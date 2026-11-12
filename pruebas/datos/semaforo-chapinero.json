@@ -1,0 +1,1024 @@
+{
+ "punto": {
+  "lat": 4.6453213,
+  "lon": -74.0613437
+ },
+ "fecha": "2026-11-12T22:31:02.350Z",
+ "fuente": "© colaboradores de OpenStreetMap (ODbL), vía Overpass",
+ "consulta": "[out:json][timeout:20];\nway(around:80,4.645321,-74.061344)[\"highway\"~\"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|track|busway)(_link)?$\"];\nout body geom;\n(\n  node(around:80,4.645321,-74.061344)[\"highway\"~\"^(traffic_signals|stop|give_way|crossing|speed_camera|mini_roundabout)$\"];\n  node(around:80,4.645321,-74.061344)[\"railway\"=\"level_crossing\"];\n);\nout body;",
+ "respuesta": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.7 375dc00a",
+  "osm3s": {
+   "timestamp_osm_base": "2026-11-11T21:40:01Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "way",
+    "id": 24548207,
+    "bounds": {
+     "minlat": 4.6445957,
+     "minlon": -74.0613385,
+     "maxlat": 4.6450758,
+     "maxlon": -74.0605229
+    },
+    "nodes": [
+     3938608087,
+     7371310054,
+     268231562
+    ],
+    "geometry": [
+     {
+      "lat": 4.6450758,
+      "lon": -74.0613385
+     },
+     {
+      "lat": 4.6450499,
+      "lon": -74.0612844
+     },
+     {
+      "lat": 4.6445957,
+      "lon": -74.0605229
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed": "30",
+     "name": "Calle 59A Bis",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 24677711,
+    "bounds": {
+     "minlat": 4.6452008,
+     "minlon": -74.0609907,
+     "maxlat": 4.6456817,
+     "maxlon": -74.0601628
+    },
+    "nodes": [
+     3938608095,
+     7371310048,
+     268231695
+    ],
+    "geometry": [
+     {
+      "lat": 4.6456817,
+      "lon": -74.0609907
+     },
+     {
+      "lat": 4.6456426,
+      "lon": -74.0609249
+     },
+     {
+      "lat": 4.6452008,
+      "lon": -74.0601628
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed": "30",
+     "name": "Calle 60A",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 38187742,
+    "bounds": {
+     "minlat": 4.6450154,
+     "minlon": -74.0625476,
+     "maxlat": 4.6455029,
+     "maxlon": -74.0617834
+    },
+    "nodes": [
+     449727346,
+     7796058733,
+     9586010398,
+     9586010396,
+     9586010395,
+     9586010397
+    ],
+    "geometry": [
+     {
+      "lat": 4.6455029,
+      "lon": -74.0625476
+     },
+     {
+      "lat": 4.6454754,
+      "lon": -74.0625046
+     },
+     {
+      "lat": 4.6450631,
+      "lon": -74.0618012
+     },
+     {
+      "lat": 4.6450503,
+      "lon": -74.0617884
+     },
+     {
+      "lat": 4.645033,
+      "lon": -74.0617834
+     },
+     {
+      "lat": 4.6450154,
+      "lon": -74.0617875
+     }
+    ],
+    "tags": {
+     "alt_name": "Calle 59Bis",
+     "highway": "residential",
+     "lanes": "2",
+     "name": "Calle 59B",
+     "surface": "bricks"
+    }
+   },
+   {
+    "type": "way",
+    "id": 38187743,
+    "bounds": {
+     "minlat": 4.6445904,
+     "minlon": -74.0620257,
+     "maxlat": 4.6450154,
+     "maxlon": -74.0617875
+    },
+    "nodes": [
+     9586010397,
+     449727350
+    ],
+    "geometry": [
+     {
+      "lat": 4.6450154,
+      "lon": -74.0617875
+     },
+     {
+      "lat": 4.6445904,
+      "lon": -74.0620257
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Carrera 8",
+     "oneway": "no",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 89631981,
+    "bounds": {
+     "minlat": 4.6442774,
+     "minlon": -74.0615723,
+     "maxlat": 4.6450758,
+     "maxlon": -74.0613385
+    },
+    "nodes": [
+     3937066545,
+     7996375413,
+     9349200653,
+     5686315578,
+     3938608087
+    ],
+    "geometry": [
+     {
+      "lat": 4.6442774,
+      "lon": -74.0615723
+     },
+     {
+      "lat": 4.6445745,
+      "lon": -74.061496
+     },
+     {
+      "lat": 4.6447119,
+      "lon": -74.0614579
+     },
+     {
+      "lat": 4.6449161,
+      "lon": -74.0613939
+     },
+     {
+      "lat": 4.6450758,
+      "lon": -74.0613385
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "highway": "primary",
+     "lanes": "4",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "sidewalk:left": "no",
+     "sidewalk:right": "separate",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 276005838,
+    "bounds": {
+     "minlat": 4.6454791,
+     "minlon": -74.0614906,
+     "maxlat": 4.645516,
+     "maxlon": -74.0612508
+    },
+    "nodes": [
+     2498505034,
+     5105783501,
+     7371310031,
+     5105783502,
+     5105783504,
+     5105783500,
+     2806541631
+    ],
+    "geometry": [
+     {
+      "lat": 4.6454917,
+      "lon": -74.0612508
+     },
+     {
+      "lat": 4.6454812,
+      "lon": -74.0613082
+     },
+     {
+      "lat": 4.6454796,
+      "lon": -74.0613424
+     },
+     {
+      "lat": 4.6454791,
+      "lon": -74.0613523
+     },
+     {
+      "lat": 4.6454846,
+      "lon": -74.0613978
+     },
+     {
+      "lat": 4.6454964,
+      "lon": -74.0614451
+     },
+     {
+      "lat": 4.645516,
+      "lon": -74.0614906
+     }
+    ],
+    "tags": {
+     "highway": "primary_link",
+     "lanes": "1",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1013363217,
+    "bounds": {
+     "minlat": 4.6453213,
+     "minlon": -74.0613437,
+     "maxlat": 4.6454917,
+     "maxlon": -74.0612508
+    },
+    "nodes": [
+     2498505034,
+     7996375416,
+     7371310036,
+     253762199
+    ],
+    "geometry": [
+     {
+      "lat": 4.6454917,
+      "lon": -74.0612508
+     },
+     {
+      "lat": 4.6454506,
+      "lon": -74.0612747
+     },
+     {
+      "lat": 4.6453904,
+      "lon": -74.0613071
+     },
+     {
+      "lat": 4.6453213,
+      "lon": -74.0613437
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "primary",
+     "lanes": "2",
+     "maxspeed": "50",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1013363218,
+    "bounds": {
+     "minlat": 4.6453213,
+     "minlon": -74.0614906,
+     "maxlat": 4.645516,
+     "maxlon": -74.0613437
+    },
+    "nodes": [
+     253762199,
+     7371310033,
+     5105783508,
+     5105783506,
+     2806541631
+    ],
+    "geometry": [
+     {
+      "lat": 4.6453213,
+      "lon": -74.0613437
+     },
+     {
+      "lat": 4.6453867,
+      "lon": -74.0613867
+     },
+     {
+      "lat": 4.6454248,
+      "lon": -74.0614125
+     },
+     {
+      "lat": 4.6454729,
+      "lon": -74.0614515
+     },
+     {
+      "lat": 4.645516,
+      "lon": -74.0614906
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "highway": "tertiary",
+     "lanes": "1",
+     "maxspeed": "30",
+     "mechanical": "yes",
+     "name": "Calle 60",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1013363219,
+    "bounds": {
+     "minlat": 4.6451879,
+     "minlon": -74.0613437,
+     "maxlat": 4.6453213,
+     "maxlon": -74.0612932
+    },
+    "nodes": [
+     3938608086,
+     5105783510,
+     9027163759,
+     253762199
+    ],
+    "geometry": [
+     {
+      "lat": 4.6451879,
+      "lon": -74.0612932
+     },
+     {
+      "lat": 4.6452575,
+      "lon": -74.0613129
+     },
+     {
+      "lat": 4.6452909,
+      "lon": -74.061329
+     },
+     {
+      "lat": 4.6453213,
+      "lon": -74.0613437
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "cycleway:both": "no",
+     "highway": "tertiary",
+     "lanes": "1",
+     "maxspeed": "30",
+     "mechanical": "yes",
+     "name": "Calle 60",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1013363220,
+    "bounds": {
+     "minlat": 4.6454917,
+     "minlon": -74.0612508,
+     "maxlat": 4.6462298,
+     "maxlon": -74.0607226
+    },
+    "nodes": [
+     263369023,
+     3850912177,
+     3850912188,
+     2498505034
+    ],
+    "geometry": [
+     {
+      "lat": 4.6462298,
+      "lon": -74.0607226
+     },
+     {
+      "lat": 4.6460351,
+      "lon": -74.0608616
+     },
+     {
+      "lat": 4.6457194,
+      "lon": -74.0610889
+     },
+     {
+      "lat": 4.6454917,
+      "lon": -74.0612508
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "primary",
+     "lanes": "2",
+     "maxspeed": "50",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1032743182,
+    "bounds": {
+     "minlat": 4.6445447,
+     "minlon": -74.0617147,
+     "maxlat": 4.644757,
+     "maxlon": -74.0615848
+    },
+    "nodes": [
+     9515302384,
+     9515302386,
+     9586010415,
+     9586010413,
+     9586010414,
+     9586010409,
+     7996375414
+    ],
+    "geometry": [
+     {
+      "lat": 4.644757,
+      "lon": -74.0617063
+     },
+     {
+      "lat": 4.6447321,
+      "lon": -74.0617132
+     },
+     {
+      "lat": 4.644718,
+      "lon": -74.0617147
+     },
+     {
+      "lat": 4.6447041,
+      "lon": -74.0617118
+     },
+     {
+      "lat": 4.6446919,
+      "lon": -74.0617047
+     },
+     {
+      "lat": 4.6446191,
+      "lon": -74.0616447
+     },
+     {
+      "lat": 4.6445447,
+      "lon": -74.0615848
+     }
+    ],
+    "tags": {
+     "highway": "service",
+     "oneway": "yes",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1032743183,
+    "bounds": {
+     "minlat": 4.644757,
+     "minlon": -74.0617063,
+     "maxlat": 4.6448954,
+     "maxlon": -74.0616683
+    },
+    "nodes": [
+     9515302385,
+     9515302384
+    ],
+    "geometry": [
+     {
+      "lat": 4.6448954,
+      "lon": -74.0616683
+     },
+     {
+      "lat": 4.644757,
+      "lon": -74.0617063
+     }
+    ],
+    "tags": {
+     "covered": "yes",
+     "highway": "service",
+     "oneway": "yes"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1032743184,
+    "bounds": {
+     "minlat": 4.6448737,
+     "minlon": -74.0616683,
+     "maxlat": 4.6449096,
+     "maxlon": -74.0614955
+    },
+    "nodes": [
+     9515302388,
+     7371310057,
+     9515302387,
+     9586010412,
+     9586010410,
+     9586010411,
+     9515302385
+    ],
+    "geometry": [
+     {
+      "lat": 4.6448737,
+      "lon": -74.0614955
+     },
+     {
+      "lat": 4.6448918,
+      "lon": -74.0615719
+     },
+     {
+      "lat": 4.644909,
+      "lon": -74.0616441
+     },
+     {
+      "lat": 4.6449096,
+      "lon": -74.0616511
+     },
+     {
+      "lat": 4.6449068,
+      "lon": -74.0616596
+     },
+     {
+      "lat": 4.6449021,
+      "lon": -74.0616649
+     },
+     {
+      "lat": 4.6448954,
+      "lon": -74.0616683
+     }
+    ],
+    "tags": {
+     "highway": "service",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1032743185,
+    "bounds": {
+     "minlat": 4.644328,
+     "minlon": -74.0616395,
+     "maxlat": 4.6448737,
+     "maxlon": -74.0614955
+    },
+    "nodes": [
+     9515302388,
+     7996375414,
+     263544186
+    ],
+    "geometry": [
+     {
+      "lat": 4.6448737,
+      "lon": -74.0614955
+     },
+     {
+      "lat": 4.6445447,
+      "lon": -74.0615848
+     },
+     {
+      "lat": 4.644328,
+      "lon": -74.0616395
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "primary",
+     "lanes": "2",
+     "lit": "yes",
+     "maxspeed": "50",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "oneway:conditional": "no @ (Su,PH 07:00-14:00)",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1032743186,
+    "bounds": {
+     "minlat": 4.6448737,
+     "minlon": -74.0614955,
+     "maxlat": 4.6453213,
+     "maxlon": -74.0613437
+    },
+    "nodes": [
+     253762199,
+     5105783512,
+     7796058730,
+     5105783513,
+     9515302388
+    ],
+    "geometry": [
+     {
+      "lat": 4.6453213,
+      "lon": -74.0613437
+     },
+     {
+      "lat": 4.6452285,
+      "lon": -74.0613862
+     },
+     {
+      "lat": 4.6451508,
+      "lon": -74.061416
+     },
+     {
+      "lat": 4.6450673,
+      "lon": -74.0614429
+     },
+     {
+      "lat": 4.6448737,
+      "lon": -74.0614955
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "primary",
+     "lanes": "2",
+     "lit": "yes",
+     "maxspeed": "50",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "short_name": "AK 7",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1047586493,
+    "bounds": {
+     "minlat": 4.6453339,
+     "minlon": -74.0612197,
+     "maxlat": 4.646857,
+     "maxlon": -74.0602249
+    },
+    "nodes": [
+     7371310035,
+     7996375417,
+     5105783497,
+     7996375418,
+     3938608095,
+     3938608096,
+     3938608097,
+     3938608098,
+     3938608085
+    ],
+    "geometry": [
+     {
+      "lat": 4.6453339,
+      "lon": -74.0612197
+     },
+     {
+      "lat": 4.6454205,
+      "lon": -74.0611692
+     },
+     {
+      "lat": 4.6455022,
+      "lon": -74.0611195
+     },
+     {
+      "lat": 4.6455602,
+      "lon": -74.0610807
+     },
+     {
+      "lat": 4.6456817,
+      "lon": -74.0609907
+     },
+     {
+      "lat": 4.6459971,
+      "lon": -74.0607782
+     },
+     {
+      "lat": 4.6462904,
+      "lon": -74.0605895
+     },
+     {
+      "lat": 4.6465002,
+      "lon": -74.0604545
+     },
+     {
+      "lat": 4.646857,
+      "lon": -74.0602249
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "highway": "primary",
+     "lanes": "3",
+     "maxspeed": "30",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "sidewalk:left": "no",
+     "sidewalk:right": "separate",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1156300777,
+    "bounds": {
+     "minlat": 4.645516,
+     "minlon": -74.0622339,
+     "maxlat": 4.6459583,
+     "maxlon": -74.0614906
+    },
+    "nodes": [
+     2806541631,
+     8317339887,
+     7796058731,
+     10250003145,
+     263369144
+    ],
+    "geometry": [
+     {
+      "lat": 4.645516,
+      "lon": -74.0614906
+     },
+     {
+      "lat": 4.6455443,
+      "lon": -74.0615278
+     },
+     {
+      "lat": 4.6458705,
+      "lon": -74.062071
+     },
+     {
+      "lat": 4.6459124,
+      "lon": -74.062149
+     },
+     {
+      "lat": 4.6459583,
+      "lon": -74.0622339
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "highway": "tertiary",
+     "lanes": "2",
+     "maxspeed": "30",
+     "mechanical": "yes",
+     "name": "Calle 60",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "sidewalk:both": "separate",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1156300779,
+    "bounds": {
+     "minlat": 4.6451879,
+     "minlon": -74.0612932,
+     "maxlat": 4.6453339,
+     "maxlon": -74.0612197
+    },
+    "nodes": [
+     3938608086,
+     9632899442,
+     7371310035
+    ],
+    "geometry": [
+     {
+      "lat": 4.6451879,
+      "lon": -74.0612932
+     },
+     {
+      "lat": 4.645266,
+      "lon": -74.061255
+     },
+     {
+      "lat": 4.6453339,
+      "lon": -74.0612197
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "highway": "primary",
+     "lanes": "3",
+     "maxspeed": "30",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "sidewalk:left": "no",
+     "sidewalk:right": "separate",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1311577776,
+    "bounds": {
+     "minlat": 4.6450758,
+     "minlon": -74.0613385,
+     "maxlat": 4.6451879,
+     "maxlon": -74.0612932
+    },
+    "nodes": [
+     3938608087,
+     3938608086
+    ],
+    "geometry": [
+     {
+      "lat": 4.6450758,
+      "lon": -74.0613385
+     },
+     {
+      "lat": 4.6451879,
+      "lon": -74.0612932
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Alberto Lleras Camargo",
+     "busway:right": "lane",
+     "cycleway:both": "no",
+     "highway": "primary",
+     "lanes": "4",
+     "name": "Avenida Carrera 7",
+     "oneway": "yes",
+     "short_name": "AK 7",
+     "sidewalk:left": "no",
+     "sidewalk:right": "separate",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "node",
+    "id": 253762199,
+    "lat": 4.6453213,
+    "lon": -74.0613437,
+    "tags": {
+     "highway": "traffic_signals"
+    }
+   },
+   {
+    "type": "node",
+    "id": 3938608086,
+    "lat": 4.6451879,
+    "lon": -74.0612932,
+    "tags": {
+     "highway": "traffic_signals"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310031,
+    "lat": 4.6454796,
+    "lon": -74.0613424,
+    "tags": {
+     "highway": "traffic_signals"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310033,
+    "lat": 4.6453867,
+    "lon": -74.0613867,
+    "tags": {
+     "button_operated": "no",
+     "crossing": "traffic_signals",
+     "highway": "crossing",
+     "traffic_signals:sound": "no",
+     "traffic_signals:vibration": "no"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310035,
+    "lat": 4.6453339,
+    "lon": -74.0612197,
+    "tags": {
+     "button_operated": "no",
+     "crossing": "traffic_signals",
+     "highway": "crossing",
+     "traffic_signals:sound": "no",
+     "traffic_signals:vibration": "no"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310036,
+    "lat": 4.6453904,
+    "lon": -74.0613071,
+    "tags": {
+     "button_operated": "no",
+     "crossing": "traffic_signals",
+     "highway": "crossing",
+     "traffic_signals:sound": "no",
+     "traffic_signals:vibration": "no"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310048,
+    "lat": 4.6456426,
+    "lon": -74.0609249,
+    "tags": {
+     "crossing": "uncontrolled",
+     "crossing:island": "no",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310054,
+    "lat": 4.6450499,
+    "lon": -74.0612844,
+    "tags": {
+     "crossing": "unmarked",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 7371310057,
+    "lat": 4.6448918,
+    "lon": -74.0615719,
+    "tags": {
+     "crossing": "marked",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 9027163759,
+    "lat": 4.6452909,
+    "lon": -74.061329,
+    "tags": {
+     "highway": "crossing"
+    }
+   }
+  ]
+ }
+}

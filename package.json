@@ -1,0 +1,16 @@
+{
+  "name": "siniestros",
+  "version": "0.1.0",
+  "private": true,
+  "description": "El choque documentado con el celular, para aseguradoras: ubicación, análisis de la vía, escena, carros, daños y croquis.",
+  "type": "module",
+  "scripts": {
+    "dev": "node herramientas/servidor.js 8320",
+    "celular": "node herramientas/servidor.js 8320 --red",
+    "test": "node --test pruebas/*.test.js",
+    "ejemplos-via": "node herramientas/guardar-ejemplo-via.mjs"
+  },
+  "devDependencies": {
+    "leaflet": "1.9.4"
+  }
+}

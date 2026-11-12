@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Reportar un choque</title>
+<link rel="stylesheet" href="js/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="barra">
+  <span class="barra-titulo">Reportar un choque</span>
+  <span class="barra-paso" id="paso"></span>
+</header>
+
+<main>
+  <section class="pantalla" id="p-inicio">
+    <h1>¿Hay alguien herido?</h1>
+    <p class="suave">Cualquier persona: tú, quien iba contigo, el otro conductor o un peatón.</p>
+    <button class="boton boton-peligro" type="button" data-ir="heridos">Sí, hay heridos</button>
+    <button class="boton" type="button" data-ir="a-salvo">No, solo daños en los carros</button>
+    <p class="nota">Si no estás seguro, toca «Sí».</p>
+  </section>
+
+  <section class="pantalla" id="p-heridos" hidden>
+    <h1>Llama al 123</h1>
+    <p>Es la línea de emergencias de Colombia. Di dónde estás y cuántos heridos hay.</p>
+    <a class="boton boton-peligro" href="tel:123">Llamar al 123</a>
+    <ul class="pasos">
+      <li>No muevas a los heridos, salvo que corran peligro donde están.</li>
+      <li>No muevas los carros: con heridos, la escena la atienden las autoridades de tránsito.</li>
+      <li>Enciende las luces de parqueo y pon las señales de carretera.</li>
+    </ul>
+    <p class="nota">El reporte puede esperar. Cuando todos estén atendidos, sigue desde aquí.</p>
+    <button class="boton boton-suave" type="button" data-ir="donde">Ya están atendidos: seguir</button>
+  </section>
+
+  <section class="pantalla" id="p-a-salvo" hidden>
+    <h1>Primero, ponte a salvo</h1>
+    <ul class="pasos">
+      <li>Enciende las luces de parqueo.</li>
+      <li>Sal del carro por el lado contrario al tráfico. Si tienes chaleco reflectivo, póntelo.</li>
+      <li>Pon las señales de carretera (triángulos o conos) detrás de los carros.</li>
+      <li>Antes de mover los carros, toma fotos de cómo quedaron. En un choque simple, después hay que retirarlos de la vía.</li>
+    </ul>
+    <button class="boton" type="button" data-ir="donde">Ya estoy a salvo</button>
+  </section>
+
+  <section class="pantalla" id="p-donde" hidden>
+    <h1>¿Dónde fue el choque?</h1>
+    <div class="mapa" id="mapa" role="application" aria-label="Mapa: toca el punto del choque"></div>
+    <p class="estado-ubicacion" id="estado-ubicacion" aria-live="polite">Toca «Usar mi ubicación», o toca el mapa en el punto del choque.</p>
+    <div class="dos-botones">
+      <button class="boton" type="button" id="usar-ubicacion">Usar mi ubicación</button>
+      <button class="boton boton-suave" type="button" id="ver-ejemplo">Ver un ejemplo</button>
+    </div>
+    <label class="campo">Hora del choque
+      <input type="datetime-local" id="hora-choque" step="60">
+    </label>
+
+    <section class="analisis" id="analisis" hidden>
+      <h2>La vía en ese punto</h2>
+      <p class="nota" id="analisis-estado" aria-live="polite"></p>
+      <button class="boton boton-suave boton-chico" type="button" id="reintentar" hidden>Reintentar</button>
+      <dl class="filas" id="filas-via"></dl>
+      <h2>La luz y el clima a esa hora</h2>
+      <dl class="filas" id="filas-luz"></dl>
+      <p class="fuente">Vía: © colaboradores de OpenStreetMap. Clima: modelo de Open-Meteo, no una estación. Para analizar, este punto se consulta en esos dos servicios y el mapa se descarga de OpenStreetMap; nada más sale del teléfono. La app no decide quién tuvo la culpa.</p>
+    </section>
+
+    <button class="boton" type="button" data-ir="escena">Siguiente: la escena</button>
+  </section>
+
+  <section class="pantalla" id="p-escena" hidden>
+    <h1>La escena</h1>
+    <p>Aquí la app te guiará para fotografiar la escena en una vuelta, con la brújula, antes de mover los carros.</p>
+    <p class="nota">Este paso todavía no está construido: llega el martes 17 de noviembre.</p>
+    <button class="boton boton-suave" type="button" data-ir="donde">Volver</button>
+  </section>
+</main>
+
+<script src="js/vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

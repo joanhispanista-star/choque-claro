@@ -1,0 +1,168 @@
+/* Primero que nada: que `hidden` gane siempre. Una regla con display:flex le
+   gana al hidden del navegador y deja pintadas pantallas que deberían estar
+   ocultas (pasó en el taller y en Tu Garantía). */
+[hidden] { display: none !important; }
+
+/* Tema claro y solo claro: la app se usa en la calle, muchas veces a pleno
+   sol, y ahí el texto oscuro sobre fondo claro es el que se lee. */
+:root {
+  color-scheme: light;
+  --fondo: #f3f4f6;
+  --panel: #ffffff;
+  --texto: #14181d;
+  --texto-suave: #4a5260;
+  --borde: #d5d9df;
+  /* Acción principal. #0f6e56 sobre blanco da 6,2:1. */
+  --acento: #0f6e56;
+  --acento-suave: #e1f5ee;
+  /* Heridos y el pin del choque. #b42318 sobre blanco da 6,6:1. */
+  --peligro: #b42318;
+  --peligro-suave: #fdecea;
+  /* Lo que el analista tiene que mirar dos veces. */
+  --atencion: #8a4b00;
+  --atencion-suave: #fdf3e1;
+  /* Lo que el mapa no trae. */
+  --sin-dato: #5f6672;
+  --tramo: #1d9e75;
+  --precision: #2f6fb7;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.45;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.barra {
+  position: sticky;
+  top: 0;
+  /* Encima de las capas de Leaflet (400-1000). */
+  z-index: 1100;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: var(--panel);
+  border-bottom: 1px solid var(--borde);
+}
+.barra-titulo { font-weight: 700; }
+.barra-paso { color: var(--texto-suave); font-size: 15px; white-space: nowrap; }
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px max(32px, env(safe-area-inset-bottom));
+}
+
+h1 { font-size: 26px; line-height: 1.2; margin: 8px 0 12px; }
+h2 { font-size: 19px; margin: 24px 0 4px; }
+p { margin: 0 0 12px; }
+.suave { color: var(--texto-suave); }
+.nota { color: var(--texto-suave); font-size: 15px; }
+
+.boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54px;
+  margin: 10px 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--acento);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton:active { transform: scale(0.99); }
+.boton:focus-visible { outline: 3px solid var(--precision); outline-offset: 2px; }
+.boton-peligro { background: var(--peligro); }
+.boton-suave { background: transparent; color: var(--acento); border: 2px solid var(--acento); }
+.boton-chico { min-height: 44px; width: auto; padding: 8px 18px; }
+
+.dos-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dos-botones .boton { margin: 6px 0; }
+
+.pasos { margin: 0 0 16px; padding-left: 22px; }
+.pasos li { margin: 0 0 10px; }
+
+.mapa {
+  height: 46vh;
+  min-height: 260px;
+  max-height: 460px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  overflow: hidden;
+  background: #e8e8e8;
+}
+
+.estado-ubicacion { margin: 10px 0 4px; font-size: 15px; color: var(--texto-suave); }
+.estado-ubicacion.error { color: var(--peligro); font-weight: 600; }
+
+.campo { display: block; margin: 12px 0; font-size: 15px; color: var(--texto-suave); }
+.campo input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+}
+
+.analisis {
+  margin: 16px 0;
+  padding: 4px 16px 12px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+}
+
+.filas { margin: 0; }
+.fila {
+  display: grid;
+  grid-template-columns: minmax(7.5em, 34%) 1fr;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--borde);
+}
+.fila:first-child { border-top: 0; }
+.fila dt { color: var(--texto-suave); font-size: 15px; }
+.fila dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.fila .valor { font-weight: 600; }
+.fila .nota { display: block; font-size: 14px; }
+.fila.sin-dato .valor { color: var(--sin-dato); font-weight: 500; }
+.fila.atencion {
+  margin: 0 -10px;
+  padding: 9px 10px;
+  background: var(--atencion-suave);
+  border-radius: 8px;
+}
+.fila.atencion .valor { color: var(--atencion); }
+
+.fuente { margin-top: 12px; font-size: 13px; color: var(--texto-suave); }
+
+/* El mapa. Leaflet pone los colores como atributos del SVG; una regla de CSS
+   les gana, así que aquí mandan las variables de la paleta. */
+.pin-choque svg { display: block; width: 36px; height: 46px; }
+.pin-choque path { fill: var(--peligro); stroke: #fff; stroke-width: 2; }
+.pin-choque circle { fill: #fff; }
+.circulo-precision { stroke: var(--precision); stroke-width: 2; stroke-dasharray: 5 5; fill: var(--precision); fill-opacity: 0.12; }
+.tramo-analizado { stroke: var(--tramo); stroke-width: 10; stroke-opacity: 0.55; stroke-linecap: round; fill: none; }
+.senal-mapa { stroke: #fff; stroke-width: 2; fill: var(--atencion); fill-opacity: 1; }

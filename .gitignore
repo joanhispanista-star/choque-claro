@@ -1,0 +1,7 @@
+node_modules/
+
+# El plan de negocio (precios, competencia, a quién se le vende y las notas
+# de mentor) vive solo en el PC de Joan. El repositorio de GitHub es PÚBLICO
+# (lo exige GitHub Pages gratis): todo lo que entra a git lo puede leer
+# cualquiera, incluida una aseguradora a la que se le esté vendiendo.
+PLAN.md
