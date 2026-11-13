@@ -29,5 +29,24 @@
 .leyenda .sin-muestra { background: transparent; border: 1.5px dashed var(--sin-dato); }
 .leyenda .falta { color: var(--sin-dato); }
 
+/* La escena en 360°: un cilindro de CSS 3D (pantalla-escena-360.js). El fondo
+   oscuro es el de un visor de fotos: lo que no cubre ninguna foto es "no hay foto". */
+.escena-360 { margin-top: 24px; }
+.visor-360 {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #1b1f24;
+  touch-action: pan-y; /* el dedo de lado gira; de arriba abajo sigue bajando la página */
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mundo-360 { position: absolute; inset: 0; transform-style: preserve-3d; }
+.panel-360 { position: absolute; left: 50%; top: 50%; overflow: hidden; background: #2a3038; }
+.panel-360 img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.mira-360 { position: absolute; left: 50%; top: 10px; bottom: 10px; border-left: 2px dashed rgba(255, 255, 255, 0.55); pointer-events: none; }
+.frente-360 { margin: 8px 0 0; font-size: 15px; }
+
 /* Los controles de MapLibre, del tamaño de un dedo. */
 .zona-3d .maplibregl-ctrl-group button { width: 40px; height: 40px; }

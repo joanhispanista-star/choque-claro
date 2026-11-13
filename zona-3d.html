@@ -25,6 +25,29 @@
     <button class="boton boton-suave boton-chico" type="button" id="dar-vuelta">Dar la vuelta</button>
   </div>
   <ul class="leyenda" id="leyenda"></ul>
+
+  <section class="escena-360" id="escena-360">
+    <h2>La escena en 360°</h2>
+    <p class="nota">Lo único de esta página que es del día del choque: las fotos de la vuelta del paso 4, tomadas en este teléfono, con su hora, su GPS y su huella.</p>
+    <div id="escena-360-vacia" hidden>
+      <p id="escena-360-vacia-texto"></p>
+      <a class="boton boton-suave" href="index.html#escena">Ir a la escena</a>
+    </div>
+    <div id="escena-360-visor-caja" hidden>
+      <div class="visor-360" id="escena-360-visor" role="img" aria-label="Las fotos de la escena en círculo: arrastra a los lados para girar">
+        <div class="mundo-360" id="escena-360-mundo"></div>
+        <div class="mira-360" aria-hidden="true"></div>
+      </div>
+      <p class="frente-360" id="escena-360-frente" aria-live="polite"></p>
+      <div class="tres-botones">
+        <button class="boton boton-suave boton-chico" type="button" id="escena-360-izquierda">◀ Izquierda</button>
+        <button class="boton boton-suave boton-chico" type="button" id="escena-360-norte">Norte</button>
+        <button class="boton boton-suave boton-chico" type="button" id="escena-360-derecha">Derecha ▶</button>
+      </div>
+      <p class="nota" id="escena-360-nota"></p>
+    </div>
+  </section>
+
   <p class="nota">Es una maqueta hecha con el mapa abierto. El relieve viene de datos de satélite (más o menos un punto cada 30 m) y los edificios son los que alguien dibujó en OpenStreetMap: puede faltar alguno o sobrar uno que ya no está. No es una foto ni es del día del choque. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.</p>
   <p class="fuente">Para dibujarla, este punto y la zona se piden a OpenFreeMap (edificios y calles), a los mosaicos de relieve de AWS y, si no es el ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.</p>
 </main>

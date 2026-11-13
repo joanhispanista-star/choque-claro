@@ -64,7 +64,16 @@ Los pasos 1 a 4 de 8:
      Los carros y sus trayectorias salen SOLO en el ejemplo, marcados como
      inventados, hasta que exista el croquis (paso 7): cuando exista, que le pase
      sus carros a `capasDeLaZona`. Sin clave ni tarjeta. Es una maqueta, no del
-     día, y la página lo dice.
+     día, y la página lo dice. Nada espera al análisis de la vía: con los
+     servidores públicos lentos (hasta 75 s) la página se quedaba en blanco; el
+     tramo y la cámara a lo largo de la vía llegan después.
+   - **La escena en 360°** (13-nov, la opción C), en la misma página: las 8
+     fotos de la vuelta del paso 4 de este teléfono, en círculo según su rumbo,
+     en un cilindro de CSS 3D sin librerías. Se gira con el dedo o con
+     Izquierda, Norte y Derecha, y abajo dice qué foto está de frente (hora,
+     rumbo, GPS y huella corta). No están cosidas, y la página lo dice; sin
+     brújula van una cada 45°. El ejemplo no muestra fotos: su choque es
+     inventado y las de un reporte de verdad no se le pegan.
 4. **La escena, en una vuelta** (13-nov). Antes de mover los carros, parada en
    el punto del golpe, la persona gira sobre sí misma y toma 8 fotos:
    - **El anillo de 8 tomas** gira con la brújula: lo que la cámara tiene al
@@ -176,6 +185,8 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
 | `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del ejemplo), la cámara a lo largo de la vía, la luz del sol y la leyenda que dice lo que falta. |
 | `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado), lee las fotos de la escena y arma el mapa con relieve, sombreado y capas. |
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
+| `js/escena-360.js` | **Puro.** Dónde va cada foto en el círculo, las medidas del cilindro (70° de visor, 50° por foto), la foto de frente y su texto. |
+| `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). |
 | `js/pantalla-escena.js` | "La escena": une la cámara, los sensores y la base; tres vistas (inicio, cámara, lista). Apaga la cámara al salir, al terminar y en segundo plano. |
 | `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. |
 | `js/calidad.js` | **Puro.** Borrosa (varianza del laplaciano por ejes), oscura y torcida; los umbrales, sin calibrar. |

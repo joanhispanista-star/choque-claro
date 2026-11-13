@@ -139,15 +139,19 @@ export function leyendaDeLaZona({ ejemplo = false, analisis = null, fotos = [], 
   if (analisis?.estado === 'ok') {
     const forma = analisis.forma.tipo ? analisis.forma.tipo + (analisis.forma.radio ? `, radio ${Math.round(analisis.forma.radio)} m` : '') : 'forma sin dato';
     filas.push({ clave: 'tramo', color: COLORES.tramo, texto: `Tramo analizado: ${forma}` });
+  } else if (analisis?.estado === 'cargando') {
+    filas.push({ clave: 'tramo', color: null, texto: 'Analizando la vía en el mapa…' });
   } else {
     filas.push({ clave: 'tramo', color: null, texto: 'Sin análisis de la vía: el mapa no se pudo consultar' });
   }
   if (analisis?.estado === 'ok' && analisis.senales.length) filas.push({ clave: 'senales', color: COLORES.senales, texto: 'Señales que están en el mapa' });
   const conCono = fotosConCono(fotos).length;
   filas.push(
-    conCono
-      ? { clave: 'conos', color: COLORES.conos, texto: `Fotos de la escena: ${conCono}, cada una hacia donde apuntaba (con brújula, dirección aproximada)` }
-      : { clave: 'conos', color: null, texto: 'Aún no hay fotos de la escena en este teléfono' },
+    ejemplo
+      ? { clave: 'conos', color: null, texto: 'El ejemplo no tiene fotos de la escena: el choque es inventado' }
+      : conCono
+        ? { clave: 'conos', color: COLORES.conos, texto: `Fotos de la escena: ${conCono}, cada una hacia donde apuntaba (con brújula, dirección aproximada)` }
+        : { clave: 'conos', color: null, texto: 'Aún no hay fotos de la escena en este teléfono' },
   );
   filas.push(
     sol && sol.altura > 0
