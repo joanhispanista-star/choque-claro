@@ -20,7 +20,7 @@ import { analizarVia, consultaDeLaVia } from './via.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { posicionDelSol } from './sol.js';
 import { abrirBaseDelReporte } from './reporte-bd.js';
-import { COLORES, camaraDeLaZona, capasDeLaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
+import { COLORES, camaraDeArranque, camaraDeLaZona, capasDeLaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
 import { montarEscena360 } from './pantalla-escena-360.js';
 
 const ESTILO = 'https://tiles.openfreemap.org/styles/liberty';
@@ -141,7 +141,9 @@ async function iniciar() {
   let camara = camaraDeLaZona(centro, null);
   let mapa;
   try {
-    mapa = new maplibregl.Map({ container: 'mapa-3d', style: ESTILO, ...camara, maxPitch: 75, attributionControl: { compact: true } });
+    // Arranca desde arriba y entra al 3D cuando el relieve ya llegó: con la cámara inclinada
+    // desde el principio, el mapa salía gris (ver camaraDeArranque).
+    mapa = new maplibregl.Map({ container: 'mapa-3d', style: ESTILO, ...camaraDeArranque(centro), maxPitch: 75, attributionControl: { compact: true } });
   } catch {
     // Sin WebGL, MapLibre no arranca: se dice, no se deja la caja en blanco.
     avisar('Este teléfono no puede dibujar mapas en 3D (le falta WebGL). La leyenda y la escena en 360° siguen sirviendo.', true);
@@ -183,11 +185,22 @@ async function iniciar() {
     mapa.setLight(luzDelSol(sol));
     ponerCapas(mapa, capasDeLaZona({ centro, precision, analisis: null, sol, ejemplo, fotos }));
 
+    // El primer "quieto" del mapa después de encender el relieve es cuando ya llegaron sus
+    // teselas: ahí se entra al 3D. Se lee `camara` en ese momento, así que si el análisis llegó
+    // antes, ya entra mirando a lo largo de la vía.
+    let enTresD = false;
+    mapa.once('idle', () => {
+      enTresD = true;
+      if (!tocado) mapa.easeTo({ ...camara, duration: 1800 });
+    });
+
     analisis = await promesaDelAnalisis;
     for (const [nombre, datosDeLaCapa] of Object.entries(capasDeLaZona({ centro, precision, analisis, sol, ejemplo, fotos }))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
     pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol }));
     camara = camaraDeLaZona(centro, analisis);
-    if (!tocado) mapa.easeTo({ bearing: camara.bearing, duration: 1500 });
+    // La cámara entera, no solo el rumbo: si la entrada al 3D va a medio camino, un easeTo de
+    // solo el rumbo la cortaría y dejaría el mapa a media inclinación.
+    if (!tocado && enTresD) mapa.easeTo({ ...camara, duration: 1500 });
     if (analisis.estado === 'error') avisar(`${analisis.error} La maqueta y la escena salen igual, sin el tramo analizado.`, true);
     else if (!ejemplo) avisar('Lista. Arrastra para moverte; con dos dedos giras e inclinas.');
   });

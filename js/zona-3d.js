@@ -76,6 +76,17 @@ export function camaraDeLaZona(centro, analisis) {
   return { center: [centro.lon, centro.lat], zoom: 17.3, pitch: 62, bearing: Math.round(rumbo) % 360 };
 }
 
+// La cámara con la que ARRANCA el mapa: desde arriba, sin inclinar. Si el relieve se enciende con
+// la cámara ya inclinada (como estaba hasta el 13-nov-2026), MapLibre 4.7 nunca pide la tesela
+// del relieve que hay debajo del punto: calcula la altura del terreno en 0 m, la cámara queda
+// dentro de la montaña (en Los Verjones el suelo está a 2.921 m) y el mapa sale gris, en zoom
+// 14,35 y 7°, en cualquier navegador. Desde arriba sí la pide; con la altura ya calculada, la
+// cámara de camaraDeLaZona entra al 3D sin problema (medido en el Edge oculto con la tarjeta
+// gráfica del PC).
+export function camaraDeArranque(centro) {
+  return { center: [centro.lon, centro.lat], zoom: 15, pitch: 0, bearing: 0 };
+}
+
 // La luz de los edificios viene de donde estaba el sol a esa hora (MapLibre:
 // posición [radio, rumbo desde el norte, ángulo desde la vertical]). De noche,
 // una luz azulada y floja: no hay sol que ilumine nada.

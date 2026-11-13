@@ -305,6 +305,17 @@ Los carros y los daños (pasos 5 y 6):
 
 ## Trampas que ya mordieron
 
+- **La zona 3D salía gris en cualquier navegador** (13-nov-2026, ya
+  publicada). El mapa nacía con la cámara inclinada (zoom 17,3 y 62°) y el
+  relieve se encendía después: así MapLibre 4.7 nunca pide la tesela del
+  relieve que hay debajo del punto, calcula el suelo a 0 m, la cámara queda
+  dentro de la montaña (en Los Verjones el suelo está a 2.921 m) y el mapa
+  termina en zoom 14,35 y 7°, sin dibujar nada; la caja gris es su fondo CSS.
+  No era el Edge oculto: con la tarjeta gráfica del PC salía igual, y sin
+  relieve se dibujaba bien. Ahora arranca desde arriba (`camaraDeArranque`) y
+  entra al 3D en el primer `idle` después de encender el relieve. Para
+  medirlo: `__zona3d.mapa.transform.elevation` tiene que dar la altura real,
+  no 0.
 - **overpass.openstreetmap.fr le responde 403 a los navegadores ocultos**
   ("HeadlessEdg", medido el 13-nov-2026) y a un navegador que no manda
   Referer. A un iPhone que abre la app desde GitHub Pages le responde 200. Por

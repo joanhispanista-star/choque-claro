@@ -194,7 +194,7 @@ export function estadoDeLaPlaca(carro, { leyendo = false } = {}) {
     return {
       tipo: 'propuesta',
       texto: lectura.texto,
-      detalle: `Leída ${DE_LA_FOTO[lectura.sector] ?? 'de una foto'}. Revísala: el lector puede confundir una letra (la 6 con la 8, la M con la W).`,
+      detalle: `Leída ${DE_LA_FOTO[lectura.sector] ?? 'de una foto'}. Revísala: el lector puede confundir una letra (la K con la X, la 6 con la 8, la M con la W).`,
     };
   }
   const ultimo = placa.intentos[placa.intentos.length - 1];

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { planoLocal, distancia, diferenciaAngular } from '../js/geo.js';
 import { analizarVia } from '../js/via.js';
-import { camaraDeLaZona, capasDeLaZona, circulo, conoDeFoto, croquisDeEjemplo, desplazar, fotosConCono, leyendaDeLaZona, luzDelSol, rectanguloDeCarro } from '../js/zona-3d.js';
+import { camaraDeArranque, camaraDeLaZona, capasDeLaZona, circulo, conoDeFoto, croquisDeEjemplo, desplazar, fotosConCono, leyendaDeLaZona, luzDelSol, rectanguloDeCarro } from '../js/zona-3d.js';
 
 const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const plano = planoLocal(CENTRO);
@@ -47,6 +47,10 @@ test('el cono de una foto sale de donde se tomó y abre hacia su rumbo', () => {
 test('la cámara mira a lo largo de la vía', () => {
   assert.deepEqual(camaraDeLaZona(CENTRO, { estado: 'ok', rumbo: 223.4 }), { center: [-74.0105, 4.6484], zoom: 17.3, pitch: 62, bearing: 223 });
   assert.equal(camaraDeLaZona(CENTRO, null).bearing, 0);
+});
+
+test('el mapa arranca desde arriba: con la cámara inclinada, el relieve no calcula la altura', () => {
+  assert.deepEqual(camaraDeArranque(CENTRO), { center: [-74.0105, 4.6484], zoom: 15, pitch: 0, bearing: 0 });
 });
 
 test('la luz viene de donde estaba el sol; de noche es floja y azulada', () => {
