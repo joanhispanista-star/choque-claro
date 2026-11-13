@@ -18,6 +18,11 @@
   overflow: hidden;
   background: #e8e8e8;
 }
+/* El 3D de Google es un elemento propio (gmp-map-3d) que no toma el tamaño de la caja solo. */
+.zona-3d .mapa-google { display: block; width: 100%; height: 100%; }
+/* Los avisos de error de esta página (la vía que no llegó, el 3D de Google que falló) salían grises
+   como una nota cualquiera: la clase 'error' no tenía estilo aquí. */
+.zona-3d .nota.error { color: var(--peligro); font-weight: 600; }
 
 .tres-botones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tres-botones .boton { width: 100%; margin: 8px 0; padding: 8px 6px; font-size: 15px; }

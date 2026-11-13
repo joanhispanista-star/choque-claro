@@ -74,6 +74,28 @@ Los pasos 1 a 7 de 8:
      día, y la página lo dice. Nada espera al análisis de la vía: con los
      servidores públicos lentos (hasta 75 s) la página se quedaba en blanco; el
      tramo y la cámara a lo largo de la vía llegan después.
+   - **El 3D fotorrealista de Google** (opción A: Joan la eligió el vie 13-nov
+     después de ver la hoja con Google Earth). Es la misma página, pero con el
+     `Map3DElement` de Maps JavaScript en vez de MapLibre, y **solo cuando hay
+     clave** en `js/clave-de-google.js`. Hoy la clave está vacía, así que sale
+     la maqueta de siempre.
+     - **Lo que va encima:** lo mismo que en la maqueta (punto, tramo, señales,
+       sol, conos y croquis). Los carros del croquis son el carro 3D del paso 6,
+       exportado a .glb en el teléfono por `carro-glb.js`, a su tamaño y del
+       color de su letra.
+     - **Si Google falla** (sin conexión, clave que no acepta, cupo del día), su
+       mapa se quita entero y sale la maqueta con el motivo en rojo. Se quita
+       entero porque Google no deja su 3D junto a un mapa ajeno.
+     - **Precio** (SKU «Immersive Maps»): 5.000 aperturas gratis al mes y
+       luego US$7 por 1.000. Con la «Maps Demo Key» no hay cobros posibles.
+     - **Verificado sin clave, el 13-nov**, en el Edge oculto: sin clave, la
+       maqueta sale igual que antes y no se le pide nada a Google. Con una
+       clave falsa vuelve a la maqueta y dice «Google no aceptó la clave del
+       3D (InvalidKeyMapError)». El carro sale como .glb (595 KB). La altura
+       del suelo cuadra: 2.919 m en Los Verjones y 2.582 m en Chapinero.
+     - **Falta probarlo con la clave de Joan:** el giro del carro
+       (`GIRO_DEL_MODELO`), la altura de las flechas sobre la vía de la foto, y
+       si Google acepta el .glb desde un `blob:`.
    - **La escena en 360°** (13-nov, la opción C), en la misma página: las 8
      fotos de la vuelta del paso 4 de este teléfono, en círculo según su rumbo,
      en un cilindro de CSS 3D sin librerías. Se gira con el dedo o con
@@ -276,6 +298,11 @@ El croquis (paso 7):
     (si algo falla con `touch-action`, Safari se queda el gesto). Volver a
     «Mover» y comprobar que el mapa se arrastra otra vez.
 
+La zona en el 3D de Google (cuando esté la clave):
+
+13. ¿Carga en Safari y se mueve con el dedo sin trabarse? ¿Aguanta la memoria
+    del iPhone con los dos carros encima, o Safari recarga la página?
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
@@ -318,7 +345,11 @@ El croquis (paso 7):
 | `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
 | `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
 | `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
-| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado), lee las fotos de la escena y el croquis, y arma el mapa con relieve, sombreado y capas. |
+| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis y la línea de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado y capas. |
+| `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |
+| `js/pantalla-zona-google.js` | Carga Maps JavaScript con la clave, pide la altura del suelo, monta el `gmp-map-3d` con carros, flechas y marcas, y avisa si Google falla. |
+| `js/carro-glb.js` | El carro del paso 6 como .glb, hecho con el exportador de Three.js, para el 3D de Google. |
+| `js/clave-de-google.js` | La clave de navegador de Google Maps. Vacía = maqueta abierta. No es un secreto: la protege la restricción a los sitios de Choque Claro. |
 | `js/croquis.js` | **Puro.** El croquis del paso 7: la vía en metros (tangentes promediadas, para que la curva cerrada no quiebre los carriles), los seis casos, poner, mover, girar y cambiar carros, las flechas automáticas y a mano, el relato, guardar y reabrir. |
 | `js/pantalla-croquis.js` | "El croquis": las tarjetas, el mapa con las manijas, la de girar y la estrella, el dibujo a dedo, los botones y el guardado. |
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
@@ -427,6 +458,15 @@ El croquis (paso 7):
   `zoomSnap: 0.25` y tope 20,5 (unos 42 px por carro).
 - **El paso 3 vive solo en la memoria**: el punto y el análisis se pierden al
   recargar. Por eso el croquis guarda su propia copia de la vía.
+- **Con el 3D, Google no avisa por `gm_authFailure`** (13-nov-2026, medido con
+  una clave que no existe). Tampoco dispara el evento `gmp-error`. Pone su
+  tarjeta «¡Vaya! Se ha producido un error» dentro del mapa y escribe «Google
+  Maps JavaScript API error: InvalidKeyMapError» en la consola. Por eso la
+  página escucha `console.error` para volver a la maqueta.
+- **El `center` del 3D de Google se mide sobre el nivel del mar**, no sobre el
+  suelo: con altura 0, en Bogotá la cámara mira a un punto 2.600 m bajo tierra.
+  La altura sale del píxel del mosaico terrarium de AWS, leído sin corrección
+  de color.
 
 ## Licencias de terceros
 
@@ -437,4 +477,7 @@ comercial. Leaflet: BSD-2 (`js/vendor/leaflet/LICENSE`). Three.js: MIT
 (`js/vendor/three/LICENSE`). El modelo de placas fast-plate-ocr: MIT
 (`js/vendor/placa/LICENSE-fast-plate-ocr`); ONNX Runtime Web: MIT (aviso en
 la primera línea de `ort.wasm.min.mjs`). Las medidas del catálogo citan su
-fuente en cada línea.
+fuente en cada línea. El exportador glTF de Three.js (MIT) está copiado sin
+cambios en `js/vendor/three/exporters`. El 3D fotorrealista es de Google Maps
+Platform y va con sus términos: su logo y sus créditos quedan a la vista, su
+contenido no se guarda ni se exporta, y no se pone junto a un mapa ajeno.

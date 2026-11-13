@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="js/vendor/maplibre/maplibre-gl.css">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/zona-3d.css">
+<!-- Three.js solo baja si el 3D de Google tiene carros que dibujar (carro-glb.js, import dinámico). -->
+<script type="importmap">
+  { "imports": { "three": "./js/vendor/three/three.module.min.js" } }
+</script>
 </head>
 <body>
 <header class="barra">
@@ -48,8 +52,8 @@
     </div>
   </section>
 
-  <p class="nota">Es una maqueta hecha con el mapa abierto. El relieve viene de datos de satélite (más o menos un punto cada 30 m) y los edificios son los que alguien dibujó en OpenStreetMap: puede faltar alguno o sobrar uno que ya no está. No es una foto ni es del día del choque. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.</p>
-  <p class="fuente">Para dibujarla, este punto y la zona se piden a OpenFreeMap (edificios y calles), a los mosaicos de relieve de AWS y, si no es el ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.</p>
+  <p class="nota" id="zona-nota">Es una maqueta hecha con el mapa abierto. El relieve viene de datos de satélite (más o menos un punto cada 30 m) y los edificios son los que alguien dibujó en OpenStreetMap: puede faltar alguno o sobrar uno que ya no está. No es una foto ni es del día del choque. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.</p>
+  <p class="fuente" id="zona-fuente">Para dibujarla, este punto y la zona se piden a OpenFreeMap (edificios y calles), a los mosaicos de relieve de AWS y, si no es el ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.</p>
 </main>
 
 <script src="js/vendor/maplibre/maplibre-gl.js"></script>

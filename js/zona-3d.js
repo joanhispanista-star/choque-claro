@@ -183,10 +183,18 @@ export function fotosConCono(registros = []) {
   return registros.filter((r) => r && r.paso === 'escena' && r.gps && Number.isFinite(r.gps.lat) && Number.isFinite(r.gps.lon) && Number.isFinite(r.rumbo));
 }
 
+// Los carros que se dibujan: los del croquis del teléfono o, en el ejemplo sin croquis, los
+// inventados que salen del tramo (por eso cambian cuando llega el análisis). Los usan la maqueta y el
+// 3D de Google (zona-google.js), que pone en cada uno el carro 3D del paso 6.
+export function carrosDeLaZona({ croquis = null, ejemplo = false, analisis = null }) {
+  const via = analisis?.estado === 'ok' ? analisis : null;
+  return croquis ? carrosDelCroquis(croquis) : ejemplo ? croquisDeEjemplo(via) ?? [] : [];
+}
+
 // Todo lo que se dibuja encima de la maqueta, en GeoJSON. `croquis`: el de croquisDeEstaZona.
 export function capasDeLaZona({ centro, precision = null, analisis = null, sol = null, ejemplo = false, fotos = [], croquis = null }) {
   const via = analisis?.estado === 'ok' ? analisis : null;
-  const carros = croquis ? carrosDelCroquis(croquis) : ejemplo ? croquisDeEjemplo(via) ?? [] : [];
+  const carros = carrosDeLaZona({ croquis, ejemplo, analisis });
   const conSol = sol && sol.altura > 0;
   const finDelRayo = conSol ? desplazar(centro, sol.azimut, 70) : null;
   return {

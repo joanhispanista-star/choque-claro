@@ -7,5 +7,11 @@ index.html los conecta con un import map ("three" → este archivo). Las
 pruebas en Node usan el paquete three@0.169.0 de node_modules: si se
 actualiza uno, se actualiza el otro.
 
+El 13-nov-2026 se copiaron también, sin cambios, de node_modules/three@0.169.0:
+exporters/GLTFExporter.js y utils/TextureUtils.js (el exportador lo importa
+con "./../utils/", por eso van en esas dos carpetas). Los usa carro-glb.js
+para pasar el carro del paso 6 a .glb, el formato que pide el 3D de Google.
+zona-3d.html tiene su propio import map ("three" → este archivo).
+
 Solo se cargan al llegar a los carros (las siluetas guía) y a los daños (el
 carro en 3D): las pantallas de antes no los bajan.

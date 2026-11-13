@@ -1,17 +1,21 @@
-// La página de la zona en 3D (zona-3d.html), sobre MapLibre 4.7.1 (BSD,
-// copiado en js/vendor/maplibre, sin CDN). La lógica pura está en zona-3d.js.
+// La página de la zona en 3D (zona-3d.html), con dos motores que nunca salen juntos:
+//  - El 3D fotorrealista de Google (pantalla-zona-google.js), si hay clave en clave-de-google.js.
+//    Es la opción A, que Joan eligió el vie 13-nov-2026 al ver la hoja con Google Earth.
+//  - La maqueta abierta, sobre MapLibre 4.7.1 (BSD, copiado en js/vendor/maplibre, sin CDN), sin
+//    clave ni tarjeta. Sale cuando no hay clave y también si el 3D de Google falla, y la página dice
+//    por qué.
+// La lógica pura está en zona-3d.js y zona-google.js.
 //
 // Se abre desde "¿Dónde fue?" con el punto en la dirección:
 //   zona-3d.html?lat=4.648400&lon=-74.010500&t=<ISO>&p=<precisión m>&ejemplo=1
-// Fuentes, todas sin clave ni tarjeta (Joan eligió esta opción el 13-nov-2026):
+// Fuentes de la maqueta abierta, todas sin clave ni tarjeta (la opción B, del 13-nov-2026):
 //  - Calles y edificios: el estilo "liberty" de OpenFreeMap (datos de
 //    OpenStreetMap), que ya trae los edificios levantados en 3D.
 //  - Relieve: los mosaicos "terrarium" de AWS (Terrain Tiles, de Mapzen).
 //  - La vía: el mismo análisis de "¿Dónde fue?" (via.js). El ejemplo usa la
 //    respuesta guardada, para que no falle; un punto real se consulta en vivo.
-// Las fotos de la escena y el croquis (paso 7) se leen de este teléfono
-// (reporte-bd.js): si el reporte se hizo en otro, aquí no aparecen, y la
-// leyenda lo dice.
+// Las fotos de la escena, el croquis (paso 7) y la línea de cada carro (paso 5) se leen de este
+// teléfono (reporte-bd.js): si el reporte se hizo en otro, aquí no aparecen, y la leyenda lo dice.
 //
 // NADA espera al análisis de la vía (13-nov-2026): con los servidores públicos
 // lentos tardaba hasta 75 s y la página se quedaba en blanco, sin 360° ni mapa.
@@ -21,19 +25,31 @@ import { analizarVia, consultaDeLaVia } from './via.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { posicionDelSol } from './sol.js';
 import { abrirBaseDelReporte } from './reporte-bd.js';
-import { COLORES, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, croquisDeEstaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
+import { COLORES, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, croquisDeEstaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
 import { montarEscena360 } from './pantalla-escena-360.js';
+import { montarZonaGoogle } from './pantalla-zona-google.js';
+import { CLAVE_DE_GOOGLE } from './clave-de-google.js';
 
 const ESTILO = 'https://tiles.openfreemap.org/styles/liberty';
 const RELIEVE = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 const FUENTE = ['Noto Sans Bold'];
 
+// Lo que dicen los dos párrafos del final con el 3D de Google. Los de la maqueta abierta están en
+// zona-3d.html y vuelven si Google falla.
+const TEXTOS_DE_GOOGLE = {
+  nota: 'El 3D es de Google: lo arma con fotos aéreas de otra fecha, que pueden tener años, y en ese tiempo se repinta una línea o se quita una señal. No es una foto del día del choque. Los carros, a su tamaño y del color de su letra, salen del croquis: son lo que se declaró, no una medición. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.',
+  fuente: 'Para dibujarla, este punto y la zona se piden a Google (el 3D), a los mosaicos de relieve de AWS (la altura del suelo, para apuntar la cámara) y, si no es el ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.',
+};
+
 const $ = (selector) => document.querySelector(selector);
 
+// Si el 3D de Google falló, el porqué va delante de cualquier otro aviso: si no, el siguiente aviso
+// lo borraba y la persona veía la maqueta sin saber que debía ser otra cosa.
+let motivoDelRespaldo = '';
 function avisar(texto, esError = false) {
   const p = $('#zona-estado');
-  p.textContent = texto;
-  p.classList.toggle('error', esError);
+  p.textContent = [motivoDelRespaldo, texto].filter(Boolean).join(' ');
+  p.classList.toggle('error', esError || !!motivoDelRespaldo);
 }
 
 function leerDireccion() {
@@ -62,10 +78,13 @@ async function analisisDeLaVia(centro, ejemplo) {
   }
 }
 
+// La línea de cada carro (paso 5), por letra: el 3D de Google dibuja cada uno con su carrocería.
+const lineasDeLosCarros = (carros) => Object.fromEntries((Array.isArray(carros) ? carros : []).filter((c) => c?.letra && c.linea).map((c) => [c.letra, c.linea]));
+
 // Del reporte de este teléfono: las fotos ({ id, registro, miniatura } y, solo
 // las de la escena, también `archivo`, la grande, que va en el círculo del
-// 360°) y el croquis. Se cargan antes de cerrar la base: iOS la cierra sola en
-// segundo plano.
+// 360°), el croquis y la línea de cada carro. Se cargan antes de cerrar la base:
+// iOS la cierra sola en segundo plano.
 async function delReporte() {
   try {
     const base = await abrirBaseDelReporte();
@@ -73,12 +92,12 @@ async function delReporte() {
       const reporte = await base.reporteEnCurso();
       const fotos = await base.fotos(reporte.id);
       for (const f of fotos) if (f.registro.paso === 'escena') f.archivo = await base.foto(f.id);
-      return { fotos, croquis: reporte.croquis || null };
+      return { fotos, croquis: reporte.croquis || null, lineas: lineasDeLosCarros(reporte.carros) };
     } finally {
       base.cerrar();
     }
   } catch {
-    return { fotos: [], croquis: null };
+    return { fotos: [], croquis: null, lineas: {} };
   }
 }
 
@@ -119,36 +138,13 @@ function ponerCapas(mapa, capas, { conCroquis = false } = {}) {
   mapa.addLayer({ id: 'choque-carros-nombre', type: 'symbol', source: 'choque-nombresDeCarros', layout: { 'text-field': ['get', 'nombre'], 'text-font': FUENTE, 'text-size': 16, 'text-offset': [0, -1.4], 'text-allow-overlap': true }, paint: { 'text-color': '#14181d', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
 }
 
-async function iniciar() {
-  const datos = leerDireccion();
-  if (!datos) {
-    avisar('Falta el punto del choque. Abre la zona en 3D desde «¿Dónde fue el choque?».', true);
-    return;
-  }
-  const { centro, fecha, precision, ejemplo } = datos;
-  const sol = posicionDelSol(fecha, centro.lat, centro.lon);
-  avisar(ejemplo ? 'Ejemplo: una curva real de la vía Los Verjones–Patios, con un choque inventado.' : 'Armando la zona; el análisis de la vía llega en unos segundos.');
-  const promesaDelAnalisis = analisisDeLaVia(centro, ejemplo);
-
-  // Las fotos y el croquis son de este teléfono: llegan rápido. El ejemplo es
-  // un choque inventado: las fotos de un reporte de verdad no se le pegan. El
-  // croquis sí, si se hizo sobre el ejemplo (croquisDeEstaZona).
-  const delTelefono = await delReporte();
-  const fotosDelChoque = ejemplo ? [] : delTelefono.fotos;
-  const croquis = croquisDeEstaZona(delTelefono.croquis, centro, ejemplo);
-  const fotos = fotosDelChoque.map((f) => f.registro);
-  let analisis = { estado: 'cargando' };
-  pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
-  // El 360° no necesita WebGL ni el análisis: sale ya.
-  const escena360 = montarEscena360($('#escena-360'), fotosDelChoque, { ejemplo });
-  addEventListener('pagehide', () => escena360?.cerrar());
-
+// La maqueta abierta. Devuelve el motor (los mismos botones que el 3D de Google) o null si este
+// teléfono no puede dibujarla, y entonces ya lo dijo.
+function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
   if (!globalThis.maplibregl) {
     avisar('El motor del mapa 3D no cargó. Recarga la página.', true);
-    return;
+    return null;
   }
-  // Con croquis, la cámara se acerca al golpe: a la distancia de la zona sus carros eran una mota.
-  const camaraDe = (deLaVia) => (croquis ? camaraDelCroquis(centro, deLaVia, croquis) : camaraDeLaZona(centro, deLaVia));
   let camara = camaraDe(null);
   let mapa;
   try {
@@ -158,7 +154,7 @@ async function iniciar() {
   } catch {
     // Sin WebGL, MapLibre no arranca: se dice, no se deja la caja en blanco.
     avisar('Este teléfono no puede dibujar mapas en 3D (le falta WebGL). La leyenda y la escena en 360° siguen sirviendo.', true);
-    return;
+    return null;
   }
   mapa.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
   mapa.on('error', (e) => {
@@ -181,7 +177,18 @@ async function iniciar() {
     });
   }
 
-  mapa.on('load', async () => {
+  let cargado = false;
+  let pendiente = null;
+  let enTresD = false;
+  const aplicar = (analisis) => {
+    for (const [nombre, datosDeLaCapa] of Object.entries(capasCon(analisis))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
+    camara = camaraDe(analisis);
+    // La cámara entera, no solo el rumbo: si la entrada al 3D va a medio camino, un easeTo de
+    // solo el rumbo la cortaría y dejaría el mapa a media inclinación.
+    if (!tocado && enTresD) mapa.easeTo({ ...camara, duration: 1500 });
+  };
+
+  mapa.on('load', () => {
     mapa.addSource('relieve', { type: 'raster-dem', tiles: [RELIEVE], encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles (Mapzen, AWS)</a>' });
     // Exageración 1: el relieve como es. Una pendiente aumentada sería mentir sobre la vía.
     mapa.setTerrain({ source: 'relieve', exaggeration: 1 });
@@ -194,50 +201,152 @@ async function iniciar() {
     const debajoDe = mapa.getStyle().layers.find((capa) => capa.type === 'line' || capa.type === 'symbol')?.id;
     mapa.addLayer({ id: 'relieve-sombra', type: 'hillshade', source: 'relieve-sombra', paint: { 'hillshade-exaggeration': 0.45, 'hillshade-shadow-color': '#4a4a4a' } }, debajoDe);
     mapa.setLight(luzDelSol(sol));
-    ponerCapas(mapa, capasDeLaZona({ centro, precision, analisis: null, sol, ejemplo, fotos, croquis }), { conCroquis: !!croquis });
+    ponerCapas(mapa, capasCon(null), { conCroquis: !!croquis });
 
     // El primer "quieto" del mapa después de encender el relieve es cuando ya llegaron sus
     // teselas: ahí se entra al 3D. Se lee `camara` en ese momento, así que si el análisis llegó
     // antes, ya entra mirando a lo largo de la vía.
-    let enTresD = false;
     mapa.once('idle', () => {
       enTresD = true;
       if (!tocado) mapa.easeTo({ ...camara, duration: 1800 });
     });
-
-    analisis = await promesaDelAnalisis;
-    for (const [nombre, datosDeLaCapa] of Object.entries(capasDeLaZona({ centro, precision, analisis, sol, ejemplo, fotos, croquis }))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
-    pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
-    camara = camaraDe(analisis);
-    // La cámara entera, no solo el rumbo: si la entrada al 3D va a medio camino, un easeTo de
-    // solo el rumbo la cortaría y dejaría el mapa a media inclinación.
-    if (!tocado && enTresD) mapa.easeTo({ ...camara, duration: 1500 });
-    if (analisis.estado === 'error') avisar(`${analisis.error} La maqueta y la escena salen igual, sin el tramo analizado.`, true);
-    else if (!ejemplo) avisar('Lista. Arrastra para moverte; con dos dedos giras e inclinas.');
+    cargado = true;
+    if (pendiente) aplicar(pendiente);
   });
 
-  $('#vista-3d').addEventListener('click', () => {
-    detenerGiro();
-    mapa.easeTo({ center: camara.center, zoom: camara.zoom, pitch: camara.pitch, bearing: camara.bearing, duration: 1200 });
-  });
-  $('#vista-arriba').addEventListener('click', () => {
-    detenerGiro();
-    mapa.easeTo({ center: camara.center, zoom: camara.zoom + 0.4, pitch: 0, bearing: 0, duration: 1200 });
-  });
-  $('#dar-vuelta').addEventListener('click', () => {
-    if (giro) return detenerGiro();
-    $('#dar-vuelta').setAttribute('aria-pressed', 'true');
-    const inicio = performance.now();
-    const desde = mapa.getBearing();
-    const paso = (ahora) => {
-      const avance = (ahora - inicio) / 16000;
-      if (avance >= 1) return detenerGiro();
-      mapa.setBearing(desde + 360 * avance);
+  return {
+    nombre: 'abierto',
+    mapa,
+    // Las capas no se pueden tocar antes del 'load': si el análisis llega antes, espera.
+    conAnalisis(analisis) {
+      if (cargado) aplicar(analisis);
+      else pendiente = analisis;
+    },
+    vista3d() {
+      detenerGiro();
+      mapa.easeTo({ center: camara.center, zoom: camara.zoom, pitch: camara.pitch, bearing: camara.bearing, duration: 1200 });
+    },
+    desdeArriba() {
+      detenerGiro();
+      mapa.easeTo({ center: camara.center, zoom: camara.zoom + 0.4, pitch: 0, bearing: 0, duration: 1200 });
+    },
+    darLaVuelta() {
+      if (giro) return detenerGiro();
+      $('#dar-vuelta').setAttribute('aria-pressed', 'true');
+      const inicio = performance.now();
+      const desde = mapa.getBearing();
+      const paso = (ahora) => {
+        const avance = (ahora - inicio) / 16000;
+        if (avance >= 1) return detenerGiro();
+        mapa.setBearing(desde + 360 * avance);
+        giro = requestAnimationFrame(paso);
+      };
       giro = requestAnimationFrame(paso);
-    };
-    giro = requestAnimationFrame(paso);
+    },
+  };
+}
+
+async function iniciar() {
+  const datos = leerDireccion();
+  if (!datos) {
+    avisar('Falta el punto del choque. Abre la zona en 3D desde «¿Dónde fue el choque?».', true);
+    return;
+  }
+  const { centro, fecha, precision, ejemplo } = datos;
+  const sol = posicionDelSol(fecha, centro.lat, centro.lon);
+  const bienvenida = ejemplo ? 'Ejemplo: una curva real de la vía Los Verjones–Patios, con un choque inventado.' : 'Armando la zona; el análisis de la vía llega en unos segundos.';
+  avisar(bienvenida);
+  const promesaDelAnalisis = analisisDeLaVia(centro, ejemplo);
+
+  // Las fotos y el croquis son de este teléfono: llegan rápido. El ejemplo es
+  // un choque inventado: las fotos de un reporte de verdad no se le pegan. El
+  // croquis sí, si se hizo sobre el ejemplo (croquisDeEstaZona); y con él, la
+  // línea de cada carro, que en el ejemplo sin croquis no es de nadie.
+  const delTelefono = await delReporte();
+  const fotosDelChoque = ejemplo ? [] : delTelefono.fotos;
+  const croquis = croquisDeEstaZona(delTelefono.croquis, centro, ejemplo);
+  const lineas = croquis ? delTelefono.lineas : {};
+  const fotos = fotosDelChoque.map((f) => f.registro);
+  let analisis = { estado: 'cargando' };
+  pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
+  // El 360° no necesita WebGL ni el análisis: sale ya.
+  const escena360 = montarEscena360($('#escena-360'), fotosDelChoque, { ejemplo });
+  addEventListener('pagehide', () => escena360?.cerrar());
+
+  // Con croquis, la cámara se acerca al golpe: a la distancia de la zona sus carros eran una mota.
+  const camaraDe = (deLaVia) => (croquis ? camaraDelCroquis(centro, deLaVia, croquis) : camaraDeLaZona(centro, deLaVia));
+  const capasCon = (deLaVia) => capasDeLaZona({ centro, precision, analisis: deLaVia, sol, ejemplo, fotos, croquis });
+  const carrosCon = (deLaVia) => carrosDeLaZona({ croquis, ejemplo, analisis: deLaVia });
+
+  let motor = null;
+  $('#vista-3d').addEventListener('click', () => motor?.vista3d());
+  $('#vista-arriba').addEventListener('click', () => motor?.desdeArriba());
+  $('#dar-vuelta').addEventListener('click', () => motor?.darLaVuelta());
+
+  const textosAbiertos = { nota: $('#zona-nota').textContent, fuente: $('#zona-fuente').textContent };
+  const ponerTextos = (t) => {
+    $('#zona-nota').textContent = t.nota;
+    $('#zona-fuente').textContent = t.fuente;
+  };
+  const yaLlegoElAnalisis = () => analisis.estado !== 'cargando';
+  const abrirMaqueta = () => {
+    ponerTextos(textosAbiertos);
+    motor = montarMaqueta({ centro, sol, croquis, camaraDe, capasCon });
+    if (motor && yaLlegoElAnalisis()) motor.conAnalisis(analisis);
+  };
+
+  if (CLAVE_DE_GOOGLE) {
+    ponerTextos(TEXTOS_DE_GOOGLE);
+    avisar(`${bienvenida} El 3D es de Google, con fotos de otra fecha: no es del día del choque.`);
+    const deGoogle = await montarZonaGoogle($('#mapa-3d'), {
+      clave: CLAVE_DE_GOOGLE,
+      centro,
+      camaraDeLaMaqueta: camaraDe(null),
+      capas: capasCon(null),
+      carros: carrosCon(null),
+      lineas,
+      // Puede llegar en cualquier momento, también con el 3D de Google ya dibujado.
+      alFallar: (motivo) => {
+        motivoDelRespaldo = `${motivo} Esta es la maqueta abierta.`;
+        avisar('');
+        abrirMaqueta();
+      },
+    });
+    if (deGoogle && !deGoogle.caido) {
+      deGoogle.conAnalisis = (a) => deGoogle.actualizar({ camaraDeLaMaqueta: camaraDe(a), capas: capasCon(a), carros: carrosCon(a) });
+      motor = deGoogle;
+      if (yaLlegoElAnalisis()) motor.conAnalisis(analisis);
+    }
+  } else {
+    abrirMaqueta();
+  }
+
+  promesaDelAnalisis.then((llegado) => {
+    analisis = llegado;
+    pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
+    motor?.conAnalisis(analisis);
+    // Con el 3D de Google, el aviso de junto al mapa sigue diciendo que sus fotos no son del día.
+    const deGoogle = motor?.nombre === 'google';
+    const queSale = deGoogle ? 'El 3D' : 'La maqueta';
+    if (analisis.estado === 'error') avisar(`${analisis.error} ${queSale} y la escena salen igual, sin el tramo analizado.`, true);
+    else if (!ejemplo) avisar(`Lista.${deGoogle ? ' El 3D es de Google, con fotos de otra fecha: no es del día del choque.' : ''} Arrastra para moverte; con dos dedos giras e inclinas.`);
   });
-  globalThis.__zona3d = { mapa, analisis: () => analisis, fotos, sol, escena360 };
+
+  globalThis.__zona3d = {
+    get motor() {
+      return motor?.nombre ?? null;
+    },
+    get mapa() {
+      return motor?.mapa ?? null;
+    },
+    get google() {
+      return motor?.nombre === 'google' ? motor : null;
+    },
+    analisis: () => analisis,
+    fotos,
+    sol,
+    escena360,
+  };
 }
 
 iniciar();
