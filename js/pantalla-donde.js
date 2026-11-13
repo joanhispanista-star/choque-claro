@@ -147,6 +147,13 @@ export function iniciarPantallaDonde(raiz) {
     $('#ver-street-view').href = calle;
     $('#enlaces-google').hidden = false;
     $('#nota-google').hidden = false;
+    // La zona en 3D es otra página (zona-3d.html): el punto, la hora y la
+    // precisión viajan en la dirección, sin guardar nada.
+    const q = new URLSearchParams({ lat: estado.punto.lat.toFixed(6), lon: estado.punto.lon.toFixed(6), t: fechaDelChoque().toISOString() });
+    if (estado.precision) q.set('p', String(Math.round(estado.precision)));
+    if (estado.origen === 'ejemplo') q.set('ejemplo', '1');
+    $('#ver-zona-3d').href = 'zona-3d.html?' + q.toString();
+    $('#ver-zona-3d').hidden = false;
   }
 
   // El ejemplo no depende de los servidores públicos del mapa, que se llenan y
@@ -198,6 +205,9 @@ export function iniciarPantallaDonde(raiz) {
   function fijarPunto(punto, { origen, precision = null, acercar = true, moverPin = true }) {
     estado.punto = punto;
     estado.origen = origen;
+    // Al arrastrar el pin, el círculo del GPS se queda donde estaba: la
+    // precisión sigue siendo la del GPS.
+    if (moverPin) estado.precision = precision;
     if (moverPin) mapa.ponerPin(punto, { precision, acercar });
     avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)} m). Si no es el punto exacto, arrastra el pin.` : TEXTOS_DEL_ORIGEN[origen]);
     estado.via = null;
@@ -248,7 +258,9 @@ export function iniciarPantallaDonde(raiz) {
   });
 
   $('#hora-choque').addEventListener('change', () => {
-    if (estado.punto) actualizarClima();
+    if (!estado.punto) return;
+    actualizarClima();
+    actualizarEnlaces(); // la zona en 3D pone el sol de esa hora
   });
 
   return {

@@ -55,6 +55,16 @@ Los pasos 1 a 4 de 8:
    - **Ver en Google Maps / Ver en Street View** (13-nov): con las URL de Maps
      de Google, sin clave ni facturación; Street View mira a lo largo de la
      vía. La pantalla avisa que esas imágenes no son del día del choque.
+   - **Ver la zona en 3D** (13-nov, la opción B que eligió Joan): otra página,
+     `zona-3d.html`, con MapLibre 4.7.1. Muestra el relieve y su sombreado
+     (mosaicos de AWS) y los edificios levantados (OpenFreeMap, OpenStreetMap).
+     Encima van el punto, el tramo analizado, las señales, el rayo del sol a esa
+     hora (también ilumina los edificios desde ahí) y los conos de las fotos de
+     la escena de este teléfono. Botones Vista 3D, Desde arriba y Dar la vuelta.
+     Los carros y sus trayectorias salen SOLO en el ejemplo, marcados como
+     inventados, hasta que exista el croquis (paso 7): cuando exista, que le pase
+     sus carros a `capasDeLaZona`. Sin clave ni tarjeta. Es una maqueta, no del
+     día, y la página lo dice.
 4. **La escena, en una vuelta** (13-nov). Antes de mover los carros, parada en
    el punto del golpe, la persona gira sobre sí misma y toma 8 fotos:
    - **El anillo de 8 tomas** gira con la brújula: lo que la cámara tiene al
@@ -162,6 +172,10 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
 | `js/geo.js` | **Puro.** Plano local en metros, proyecciones, rumbos, puntos cardinales y números con coma. |
 | `js/enlaces-google.js` | **Puro.** Los enlaces a Google Maps y Street View (URL de Maps, sin clave) y la fecha corta en hora de Colombia. |
 | `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
+| `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
+| `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del ejemplo), la cámara a lo largo de la vía, la luz del sol y la leyenda que dice lo que falta. |
+| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado), lee las fotos de la escena y arma el mapa con relieve, sombreado y capas. |
+| `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
 | `js/pantalla-escena.js` | "La escena": une la cámara, los sensores y la base; tres vistas (inicio, cámara, lista). Apaga la cámara al salir, al terminar y en segundo plano. |
 | `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. |
 | `js/calidad.js` | **Puro.** Borrosa (varianza del laplaciano por ejes), oscura y torcida; los umbrales, sin calibrar. |
