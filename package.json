@@ -1,8 +1,8 @@
 {
-  "name": "siniestros",
+  "name": "choque-claro",
   "version": "0.1.0",
   "private": true,
-  "description": "El choque documentado con el celular, para aseguradoras: ubicación, análisis de la vía, escena, carros, daños y croquis.",
+  "description": "Choque Claro: el choque documentado con el celular, para aseguradoras. Ubicación, análisis de la vía, escena, carros, daños y croquis.",
   "type": "module",
   "scripts": {
     "dev": "node herramientas/servidor.js 8320",

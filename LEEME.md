@@ -1,9 +1,13 @@
-# Siniestros (nombre de trabajo)
+# Choque Claro
 
 El choque documentado con el celular, para aseguradoras. El cliente reporta
 desde la escena (ubicación, escena, carros, daños y croquis) y la aseguradora
 recibe un expediente con el análisis de la vía y fotos que valen como prueba.
-El porqué, las fechas y las decisiones están en [PLAN.md](PLAN.md).
+
+El nombre lo eligió Joan el 13-nov-2026; la carpeta en su PC sigue siendo
+`Desktop\Siniestros`, el nombre de trabajo. El plan de negocio (`PLAN.md`:
+fechas, decisiones, a quién se le vende) está en esa carpeta pero **no entra al
+repositorio**, que es público: ver `.gitignore`.
 
 ## Cómo se abre
 
@@ -12,8 +16,13 @@ El porqué, las fechas y las decisiones están en [PLAN.md](PLAN.md).
 - `npm test` → 43 pruebas en Node, sin internet.
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
-  en vivo ni brújula. Para probar de verdad hay que publicar en GitHub Pages,
-  y el repositorio lo tiene que crear Joan (decisión 3 del plan).
+  en vivo ni brújula. Para probar de verdad se publica en GitHub Pages:
+  repositorio público `joanhispanista-star/choque-claro` (el remoto `origin` ya
+  apunta ahí), y quedará en <https://joanhispanista-star.github.io/choque-claro/>.
+  El repositorio lo crea Joan (aquí no hay `gh` ni token). El orden importa:
+  (1) Joan lo crea vacío, (2) `git push -u origin master`, (3) Joan enciende
+  Pages en Settings › Pages › "Deploy from a branch" › `master` / `(root)`:
+  con el repositorio vacío esa opción todavía no aparece.
 - `npm run ejemplos-via` vuelve a bajar los dos ejemplos reales de las pruebas
   (ver `pruebas/datos/LEEME.md`).
 

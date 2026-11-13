@@ -12,7 +12,7 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DESTINO = path.join(RAIZ, 'pruebas', 'datos');
 
 // Desde Node sí se puede (y se debe) decir quién pregunta.
-const buscar = (url, opciones) => fetch(url, { ...opciones, headers: { ...opciones.headers, 'User-Agent': 'siniestros-pruebas/0.1' } });
+const buscar = (url, opciones) => fetch(url, { ...opciones, headers: { ...opciones.headers, 'User-Agent': 'choque-claro-pruebas/0.1' } });
 
 // La curva más cerrada de la medición del 12-nov-2026 (radio 13 m).
 const CURVA = { lat: 4.6484, lon: -74.0105 };

@@ -32,4 +32,4 @@ window.addEventListener('hashchange', () => mostrar(location.hash.slice(1)));
 mostrar(location.hash.slice(1));
 
 // Para las pruebas en el navegador.
-globalThis.__siniestros = { pantallaDonde: () => donde };
+globalThis.__choqueClaro = { pantallaDonde: () => donde };
