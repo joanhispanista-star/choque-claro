@@ -56,3 +56,25 @@ export function buscarUbicacion({ alMejorar = () => {}, limiteMs = 15000, sufici
     reloj = setTimeout(() => terminar(new Error(MENSAJES[3])), limiteMs);
   });
 }
+
+// Mientras se toman las fotos de la escena: cada lectura nueva, sin quedarse
+// con la mejor. Cada foto lleva la lectura de SU momento, con su precisión; la
+// mejor de hace un minuto sería una precisión que esa foto no tuvo.
+// `alFallar(codigo)`: el de la API (1 sin permiso, 2 sin señal, 3 demora) o
+// 'sinHttps' / 'sinGeo'. Devuelve la función para dejar de escuchar.
+export function vigilarUbicacion({ alLeer, alFallar = () => {}, geo = globalThis.navigator?.geolocation, seguro = globalThis.isSecureContext } = {}) {
+  if (!seguro) {
+    alFallar('sinHttps');
+    return () => {};
+  }
+  if (!geo) {
+    alFallar('sinGeo');
+    return () => {};
+  }
+  const vigilancia = geo.watchPosition(
+    (posicion) => alLeer({ lat: posicion.coords.latitude, lon: posicion.coords.longitude, precision: posicion.coords.accuracy, hora: new Date(posicion.timestamp || Date.now()) }),
+    (error) => alFallar(error.code),
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+  );
+  return () => geo.clearWatch(vigilancia);
+}

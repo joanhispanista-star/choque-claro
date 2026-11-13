@@ -73,10 +73,72 @@
   </section>
 
   <section class="pantalla" id="p-escena" hidden>
-    <h1>La escena</h1>
-    <p>Aquí la app te guiará para fotografiar la escena en una vuelta, con la brújula, antes de mover los carros.</p>
-    <p class="nota">Este paso todavía no está construido: llega el martes 17 de noviembre.</p>
-    <button class="boton boton-suave" type="button" data-ir="donde">Volver</button>
+    <h1>La escena, en una vuelta</h1>
+    <p class="estado-ubicacion error" id="escena-error" role="alert" hidden></p>
+
+    <div id="escena-inicio">
+      <p>Párate donde fue el golpe y gira despacio sobre ti mismo. La app te pide 8 fotos, una cada octavo de vuelta, para que quede todo lo de alrededor: los carros, la vía, las señales y las marcas en el piso.</p>
+      <ul class="pasos">
+        <li><strong>Hazla antes de mover los carros.</strong> Después la escena ya no se puede repetir.</li>
+        <li><strong>Solo si es seguro estar ahí.</strong> Si pasan carros rápido, hazla desde el andén o la berma, o salta este paso.</li>
+      </ul>
+      <p class="nota">Solo con la cámara en vivo: no se pueden usar fotos de la galería. Cada foto guarda la hora, el GPS, hacia dónde apuntaba el celular y una huella digital que deja ver si alguien la cambió después. Las fotos se quedan en este teléfono.</p>
+      <button class="boton" type="button" id="escena-empezar" disabled>Empezar la vuelta</button>
+      <p class="nota">En iPhone, Safari te va a pedir permiso para la cámara y para el movimiento del celular (la brújula): toca «Permitir» en los dos.</p>
+      <div class="dos-botones">
+        <button class="boton boton-suave" type="button" data-ir="donde">Volver al mapa</button>
+        <button class="boton boton-suave" type="button" data-ir="carros">Saltar: no es seguro</button>
+      </div>
+    </div>
+
+    <div id="escena-camara" hidden>
+      <div class="visor" id="escena-visor">
+        <video id="escena-video" playsinline muted autoplay></video>
+        <div class="visor-horizonte" id="escena-horizonte" hidden></div>
+        <div class="pastillas">
+          <span class="pastilla" id="pastilla-nitidez" data-estado="neutro">Revisando…</span>
+          <span class="pastilla" id="pastilla-gps" data-estado="neutro">Buscando GPS…</span>
+          <span class="pastilla" id="pastilla-brujula" data-estado="neutro">Buscando brújula…</span>
+        </div>
+        <div class="visor-revision" id="escena-revision" hidden>
+          <img id="escena-revision-foto" alt="La foto que no pasó la revisión">
+          <div class="visor-revision-caja">
+            <p id="escena-revision-texto"></p>
+            <button class="boton" type="button" id="escena-repetir">Repetir la foto</button>
+            <button class="boton boton-claro" type="button" id="escena-usar-asi" hidden>Usarla así</button>
+          </div>
+        </div>
+      </div>
+      <div class="vuelta">
+        <svg class="anillo" id="escena-anillo" viewBox="-60 -60 120 120" role="img" aria-label="Anillo de las 8 tomas"></svg>
+        <div>
+          <p class="vuelta-guia" id="escena-guia" aria-live="polite"></p>
+          <p class="vuelta-cuenta" id="escena-cuenta"></p>
+        </div>
+      </div>
+      <p class="alerta" id="escena-alerta" role="alert" hidden></p>
+      <button class="boton" type="button" id="escena-disparar">Tomar la foto</button>
+      <div class="tira" id="escena-tira"></div>
+      <p class="nota">Toca una foto de la tira para repetirla.</p>
+      <div class="avisos" id="escena-avisos"></div>
+    </div>
+
+    <div id="escena-lista" hidden>
+      <p>La vuelta está completa: 8 fotos alrededor del punto del golpe.</p>
+      <div class="resumen" id="escena-resumen"></div>
+      <p class="cadena" id="escena-cadena"></p>
+      <p class="nota">Las fotos están guardadas solo en este teléfono. La huella deja ver si una foto cambió después de tomarla. Para que valga también ante quien tenga el teléfono, tiene que salir de él al enviar el reporte, en el último paso (todavía no está construido).</p>
+      <button class="boton" type="button" data-ir="carros">Siguiente: los carros</button>
+      <button class="boton boton-suave" type="button" id="escena-nuevo">Empezar un reporte nuevo</button>
+      <p class="nota">El reporte de ahora queda guardado en el teléfono.</p>
+    </div>
+  </section>
+
+  <section class="pantalla" id="p-carros" hidden>
+    <h1>Los carros</h1>
+    <p>Aquí la app te guiará para fotografiar cada carro por todos los lados y leer su placa.</p>
+    <p class="nota">Este paso todavía no está construido: llega el miércoles 18 de noviembre.</p>
+    <button class="boton boton-suave" type="button" data-ir="escena">Volver a la escena</button>
   </section>
 </main>
 
