@@ -17,13 +17,17 @@ repositorio**, que es público: ver `.gitignore`.
   que se copió de allá).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
-  en vivo ni brújula. Para probar de verdad se publica en GitHub Pages:
-  repositorio público `joanhispanista-star/choque-claro` (el remoto `origin` ya
-  apunta ahí), y quedará en <https://joanhispanista-star.github.io/choque-claro/>.
-  El repositorio lo crea Joan (aquí no hay `gh` ni token). El orden importa:
-  (1) Joan lo crea vacío, (2) `git push -u origin master`, (3) Joan enciende
-  Pages en Settings › Pages › "Deploy from a branch" › `master` / `(root)`:
-  con el repositorio vacío esa opción todavía no aparece.
+  en vivo ni brújula. Para probar de verdad está en GitHub Pages, encendido el
+  13-nov: <https://joanhispanista-star.github.io/choque-claro/> (repositorio
+  público `joanhispanista-star/choque-claro`; el remoto `origin` apunta ahí).
+- **Pages publica la rama `gh-pages`, no `master`.** Desde aquí no hay `gh` ni
+  token, y en Settings el guardado no le funcionó a Joan. GitHub enciende Pages
+  solo cuando aparece una rama `gh-pages`, así que se creó con un push. Por eso
+  `.git/config` de este PC tiene dos `remote.origin.push` (master → master y
+  master → gh-pages): **publicar es `git push` a secas** (con
+  `GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never`), y empuja las dos ramas. Ojo:
+  `git push origin master` NO actualiza el sitio. En otro PC, o si alguien
+  cambia la fuente de Pages a `master`, esto deja de hacer falta.
 - `npm run ejemplos-via` vuelve a bajar los dos ejemplos reales de las pruebas
   (ver `pruebas/datos/LEEME.md`).
 
@@ -186,8 +190,9 @@ marcar desde la lista; cambiar el tipo después de la foto; y la escena
 completa después, con la cadena de 19 huellas íntegra. Sin errores en la
 página. El arnés y los pantallazos viven fuera del repo.
 
-**NO probado en un celular**: GitHub Pages sigue apagado. Ver «Lo que falta
-probar en el iPhone».
+**NO probado en un celular todavía.** GitHub Pages está encendido desde el
+13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
+Ver «Lo que falta probar en el iPhone».
 
 ## Lo que falta probar en el iPhone
 
