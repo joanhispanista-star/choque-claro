@@ -13,6 +13,7 @@ import { climaALaHora, filasDelClima, urlDelClima } from './clima.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { buscarUbicacion } from './ubicacion.js';
 import { crearMapa } from './mapa.js';
+import { enlacesDeGoogle, fechaCorta } from './enlaces-google.js';
 
 // El ejemplo: una curva REAL (la más cerrada de la medición del 12-nov-2026)
 // con un choque inventado ayer a las 5:15 p. m. La pantalla lo dice.
@@ -44,6 +45,9 @@ export function iniciarPantallaDonde(raiz) {
   const estado = { punto: null, origen: null, via: null, clima: null, climaCargando: false, buscandoGps: false };
   const cacheVia = new Map();
   const cacheClima = new Map();
+  // Puntos cuya respuesta del mapa viene de un archivo guardado, con su fecha.
+  const fechasGuardadas = new Map();
+  const claveDe = (p) => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
   let turnoVia = 0;
   let turnoClima = 0;
 
@@ -129,9 +133,36 @@ export function iniciarPantallaDonde(raiz) {
     estado.via = resultado;
     mapa.dibujarVia(resultado);
     if (resultado.estado === 'error') avisarAnalisis(resultado.error, { reintentar: true });
-    else avisarAnalisis(resumenDeLaVia(resultado));
+    else avisarAnalisis(resumenDeLaVia(resultado) + (fechasGuardadas.has(clave) ? ` Datos del mapa guardados el ${fechasGuardadas.get(clave)}.` : ''));
     pintarFilas('#filas-via', filasDeLaVia(resultado));
     pintarLuz(); // el sol de frente depende del rumbo de la vía
+    actualizarEnlaces(); // Street View mirando a lo largo de la vía
+  }
+
+  function actualizarEnlaces() {
+    if (!estado.punto) return;
+    const rumbo = estado.via?.estado === 'ok' ? estado.via.rumbo : null;
+    const { mapa: aMapa, calle } = enlacesDeGoogle(estado.punto, { rumbo });
+    $('#ver-google-maps').href = aMapa;
+    $('#ver-street-view').href = calle;
+    $('#enlaces-google').hidden = false;
+    $('#nota-google').hidden = false;
+  }
+
+  // El ejemplo no depende de los servidores públicos del mapa, que se llenan y
+  // se caen (el 12-nov-2026 overpass-api.de dio 502 y 504, y dos más no
+  // respondieron): usa la respuesta REAL guardada ese día, y la pantalla dice
+  // de qué fecha es. Delante de un cliente, el ejemplo no puede fallar.
+  async function precargarEjemplo() {
+    const clave = claveDe(EJEMPLO);
+    if (cacheVia.has(clave)) return;
+    try {
+      const guardado = await consultarJson('datos/ejemplo-verjones-patios.json', { limiteMs: 8000 });
+      cacheVia.set(clave, guardado.respuesta);
+      fechasGuardadas.set(clave, fechaCorta(guardado.fecha));
+    } catch {
+      // Si el archivo no carga, el ejemplo se consulta en vivo como cualquier punto.
+    }
   }
 
   async function actualizarClima() {
@@ -169,6 +200,8 @@ export function iniciarPantallaDonde(raiz) {
     estado.origen = origen;
     if (moverPin) mapa.ponerPin(punto, { precision, acercar });
     avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)} m). Si no es el punto exacto, arrastra el pin.` : TEXTOS_DEL_ORIGEN[origen]);
+    estado.via = null;
+    actualizarEnlaces();
     $('#analisis').hidden = false;
     analizar();
     actualizarClima();
@@ -196,17 +229,19 @@ export function iniciarPantallaDonde(raiz) {
     }
   });
 
-  $('#ver-ejemplo').addEventListener('click', () => {
+  $('#ver-ejemplo').addEventListener('click', async () => {
     const ayer = new Date();
     ayer.setDate(ayer.getDate() - 1);
     ayer.setHours(17, 15, 0, 0);
     $('#hora-choque').value = valorDeFecha(ayer);
+    await precargarEjemplo();
     fijarPunto(EJEMPLO, { origen: 'ejemplo' });
   });
 
   $('#reintentar').addEventListener('click', () => {
     if (!estado.punto) return;
-    cacheVia.delete(`${estado.punto.lat.toFixed(5)},${estado.punto.lon.toFixed(5)}`);
+    cacheVia.delete(claveDe(estado.punto));
+    fechasGuardadas.delete(claveDe(estado.punto));
     analizar();
     // Si se cayó el internet, también se cayó el clima: se reintenta junto.
     if (estado.clima?.error) actualizarClima();

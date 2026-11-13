@@ -48,7 +48,13 @@ Los pasos 1 a 4 de 8:
      se dice que es menos probable que encandilara).
    - **El clima** en la hora del choque: lluvia, cielo y visibilidad.
    - **Ver un ejemplo**: la curva de radio 13 m de la vía Los Verjones–Patios,
-     con un choque inventado ayer a las 5:15 p. m. La pantalla lo dice.
+     con un choque inventado ayer a las 5:15 p. m. La pantalla lo dice. Desde
+     el 13-nov usa la respuesta real del mapa guardada el 12-nov
+     (`datos/ejemplo-verjones-patios.json`) y lo avisa: frente a un cliente no
+     puede depender de un servidor público que se cae. El clima sí es en vivo.
+   - **Ver en Google Maps / Ver en Street View** (13-nov): con las URL de Maps
+     de Google, sin clave ni facturación; Street View mira a lo largo de la
+     vía. La pantalla avisa que esas imágenes no son del día del choque.
 4. **La escena, en una vuelta** (13-nov). Antes de mover los carros, parada en
    el punto del golpe, la persona gira sobre sí misma y toma 8 fotos:
    - **El anillo de 8 tomas** gira con la brújula: lo que la cámara tiene al
@@ -154,6 +160,8 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
 | `js/ubicacion.js` | El GPS: la mejor lectura en 15 s y los mensajes de permisos para iPhone y Android. |
 | `js/mapa.js` | Leaflet: pin arrastrable, círculo de precisión, tramo analizado y señales. |
 | `js/geo.js` | **Puro.** Plano local en metros, proyecciones, rumbos, puntos cardinales y números con coma. |
+| `js/enlaces-google.js` | **Puro.** Los enlaces a Google Maps y Street View (URL de Maps, sin clave) y la fecha corta en hora de Colombia. |
+| `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
 | `js/pantalla-escena.js` | "La escena": une la cámara, los sensores y la base; tres vistas (inicio, cámara, lista). Apaga la cámara al salir, al terminar y en segundo plano. |
 | `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. |
 | `js/calidad.js` | **Puro.** Borrosa (varianza del laplaciano por ejes), oscura y torcida; los umbrales, sin calibrar. |
@@ -169,6 +177,11 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
 
 ## Trampas que ya mordieron
 
+- **overpass.openstreetmap.fr le responde 403 a los navegadores ocultos**
+  ("HeadlessEdg", medido el 13-nov-2026) y a un navegador que no manda
+  Referer. A un iPhone que abre la app desde GitHub Pages le responde 200. Por
+  eso el análisis en vivo no sale en las capturas con Edge oculto, aunque en el
+  teléfono sí sale; el ejemplo usa datos guardados y sale en las dos.
 - **Los Overpass públicos se llenan.** El 12-nov-2026 por la mañana
   overpass-api.de dio 502 y 504; por la tarde, la misma consulta tardó 0,8 s
   en openstreetmap.fr, 17,6 s en mail.ru y 58 s en overpass-api.de, y
