@@ -33,7 +33,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 ## Lo que hay (13-nov-2026)
 
-Los pasos 1 a 6 de 8:
+Los pasos 1 a 7 de 8:
 
 1. **¿Hay alguien herido?** Con heridos, el botón llama al 123 y la app no pide
    nada más hasta que estén atendidos.
@@ -66,9 +66,11 @@ Los pasos 1 a 6 de 8:
      Encima van el punto, el tramo analizado, las señales, el rayo del sol a esa
      hora (también ilumina los edificios desde ahí) y los conos de las fotos de
      la escena de este teléfono. Botones Vista 3D, Desde arriba y Dar la vuelta.
-     Los carros y sus trayectorias salen SOLO en el ejemplo, marcados como
-     inventados, hasta que exista el croquis (paso 7): cuando exista, que le pase
-     sus carros a `capasDeLaZona`. Sin clave ni tarjeta. Es una maqueta, no del
+     Los carros, sus flechas y el golpe salen del croquis del paso 7 de este
+     teléfono, si es de este lugar (a menos de 150 m) y del mismo tipo (del
+     ejemplo o de verdad): entonces la cámara se acerca al golpe y la leyenda
+     dice si ya se dio por hecho o es un borrador. Sin croquis, el ejemplo
+     muestra unos inventados y marcados así. Sin clave ni tarjeta. Es una maqueta, no del
      día, y la página lo dice. Nada espera al análisis de la vía: con los
      servidores públicos lentos (hasta 75 s) la página se quedaba en blanco; el
      tramo y la cámara a lo largo de la vía llegan después.
@@ -155,14 +157,37 @@ Los pasos 1 a 6 de 8:
    - Por ahora **solo las piezas de lata**: los vidrios, los faros y las
      llantas no se marcan (el carro del taller es de lo que se pinta), y la
      pantalla lo dice: se ven en las fotos de la vuelta.
+7. **El croquis** (13-nov, la opción 1, «guiada», que eligió Joan). Sobre la
+   vía que analizó el paso 3, en Leaflet:
+   - **Seis casos dibujados**: por detrás, de frente, en un cruce, al cambiar
+     de carril, en reversa y contra algo quieto. Al tocar uno, la app pone A
+     (tu carro) y B en su carril de la vía real, con la flecha de cada uno
+     siguiendo la curva hasta el golpe (`armarCaso`). En el cruce, B llega en
+     ángulo recto: el análisis no trae la geometría de la otra vía.
+   - **Se acomoda con el dedo**: arrastrar el carro (la manija mide 44 px
+     aunque el carro mida menos), girarlo con la manija ⟳ o de a 15°, decir si
+     iba adelante, en reversa o quieto, mover la estrella del golpe, cambiar A
+     y B, quitar un carro y volver a ponerlo desde su ficha. Cada carro tiene
+     el largo y el ancho de su línea del paso 5.
+   - **«Ninguno se parece: lo dibujo yo»** abre el modo a mano: los carros se
+     ponen desde sus fichas y, con «Flecha», el dedo traza por dónde venía
+     cada uno. Si ya había un croquis guiado, se queda y sus flechas pasan a
+     ser editables.
+   - **«Listo: así fue»** muestra el relato en palabras («A, tu carro, iba
+     hacia el oeste…») antes de seguir: lo que la app puso por defecto (B
+     quieto en «Por detrás») se vuelve una declaración si nadie lo cambia.
+   - Se guarda solo en el reporte del teléfono a los 0,7 s de cada cambio,
+     **con su propia copia de la vía**: el paso 3 no se guarda y se pierde al
+     recargar. Si después se marca otro punto a más de 30 m, el croquis lo
+     avisa. No va en la cadena de huellas (no es una foto): se sella al enviar.
+   - **«Ver el croquis en la zona 3D»** lo lleva a la maqueta (ver el paso 3).
 
 Las fotos de la escena, de los carros y de los daños van en **una sola cadena
 de huellas** por reporte (`reporte-en-curso.js`): la lista de la escena revisa
 la cadena entera. Lo declarado que no es foto (los carros con su placa y su
 línea, las marcas de daño) se guarda en el reporte y se sella al enviar (paso 8).
 
-El paso 7 (el croquis) es una pantalla que dice que llega el jueves 19-nov; el
-8 (enviar), todavía no.
+El paso 8 (enviar) todavía no está, y la pantalla del croquis lo dice.
 
 **Verificado (pasos 1 a 3)** en el panel del navegador del PC a 375 px: el
 recorrido, el ejemplo (análisis en 0,8 a 1,5 s), el toque en el mapa, el
@@ -189,6 +214,17 @@ toque en el bómper, el tipo, la foto de cerca sellada con carro, pieza y tipo;
 marcar desde la lista; cambiar el tipo después de la foto; y la escena
 completa después, con la cadena de 19 huellas íntegra. Sin errores en la
 página. El arnés y los pantallazos viven fuera del repo.
+
+**Verificado (paso 7, 13-nov)** en el mismo Edge sin ventana a 390×844, con
+toques de dedo de verdad (eventos táctiles, no clics), sobre el ejemplo: 51 de
+51. Las seis tarjetas; «De frente» armado con sus dos manijas, la de girar, la
+estrella y dos flechas; lo que de verdad hay bajo el dedo en el centro de cada
+carro (`elementFromPoint`) y su letra a la izquierda; arrastrar B y girarlo
+90° con ⟳; cambiar A y B dos veces; quieto, adelante y ±15°; «Listo» con el
+relato; recargar y encontrarlo igual, sin el paso 3; «Otro caso» y «Ninguno se
+parece» con una flecha a dedo que no movió ni el carro ni el mapa; la zona 3D
+con el croquis en la leyenda y en la maqueta; y, sin lugar, la pantalla que
+pide marcarlo. Sin errores en la página.
 
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
@@ -232,6 +268,14 @@ Los carros y los daños (pasos 5 y 6):
 10. **La foto de cerca**: con el celular a un paso de la lata, ¿la revisión la
     deja pasar? El umbral de borrosa no está calibrado para fotos de cerca.
 
+El croquis (paso 7):
+
+11. **Arrastrar y girar con el dedo**: ¿el carro se agarra a la primera?
+    ¿La manija ⟳ gira sin mover el mapa? ¿Acercan los dos dedos?
+12. **Dibujar con «Flecha»**: el dedo tiene que dibujar, no correr la página
+    (si algo falla con `touch-action`, Safari se queda el gesto). Volver a
+    «Mover» y comprobar que el mapa se arrastra otra vez.
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
@@ -252,6 +296,9 @@ Los carros y los daños (pasos 5 y 6):
   por buena sola: el lector confunde la X con la K a 30°.
 - **Las marcas de daño son lo que dice la persona**, no un peritaje. La pantalla
   lo dice; las fotos de cerca son la prueba.
+- **El croquis es lo que declara la persona**, no una medición ni una
+  reconstrucción: lo dicen su pantalla y la leyenda de la zona 3D. Lo que la
+  app puso por defecto se lee en el relato antes de «Listo».
 
 ## Archivos
 
@@ -270,8 +317,10 @@ Los carros y los daños (pasos 5 y 6):
 | `js/enlaces-google.js` | **Puro.** Los enlaces a Google Maps y Street View (URL de Maps, sin clave) y la fecha corta en hora de Colombia. |
 | `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
 | `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
-| `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del ejemplo), la cámara a lo largo de la vía, la luz del sol y la leyenda que dice lo que falta. |
-| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado), lee las fotos de la escena y arma el mapa con relieve, sombreado y capas. |
+| `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
+| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado), lee las fotos de la escena y el croquis, y arma el mapa con relieve, sombreado y capas. |
+| `js/croquis.js` | **Puro.** El croquis del paso 7: la vía en metros (tangentes promediadas, para que la curva cerrada no quiebre los carriles), los seis casos, poner, mover, girar y cambiar carros, las flechas automáticas y a mano, el relato, guardar y reabrir. |
+| `js/pantalla-croquis.js` | "El croquis": las tarjetas, el mapa con las manijas, la de girar y la estrella, el dibujo a dedo, los botones y el guardado. |
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
 | `js/escena-360.js` | **Puro.** Dónde va cada foto en el círculo, las medidas del cilindro (70° de visor, 50° por foto), la foto de frente y su texto. |
 | `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). |
@@ -363,6 +412,21 @@ Los carros y los daños (pasos 5 y 6):
   «roto» salía rosado. `visor-danos.js` pinta el color entero de la leyenda.
 - **El servidor tiene que mandar `.wasm` como `application/wasm`**: si no, el
   navegador no compila el motor mientras baja y lo avisa como error.
+- **Leaflet con el arrastre apagado le devuelve el dedo al navegador**
+  (13-nov): `map.dragging.disable()` quita la clase `leaflet-touch-drag`, el
+  mapa queda con `touch-action: pan-x pan-y` y el dedo que dibuja una flecha
+  corre la página. Con «Flecha» el mapa lleva `.dibujando`
+  (`touch-action: none !important`).
+- **Un `position` en el ícono de un marcador le gana a Leaflet** (13-nov):
+  `.croquis-manija { position: relative }` apilaba las manijas como bloques y
+  la de B quedaba 22 px debajo de su carro (la de un C, 44). La prueba que
+  tocaba el centro del carro pasaba por el borde de la manija; la que mira con
+  `elementFromPoint` y dónde cae la letra lo cazó.
+- **`fitBounds` se queda en su tope sin avisar**: con `maxZoom: 20` un carro
+  medía 30 px y «Por detrás» no se acercaba más aunque cupiera. El croquis usa
+  `zoomSnap: 0.25` y tope 20,5 (unos 42 px por carro).
+- **El paso 3 vive solo en la memoria**: el punto y el análisis se pierden al
+  recargar. Por eso el croquis guarda su propia copia de la vía.
 
 ## Licencias de terceros
 

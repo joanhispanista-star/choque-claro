@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { planoLocal, distancia, diferenciaAngular } from '../js/geo.js';
 import { analizarVia } from '../js/via.js';
-import { camaraDeArranque, camaraDeLaZona, capasDeLaZona, circulo, conoDeFoto, croquisDeEjemplo, desplazar, fotosConCono, leyendaDeLaZona, luzDelSol, rectanguloDeCarro } from '../js/zona-3d.js';
+import { camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDelCroquis, circulo, colorDeCarro, conoDeFoto, croquisDeEjemplo, croquisDeEstaZona, desplazar, fotosConCono, leyendaDeLaZona, luzDelSol, rectanguloDeCarro } from '../js/zona-3d.js';
+import { armarCaso, cambiarCarro, croquisParaGuardar, viaDesdeElAnalisis } from '../js/croquis.js';
 
 const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const plano = planoLocal(CENTRO);
@@ -108,7 +109,7 @@ test('las capas: sin análisis no se inventa la vía; sin sol no hay rayo; los c
 
 test('la leyenda dice lo que falta: croquis, fotos o el sol', () => {
   const real = Object.fromEntries(leyendaDeLaZona({ analisis: ejemplo(), sol: { altura: -5 } }).map((f) => [f.clave, f.texto]));
-  assert.match(real.carros, /saldrán del croquis \(paso 7/);
+  assert.match(real.carros, /salen del croquis \(paso 7\), que todavía no está hecho/);
   assert.equal(real.conos, 'Aún no hay fotos de la escena en este teléfono');
   assert.match(real.sol, /no había sol/);
   assert.match(real.tramo, /curva cerrada, radio 13 m/);
@@ -120,4 +121,69 @@ test('la leyenda dice lo que falta: croquis, fotos o el sol', () => {
   assert.equal(cargando.texto, 'Analizando la vía en el mapa…');
   assert.match(demo.tramo, /no se pudo consultar/);
   assert.match(demo.sol, /5° sobre el horizonte/);
+});
+
+// El croquis del paso 7, guardado como lo guarda la pantalla, sobre la curva del ejemplo.
+function croquisGuardado({ ejemplo: delEjemplo = true, punto = CENTRO, hecho = null } = {}) {
+  const a = ejemplo();
+  const via = viaDesdeElAnalisis(a, CENTRO);
+  const picanto = { letra: 'A', quien: 'tuyo', linea: { carroceria: 'hatchback', medidas: { largo: 3595, ancho: 1595 } } };
+  const c = cambiarCarro(armarCaso('frente', via, [picanto, { letra: 'B', quien: 'otro', linea: null }]), 'B', { movimiento: 'quieto' });
+  return croquisParaGuardar(c, via, { punto, ejemplo: delEjemplo, hecho });
+}
+
+test('el croquis del teléfono va a la zona solo si es de este lugar y del mismo tipo', () => {
+  const g = croquisGuardado();
+  assert.equal(croquisDeEstaZona(g, CENTRO, true), g);
+  assert.equal(croquisDeEstaZona(g, CENTRO, false), null, 'el del ejemplo no se le pega a un choque de verdad');
+  assert.equal(croquisDeEstaZona(croquisGuardado({ ejemplo: false }), CENTRO, true), null, 'ni al revés');
+  assert.equal(croquisDeEstaZona(g, desplazar(CENTRO, 0, 149), true), g);
+  assert.equal(croquisDeEstaZona(g, desplazar(CENTRO, 0, 151), true), null, 'de otro lugar');
+  assert.equal(croquisDeEstaZona({ ...g, carros: [] }, CENTRO, true), null, 'sin carros no hay nada que dibujar');
+  assert.equal(croquisDeEstaZona(null, CENTRO, true), null);
+});
+
+test('con croquis, la maqueta dibuja sus carros con su tamaño, sus flechas y el golpe; no el inventado', () => {
+  const g = croquisGuardado();
+  const carros = carrosDelCroquis(g);
+  assert.deepEqual(carros.map((c) => [c.nombre, c.color]), [['A', colorDeCarro('A')], ['B', colorDeCarro('B')]]);
+  assert.equal(carros[1].trayectoria, null, 'B quieto no tiene flecha');
+  const capas = capasDeLaZona({ centro: CENTRO, analisis: ejemplo(), ejemplo: true, croquis: g });
+  assert.equal(capas.carros.features.length, 2);
+  assert.equal(capas.trayectorias.features.length, 1);
+  assert.equal(capas.golpe.features.length, 1);
+  // A es un Picanto: 3,6 m, no los 4,2 del carro genérico del ejemplo.
+  const [a, b, c] = capas.carros.features[0].geometry.coordinates[0].map(enMetros);
+  const lados = [distancia(a, b), distancia(b, c)].sort((x, y) => x - y);
+  assert.ok(Math.abs(lados[1] - 3.6) < 0.01 && Math.abs(lados[0] - 1.6) < 0.01, JSON.stringify(lados));
+  // Sin croquis, el ejemplo sigue con el inventado y no hay golpe.
+  assert.equal(capasDeLaZona({ centro: CENTRO, analisis: ejemplo(), ejemplo: true }).golpe.features.length, 0);
+  const leyendaDe = (croquis) => Object.fromEntries(leyendaDeLaZona({ ejemplo: true, analisis: ejemplo(), croquis }).map((f) => [f.clave, f.texto])).carros;
+  assert.equal(leyendaDe(croquisGuardado({ hecho: '2026-11-13T15:00:00.000Z' })), 'Carros A y B, sus flechas y el golpe: tu croquis del paso 7, lo que declaraste, no una medición');
+  // Antes de «Listo: así fue» es un borrador; y sin flechas (todos quietos), no se nombran.
+  assert.equal(leyendaDe(g), 'Carros A y B, sus flechas y el golpe: tu croquis del paso 7, todavía sin terminar, no una medición');
+  assert.equal(leyendaDe({ ...g, flechas: [] }), 'Carros A y B, y el golpe: tu croquis del paso 7, todavía sin terminar, no una medición');
+  assert.equal(leyendaDe({ carros: [{ letra: 'A' }], flechas: [], hecho: 'ya' }), 'Carro A y el golpe: tu croquis del paso 7, lo que declaraste, no una medición');
+  assert.equal(colorDeCarro('Z'), colorDeCarro('F'));
+});
+
+test('con croquis, la cámara se acerca al golpe hasta que quepan los carros y sus flechas', () => {
+  const g = croquisGuardado();
+  const zona = camaraDeLaZona(CENTRO, ejemplo());
+  const cam = camaraDelCroquis(CENTRO, ejemplo(), g);
+  assert.deepEqual(cam.center, [g.golpe.lon, g.golpe.lat]);
+  assert.equal(cam.pitch, zona.pitch);
+  assert.equal(cam.bearing, zona.bearing, 'sigue mirando a lo largo de la vía');
+  // Lo más lejano del golpe tiene que quedar dentro de los 120 px que se le dan al croquis.
+  const plano = planoLocal(g.golpe);
+  const radio = Math.max(...g.carros.map((c) => distancia(plano.aMetros(c), { x: 0, y: 0 }) + c.largo / 2), ...g.flechas.flatMap((f) => f.puntos.map((p) => distancia(plano.aMetros(p), { x: 0, y: 0 }))));
+  const metrosPorPixel = (78271.517 * Math.cos((g.golpe.lat * Math.PI) / 180)) / 2 ** cam.zoom;
+  assert.ok(cam.zoom > zona.zoom + 1, `se acerca: ${cam.zoom}`);
+  assert.ok(radio / metrosPorPixel <= 121 && radio / metrosPorPixel > 100, `${(radio / metrosPorPixel).toFixed(1)} px`);
+  // Una flecha de 300 m no lo aleja más que la zona; un croquis diminuto no lo acerca más de 19.
+  const lejana = { ...g, flechas: [{ letra: 'A', puntos: [g.golpe, desplazar(g.golpe, 90, 300)] }] };
+  assert.equal(camaraDelCroquis(CENTRO, ejemplo(), lejana).zoom, zona.zoom);
+  assert.equal(camaraDelCroquis(CENTRO, ejemplo(), { ...g, carros: [], flechas: [] }).zoom, 19);
+  // Sin golpe, la de la zona.
+  assert.deepEqual(camaraDelCroquis(CENTRO, ejemplo(), { ...g, golpe: null }), zona);
 });

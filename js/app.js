@@ -1,15 +1,17 @@
 // El recorrido del reporte: una pantalla por paso, con el paso en el #hash
 // de la dirección para que el botón "atrás" del celular funcione.
 //
-// Los pasos 7 y 8 (croquis y enviar) aún no existen: la pantalla del croquis
-// lo dice con su fecha, no finge (PLAN.md).
+// El paso 8 (enviar) aún no existe: la pantalla del croquis lo dice, no finge
+// (PLAN.md).
 //
-// Las pantallas que toman fotos (escena, carros y daños) comparten UN reporte
-// en curso (reporte-en-curso.js): una sola cadena de huellas, una sola copia.
+// Las pantallas que toman fotos (escena, carros y daños) y el croquis comparten
+// UN reporte en curso (reporte-en-curso.js): una sola cadena de huellas, una
+// sola copia.
 import { iniciarPantallaDonde } from './pantalla-donde.js';
 import { iniciarPantallaEscena } from './pantalla-escena.js';
 import { iniciarPantallaCarros } from './pantalla-carros.js';
 import { iniciarPantallaDanos } from './pantalla-danos.js';
+import { iniciarPantallaCroquis } from './pantalla-croquis.js';
 import { crearReporteEnCurso } from './reporte-en-curso.js';
 
 const PASOS = { inicio: 1, heridos: 1, 'a-salvo': 2, donde: 3, escena: 4, carros: 5, danos: 6, croquis: 7 };
@@ -17,12 +19,14 @@ const TOTAL_PASOS = 8;
 const reporte = crearReporteEnCurso();
 let donde = null;
 let actual = null;
-// Las pantallas con cámara: se crean la primera vez que se entra y se apagan al salir.
-const conCamara = {};
+// Las pantallas con cámara y el croquis: se crean la primera vez que se entra y
+// se apagan al salir.
+const perezosas = {};
 const INICIAR = {
   escena: () => iniciarPantallaEscena(document.querySelector('#p-escena'), { reporte, puntoDelChoque }),
   carros: () => iniciarPantallaCarros(document.querySelector('#p-carros'), { reporte }),
   danos: () => iniciarPantallaDanos(document.querySelector('#p-danos'), { reporte }),
+  croquis: () => iniciarPantallaCroquis(document.querySelector('#p-croquis'), { reporte, lugar: lugarDelChoque }),
 };
 
 // El punto que se marcó en el mapa, para decirle a la persona si está lejos de
@@ -32,10 +36,19 @@ function puntoDelChoque() {
   return e && e.punto && e.origen !== 'ejemplo' ? e.punto : null;
 }
 
+// Lo del paso 3 que el croquis necesita: el punto, de dónde salió, el análisis
+// de la vía y la hora. Vive en la memoria de la página (el paso 3 no lo guarda
+// en el reporte): si la página se recargó, el croquis usa la vía que guardó.
+function lugarDelChoque() {
+  const e = donde ? donde.estado() : null;
+  if (!e || !e.punto) return null;
+  return { punto: e.punto, origen: e.origen, via: e.via, precision: e.precision ?? null, fecha: donde.fecha() };
+}
+
 function mostrar(nombre) {
   if (!(nombre in PASOS)) nombre = 'inicio';
   // Salir de una pantalla con cámara la apaga: nunca queda prendida detrás de otra.
-  if (actual !== nombre && conCamara[actual]) conCamara[actual].salir();
+  if (actual !== nombre && perezosas[actual]) perezosas[actual].salir();
   for (const pantalla of document.querySelectorAll('.pantalla')) pantalla.hidden = pantalla.id !== 'p-' + nombre;
   document.querySelector('#paso').textContent = `Paso ${PASOS[nombre]} de ${TOTAL_PASOS}`;
   if (nombre === 'donde') {
@@ -44,8 +57,8 @@ function mostrar(nombre) {
     requestAnimationFrame(() => donde.ajustar());
   }
   if (INICIAR[nombre]) {
-    if (!conCamara[nombre]) conCamara[nombre] = INICIAR[nombre]();
-    conCamara[nombre].entrar();
+    if (!perezosas[nombre]) perezosas[nombre] = INICIAR[nombre]();
+    perezosas[nombre].entrar();
   }
   actual = nombre;
   window.scrollTo(0, 0);
@@ -65,7 +78,8 @@ mostrar(location.hash.slice(1));
 globalThis.__choqueClaro = {
   reporte,
   pantallaDonde: () => donde,
-  pantallaEscena: () => conCamara.escena,
-  pantallaCarros: () => conCamara.carros,
-  pantallaDanos: () => conCamara.danos,
+  pantallaEscena: () => perezosas.escena,
+  pantallaCarros: () => perezosas.carros,
+  pantallaDanos: () => perezosas.danos,
+  pantallaCroquis: () => perezosas.croquis,
 };

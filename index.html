@@ -326,10 +326,67 @@
   </section>
 
   <section class="pantalla" id="p-croquis" hidden>
-    <h1>El croquis</h1>
-    <p>Aquí vas a dibujar en el mapa cómo iba cada carro y dónde fue el golpe.</p>
-    <p class="nota">Este paso todavía no está construido: llega el jueves 19 de noviembre.</p>
-    <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
+    <h1 id="croquis-titulo">El croquis</h1>
+    <p class="estado-ubicacion error" id="croquis-error" role="alert" hidden></p>
+    <p class="nota" id="croquis-ejemplo" hidden>Es el ejemplo: la curva real de la vía Los Verjones–Patios, con un choque inventado.</p>
+
+    <div id="croquis-sin-lugar" hidden>
+      <p>Para armar el croquis, la app tiene que saber dónde fue el choque. Márcalo primero en el mapa.</p>
+      <button class="boton" type="button" data-ir="donde">Marcar dónde fue</button>
+      <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
+    </div>
+
+    <div id="croquis-casos" hidden>
+      <p class="suave">Elige el que más se parece. Después lo acomodas en el mapa.</p>
+      <div class="casos" id="croquis-lista-casos"></div>
+      <p class="nota">A es tu carro y B el otro.</p>
+      <button class="boton boton-claro" type="button" id="croquis-a-mano">Ninguno se parece: lo dibujo yo</button>
+      <button class="boton boton-suave" type="button" id="croquis-volver-al-mapa" hidden>Volver a mi croquis</button>
+      <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
+    </div>
+
+    <div id="croquis-editor" hidden>
+      <p class="suave" id="croquis-guia"></p>
+      <div class="mapa mapa-croquis" id="croquis-mapa" aria-label="El croquis sobre el mapa"></div>
+      <p class="alerta" id="croquis-aviso" role="status" hidden></p>
+
+      <div id="croquis-controles">
+        <div class="fichas" id="croquis-fichas" hidden></div>
+        <div class="herramientas" id="croquis-herramientas" role="group" aria-label="Herramienta" hidden>
+          <button type="button" data-herramienta="mover">Mover</button>
+          <button type="button" data-herramienta="flecha">Flecha</button>
+        </div>
+        <div class="carro-elegido" id="croquis-elegido" hidden>
+          <p class="carro-elegido-nombre" id="croquis-elegido-nombre"></p>
+          <div class="movimientos" role="group" aria-label="Cómo iba">
+            <button type="button" data-movimiento="adelante">Adelante</button>
+            <button type="button" data-movimiento="reversa">En reversa</button>
+            <button type="button" data-movimiento="quieto">Quieto</button>
+          </div>
+          <div class="girar">
+            <button type="button" data-girar="-15" aria-label="Girar a la izquierda">↺ Girar</button>
+            <button type="button" data-girar="15" aria-label="Girar a la derecha">↻ Girar</button>
+            <button type="button" id="croquis-quitar">Quitar del mapa</button>
+          </div>
+        </div>
+        <p class="nota" id="croquis-ayuda"></p>
+        <div class="dos-botones">
+          <button class="boton boton-suave" type="button" id="croquis-cambiar">Cambiar A y B</button>
+          <button class="boton boton-suave" type="button" id="croquis-otro-caso">Otro caso</button>
+        </div>
+        <button class="boton" type="button" id="croquis-listo">Listo: así fue</button>
+      </div>
+
+      <div id="croquis-hecho" hidden>
+        <ul class="relato" id="croquis-relato" aria-label="El croquis en palabras"></ul>
+        <a class="boton boton-suave" id="croquis-ver-3d" href="zona-3d.html">Ver el croquis en la zona 3D</a>
+        <button class="boton boton-claro" type="button" id="croquis-cambiar-croquis">Cambiar el croquis</button>
+        <p class="nota">El paso 8, enviar el reporte, todavía no está construido. Lo que hiciste se queda guardado en este teléfono.</p>
+        <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
+      </div>
+
+      <p class="nota">El croquis es lo que tú declaras, no una medición. La app no decide quién tuvo la culpa.</p>
+    </div>
   </section>
 </main>
 

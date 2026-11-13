@@ -266,5 +266,7 @@ export function iniciarPantallaDonde(raiz) {
   return {
     ajustar: () => mapa.ajustar(),
     estado: () => estado,
+    // La hora del choque: el croquis la guarda para la zona en 3D (el sol de esa hora).
+    fecha: fechaDelChoque,
   };
 }

@@ -9,8 +9,9 @@
 //  - Relieve: los mosaicos "terrarium" de AWS (Terrain Tiles, de Mapzen).
 //  - La vía: el mismo análisis de "¿Dónde fue?" (via.js). El ejemplo usa la
 //    respuesta guardada, para que no falle; un punto real se consulta en vivo.
-// Las fotos de la escena se leen de este teléfono (reporte-bd.js): si el
-// reporte se hizo en otro, aquí no aparecen, y la leyenda lo dice.
+// Las fotos de la escena y el croquis (paso 7) se leen de este teléfono
+// (reporte-bd.js): si el reporte se hizo en otro, aquí no aparecen, y la
+// leyenda lo dice.
 //
 // NADA espera al análisis de la vía (13-nov-2026): con los servidores públicos
 // lentos tardaba hasta 75 s y la página se quedaba en blanco, sin 360° ni mapa.
@@ -20,7 +21,7 @@ import { analizarVia, consultaDeLaVia } from './via.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { posicionDelSol } from './sol.js';
 import { abrirBaseDelReporte } from './reporte-bd.js';
-import { COLORES, camaraDeArranque, camaraDeLaZona, capasDeLaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
+import { COLORES, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, croquisDeEstaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
 import { montarEscena360 } from './pantalla-escena-360.js';
 
 const ESTILO = 'https://tiles.openfreemap.org/styles/liberty';
@@ -61,22 +62,23 @@ async function analisisDeLaVia(centro, ejemplo) {
   }
 }
 
-// Las fotos del reporte de este teléfono: { id, registro, miniatura } y, solo
-// las de la escena, también `archivo` (la grande), que va en el círculo del
-// 360°. Se cargan antes de cerrar la base: iOS la cierra sola en segundo plano.
-async function fotosDelReporte() {
+// Del reporte de este teléfono: las fotos ({ id, registro, miniatura } y, solo
+// las de la escena, también `archivo`, la grande, que va en el círculo del
+// 360°) y el croquis. Se cargan antes de cerrar la base: iOS la cierra sola en
+// segundo plano.
+async function delReporte() {
   try {
     const base = await abrirBaseDelReporte();
     try {
       const reporte = await base.reporteEnCurso();
       const fotos = await base.fotos(reporte.id);
       for (const f of fotos) if (f.registro.paso === 'escena') f.archivo = await base.foto(f.id);
-      return fotos;
+      return { fotos, croquis: reporte.croquis || null };
     } finally {
       base.cerrar();
     }
   } catch {
-    return [];
+    return { fotos: [], croquis: null };
   }
 }
 
@@ -96,7 +98,7 @@ function pintarLeyenda(filas) {
   );
 }
 
-function ponerCapas(mapa, capas) {
+function ponerCapas(mapa, capas, { conCroquis = false } = {}) {
   for (const [nombre, datos] of Object.entries(capas)) mapa.addSource('choque-' + nombre, { type: 'geojson', data: datos });
   mapa.addLayer({ id: 'choque-precision', type: 'fill', source: 'choque-precision', paint: { 'fill-color': COLORES.precision, 'fill-opacity': 0.12 } });
   mapa.addLayer({ id: 'choque-precision-borde', type: 'line', source: 'choque-precision', paint: { 'line-color': COLORES.precision, 'line-width': 2, 'line-dasharray': [2, 2] } });
@@ -107,9 +109,14 @@ function ponerCapas(mapa, capas) {
   mapa.addLayer({ id: 'choque-sol', type: 'line', source: 'choque-sol', layout: { 'line-cap': 'round' }, paint: { 'line-color': COLORES.sol, 'line-width': 5 } });
   mapa.addLayer({ id: 'choque-sol-texto', type: 'symbol', source: 'choque-sol', layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'texto'], 'text-font': FUENTE, 'text-size': 13 }, paint: { 'text-color': '#633806', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
   mapa.addLayer({ id: 'choque-senales', type: 'circle', source: 'choque-senales', paint: { 'circle-radius': 7, 'circle-color': COLORES.senales, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
-  mapa.addLayer({ id: 'choque-carros-nombre', type: 'symbol', source: 'choque-nombresDeCarros', layout: { 'text-field': ['get', 'nombre'], 'text-font': FUENTE, 'text-size': 16, 'text-offset': [0, -1.4], 'text-allow-overlap': true }, paint: { 'text-color': '#14181d', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
   mapa.addLayer({ id: 'choque-punto', type: 'circle', source: 'choque-punto', paint: { 'circle-radius': 9, 'circle-color': COLORES.punto, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
-  mapa.addLayer({ id: 'choque-punto-texto', type: 'symbol', source: 'choque-punto', layout: { 'text-field': ['get', 'texto'], 'text-font': FUENTE, 'text-size': 14, 'text-offset': [0, 1.5], 'text-allow-overlap': true }, paint: { 'text-color': '#7a1a10', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
+  // Con croquis, el letrero «Choque» caía encima del carro A (medido el 13-nov en el ejemplo): el
+  // punto se queda, la leyenda dice qué es, y el letrero se apaga.
+  mapa.addLayer({ id: 'choque-punto-texto', type: 'symbol', source: 'choque-punto', layout: { 'text-field': ['get', 'texto'], 'text-font': FUENTE, 'text-size': 14, 'text-offset': [0, 1.5], 'text-allow-overlap': true, visibility: conCroquis ? 'none' : 'visible' }, paint: { 'text-color': '#7a1a10', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
+  // El golpe del croquis: más chico y más oscuro que el punto del choque, que es el pin del paso 3.
+  // Va encima del punto: los dos suelen caer casi en el mismo sitio y el punto lo tapaba.
+  mapa.addLayer({ id: 'choque-golpe', type: 'circle', source: 'choque-golpe', paint: { 'circle-radius': 6, 'circle-color': '#7a1a10', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+  mapa.addLayer({ id: 'choque-carros-nombre', type: 'symbol', source: 'choque-nombresDeCarros', layout: { 'text-field': ['get', 'nombre'], 'text-font': FUENTE, 'text-size': 16, 'text-offset': [0, -1.4], 'text-allow-overlap': true }, paint: { 'text-color': '#14181d', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
 }
 
 async function iniciar() {
@@ -123,13 +130,15 @@ async function iniciar() {
   avisar(ejemplo ? 'Ejemplo: una curva real de la vía Los Verjones–Patios, con un choque inventado.' : 'Armando la zona; el análisis de la vía llega en unos segundos.');
   const promesaDelAnalisis = analisisDeLaVia(centro, ejemplo);
 
-  // Las fotos son de este teléfono: llegan rápido. El ejemplo es un choque
-  // inventado: las fotos de un reporte de verdad no se le pegan.
-  const fotosDelTelefono = await fotosDelReporte();
-  const fotosDelChoque = ejemplo ? [] : fotosDelTelefono;
+  // Las fotos y el croquis son de este teléfono: llegan rápido. El ejemplo es
+  // un choque inventado: las fotos de un reporte de verdad no se le pegan. El
+  // croquis sí, si se hizo sobre el ejemplo (croquisDeEstaZona).
+  const delTelefono = await delReporte();
+  const fotosDelChoque = ejemplo ? [] : delTelefono.fotos;
+  const croquis = croquisDeEstaZona(delTelefono.croquis, centro, ejemplo);
   const fotos = fotosDelChoque.map((f) => f.registro);
   let analisis = { estado: 'cargando' };
-  pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol }));
+  pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
   // El 360° no necesita WebGL ni el análisis: sale ya.
   const escena360 = montarEscena360($('#escena-360'), fotosDelChoque, { ejemplo });
   addEventListener('pagehide', () => escena360?.cerrar());
@@ -138,7 +147,9 @@ async function iniciar() {
     avisar('El motor del mapa 3D no cargó. Recarga la página.', true);
     return;
   }
-  let camara = camaraDeLaZona(centro, null);
+  // Con croquis, la cámara se acerca al golpe: a la distancia de la zona sus carros eran una mota.
+  const camaraDe = (deLaVia) => (croquis ? camaraDelCroquis(centro, deLaVia, croquis) : camaraDeLaZona(centro, deLaVia));
+  let camara = camaraDe(null);
   let mapa;
   try {
     // Arranca desde arriba y entra al 3D cuando el relieve ya llegó: con la cámara inclinada
@@ -183,7 +194,7 @@ async function iniciar() {
     const debajoDe = mapa.getStyle().layers.find((capa) => capa.type === 'line' || capa.type === 'symbol')?.id;
     mapa.addLayer({ id: 'relieve-sombra', type: 'hillshade', source: 'relieve-sombra', paint: { 'hillshade-exaggeration': 0.45, 'hillshade-shadow-color': '#4a4a4a' } }, debajoDe);
     mapa.setLight(luzDelSol(sol));
-    ponerCapas(mapa, capasDeLaZona({ centro, precision, analisis: null, sol, ejemplo, fotos }));
+    ponerCapas(mapa, capasDeLaZona({ centro, precision, analisis: null, sol, ejemplo, fotos, croquis }), { conCroquis: !!croquis });
 
     // El primer "quieto" del mapa después de encender el relieve es cuando ya llegaron sus
     // teselas: ahí se entra al 3D. Se lee `camara` en ese momento, así que si el análisis llegó
@@ -195,9 +206,9 @@ async function iniciar() {
     });
 
     analisis = await promesaDelAnalisis;
-    for (const [nombre, datosDeLaCapa] of Object.entries(capasDeLaZona({ centro, precision, analisis, sol, ejemplo, fotos }))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
-    pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol }));
-    camara = camaraDeLaZona(centro, analisis);
+    for (const [nombre, datosDeLaCapa] of Object.entries(capasDeLaZona({ centro, precision, analisis, sol, ejemplo, fotos, croquis }))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
+    pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
+    camara = camaraDe(analisis);
     // La cámara entera, no solo el rumbo: si la entrada al 3D va a medio camino, un easeTo de
     // solo el rumbo la cortaría y dejaría el mapa a media inclinación.
     if (!tocado && enTresD) mapa.easeTo({ ...camara, duration: 1500 });
