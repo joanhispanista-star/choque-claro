@@ -13,7 +13,8 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 114 pruebas en Node, sin internet.
+- `npm test` → 213 pruebas en Node, sin internet (51 vienen del Taller con lo
+  que se copió de allá).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
   en vivo ni brújula. Para probar de verdad se publica en GitHub Pages:
@@ -28,7 +29,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 ## Lo que hay (13-nov-2026)
 
-Los pasos 1 a 4 de 8:
+Los pasos 1 a 6 de 8:
 
 1. **¿Hay alguien herido?** Con heridos, el botón llama al 123 y la app no pide
    nada más hasta que estén atendidos.
@@ -105,9 +106,59 @@ Los pasos 1 a 4 de 8:
      la vuelta, la cámara se apaga y la lista revisa la cadena entera.
    - «Saltar: no es seguro» lleva al paso 5. «Empezar un reporte nuevo» deja
      el anterior guardado; un reporte sin tocar en 6 horas también empieza otro.
+5. **Los carros** (13-nov, prometido para el mié 18). Una tarjeta por carro: A
+   (el tuyo) y B (el otro) de entrada; «Agregar otro carro» hasta la F (uno
+   agregado sin fotos se puede quitar). Por cada carro:
+   - **La vuelta de 8 fotos alrededor del carro**, con la misma cuenta, el
+     mismo anillo, la misma revisión y la misma huella de la escena: quien
+     camina alrededor de un carro apuntándole también le da la vuelta entera
+     al rumbo de la cámara. La primera foto es el frente, con la placa; la guía
+     dice «Camina hacia tu izquierda alrededor del carro», y el lado derecho
+     del carro es el que aparece primero (el carro te mira de frente).
+   - **La silueta guía** encima del visor: el contorno del carro visto desde
+     la toma donde está la persona, con «Foto 3 de 8 · Lado derecho». Sale del
+     mismo carro 3D de los daños, dibujado una vez desde las 8 tomas
+     (`siluetas-3d.js`), con la carrocería de la línea si se eligió.
+   - **«Terminar con las que hay»**: si un lado da a la vía, no se toma. El
+     carro dice «Faltan: la 4 (atrás y lado derecho)…» y que el reporte dirá
+     cuáles faltan; «Seguir la vuelta» sigue donde iba.
+   - **La placa se lee sola** de la foto del frente, y si ahí no sale, de la de
+     atrás, después de guardarla y sin detener la vuelta. Lo leído queda como
+     propuesta («Revísala: el lector puede confundir una letra») hasta que la
+     persona toca «Sí, es esa» o «Corregir». Si lo escribe ella, queda «Escrita
+     por ti. La app había leído…». También «No tiene placa». Lo leído a medias
+     («JRK24») va al campo para completarlo. La primera lectura baja el lector
+     (17 MB) y la pantalla lo dice.
+   - **Marca y línea, opcionales**, del catálogo del Taller (1.137 líneas):
+     con la línea, el carro de los daños sale con su carrocería y sus medidas.
+6. **Los daños** (13-nov, prometido para el mié 18). El carro en 3D del Taller,
+   uno por carro (pestañas arriba), gris claro y con su placa:
+   - Se gira con un dedo y se acerca con dos; botones Frente, Izquierdo,
+     Derecho, Atrás y Arriba. **Un toque marca la pieza** (con el anillo de
+     rayos del taller: el estribo y el espejo se marcan con un dedo gordo).
+     Tocar la placa, la parrilla o un faro marca lo que los sostiene.
+   - La hoja de la pieza pregunta **qué le pasó**: rayón, abolladura, roto o
+     suelto (el más grave, si tiene varios). La pieza se pinta del color de
+     su tipo, que es el de la leyenda.
+   - Después pide **la foto de cerca**: la misma cámara, sin anillo, y con una
+     revisión que solo mira borrosa u oscura (de cerca se apunta hacia abajo y
+     está bien). La foto se sella con el carro, la pieza y el tipo de ese
+     momento. Si después se cambia el tipo, la lista dice «La foto se tomó
+     cuando decía «Abolladura»». Quitar una marca no borra su foto.
+   - **«Elegir la pieza de una lista»**: las 17 piezas de afuera en botones.
+     Sirve sin 3D (si el navegador no puede, la pantalla lo dice y la abre) y a
+     quien no puede tocar un 3D.
+   - Por ahora **solo las piezas de lata**: los vidrios, los faros y las
+     llantas no se marcan (el carro del taller es de lo que se pinta), y la
+     pantalla lo dice: se ven en las fotos de la vuelta.
 
-Del paso 5 en adelante solo hay una pantalla que dice que todavía no está y
-cuándo llega (miércoles 18-nov).
+Las fotos de la escena, de los carros y de los daños van en **una sola cadena
+de huellas** por reporte (`reporte-en-curso.js`): la lista de la escena revisa
+la cadena entera. Lo declarado que no es foto (los carros con su placa y su
+línea, las marcas de daño) se guarda en el reporte y se sella al enviar (paso 8).
+
+El paso 7 (el croquis) es una pantalla que dice que llega el jueves 19-nov; el
+8 (enviar), todavía no.
 
 **Verificado (pasos 1 a 3)** en el panel del navegador del PC a 375 px: el
 recorrido, el ejemplo (análisis en 0,8 a 1,5 s), el toque en el mapa, el
@@ -123,7 +174,19 @@ encontrar la vuelta; sin brújula; sin GPS; la cámara apagada al salir; sin
 errores en la consola. El arnés vive fuera del repo (copia de
 `TallerPintura/pruebas/datos-externos/diseno-escaneo/edge.mjs`).
 
-**NO probado en un celular**: sin repositorio no hay https. Ver «Lo que falta
+**Verificado (pasos 5 y 6, 13-nov)** en el mismo Edge sin ventana a 375×667,
+con la foto de la Captiva de Joan como cámara de mentira (1600×1080), GPS
+fijado y una brújula de iPhone de mentira: 46 de 46. La vuelta al carro A con
+la silueta del frente y la del lado derecho; la placa leída de la foto del
+frente (JRK248, confianza 0,988, 0,8 s; la de verdad es JRX248) y confirmada;
+la línea del catálogo; el carro B a medias con «Terminar con las que hay», lo
+que falta y la placa corregida a mano; agregar y quitar un carro; el 3D, el
+toque en el bómper, el tipo, la foto de cerca sellada con carro, pieza y tipo;
+marcar desde la lista; cambiar el tipo después de la foto; y la escena
+completa después, con la cadena de 19 huellas íntegra. Sin errores en la
+página. El arnés y los pantallazos viven fuera del repo.
+
+**NO probado en un celular**: GitHub Pages sigue apagado. Ver «Lo que falta
 probar en el iPhone».
 
 ## Lo que falta probar en el iPhone
@@ -148,6 +211,22 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
    dice «Seguir la vuelta (n de 8 tomas)».
 6. Al completar: las 8 fotos y «Revisada en este teléfono la cadena de…».
 
+Los carros y los daños (pasos 5 y 6):
+
+7. **La vuelta al carro con la brújula**: caminando alrededor, ¿el anillo
+   avanza y la silueta cambia de lado? Al lado de un carro la brújula del
+   celular se desvía (el hierro): anotar si alguna foto cae en la toma
+   equivocada. ¿La silueta se ve sobre el carro de verdad, de día y de noche?
+8. **La placa en un celular**: nunca se ha leído una en un teléfono. Medir
+   cuánto tarda la primera (baja 17 MB) y si acierta con dos o tres placas
+   reales, de frente y de tres cuartos. Los márgenes de la segunda pasada
+   (`lector-de-placa.js`) salen de UNA foto medida.
+9. **El 3D en el iPhone**: girar con un dedo, acercar con dos, tocar el estribo
+   y el espejo. Después de los daños, volver a la cámara: dos 3D (las siluetas
+   y el carro) y la cámara a la vez no deben tumbar Safari.
+10. **La foto de cerca**: con el celular a un paso de la lata, ¿la revisión la
+    deja pasar? El umbral de borrosa no está calibrado para fotos de cerca.
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
@@ -164,6 +243,10 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
   lo dice. Y la hora es la del reloj del celular.
 - **El rumbo es magnético** y lo da la brújula del celular, que se desvía al
   lado de un carro. Cada foto dice de dónde salió (`rumboFuente`).
+- **La placa leída es una propuesta** hasta que la persona la ve. Nunca se da
+  por buena sola: el lector confunde la X con la K a 30°.
+- **Las marcas de daño son lo que dice la persona**, no un peritaje. La pantalla
+  lo dice; las fotos de cerca son la prueba.
 
 ## Archivos
 
@@ -187,8 +270,23 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
 | `js/escena-360.js` | **Puro.** Dónde va cada foto en el círculo, las medidas del cilindro (70° de visor, 50° por foto), la foto de frente y su texto. |
 | `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). |
-| `js/pantalla-escena.js` | "La escena": une la cámara, los sensores y la base; tres vistas (inicio, cámara, lista). Apaga la cámara al salir, al terminar y en segundo plano. |
-| `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. |
+| `js/pantalla-escena.js` | "La escena": el inicio, la lista con la revisión de la cadena y el aviso de que la persona está lejos del punto. La cámara y la vuelta son las comunes. |
+| `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. Recibe qué fotos cuentan (`filtro`) y qué decir (`textos`): sirve a la escena y a cada carro. |
+| `js/sesion-de-camara.js` | La cámara en vivo con la brújula y el GPS, las pastillas, la revisión («Repetir» / «Usarla así») y el guardado. La comparten la escena, los carros y los daños. Se apaga sola en segundo plano. |
+| `js/vuelta-en-pantalla.js` | La vuelta de 8 en pantalla: el anillo, la guía, la tira y la silueta. La usan la escena y los carros. |
+| `js/reporte-en-curso.js` | El reporte que comparten las tres pantallas de fotos: una sola copia de la cadena, `agregarFoto` (reduce, sella y guarda), `revisarCadena` y `guardarDatos` (carros y daños). |
+| `js/pantalla-carros.js` | "Los carros": la lista, un carro (sus fotos, la placa y la línea) y la cámara con la silueta. Lee la placa por detrás después de la foto. |
+| `js/carros.js` | **Puro.** Los carros del reporte, los nombres de las 8 tomas, los textos de la vuelta al carro, la placa (formato, propuesta, escrita, sin placa) y la tarjeta de cada carro. |
+| `js/lector-de-placa.js` | La placa de una foto del video: el lector del taller y, si no está seguro, una segunda pasada con más margen alrededor de la placa (ver «Trampas»). |
+| `js/silueta.js`, `js/siluetas-3d.js` | La silueta guía: dónde se para la cámara en cada toma y el contorno de la mancha (puro); y las 8 imágenes dibujadas una vez con Three.js. |
+| `js/pantalla-danos.js` | "Los daños": el carro 3D, la hoja de la pieza, la lista de lo marcado, la lista de piezas y la cámara de la foto de cerca. |
+| `js/danos.js` | **Puro.** Los 4 tipos con su color, las piezas que se marcan (las 17 de afuera), marcar y quitar, la foto vigente de cada pieza, las filas de la lista y la revisión de la foto de cerca. |
+| `js/visor-danos.js` | El carro en 3D mínimo: Three.js, giro con un dedo, el toque (toque.js), la tinta de cada daño y las vistas. Se dibuja solo cuando algo cambia. |
+| `js/carro.js`, `js/piezas.js`, `js/carrocerias.js`, `js/toque.js`, `js/encuadre.js` | **Copiados del Taller** (commit 4502d41) sin más cambio que el encabezado: el carro por piezas en cuatro carrocerías, los nombres del gremio, el toque y el encuadre. `visor.js` NO se copió (arrastra los escaneos y los modelos del catálogo). |
+| `js/placa-foto.js`, `js/placa-ocr.js` | **Copiados del Taller** (4502d41): encontrar la placa amarilla, enderezarla y leerla con fast-plate-ocr. `placa-ocr.js` solo cambia la carpeta del motor. |
+| `js/catalogo.js`, `js/catalogo-carros.js` | **Copiados del Taller** (4502d41): el buscador y las 1.137 líneas de Colombia (se baja solo al buscar). |
+| `js/vendor/three/` | Three.js 0.169.0 con OrbitControls y RoomEnvironment (MIT), copiado del Taller; `index.html` lo conecta con un import map. |
+| `js/vendor/placa/` | El modelo de placas (3,3 MB) y el motor ONNX Runtime Web (14 MB), copiados del Taller (ver su `LEEME.txt`). |
 | `js/calidad.js` | **Puro.** Borrosa (varianza del laplaciano por ejes), oscura y torcida; los umbrales, sin calibrar. |
 | `js/orientacion.js` | **Puro.** El rumbo de la cámara (W3C o `webkitCompassHeading`), la elevación y el giro del horizonte. |
 | `js/evidencia.js` | **Puro.** El registro de cada foto, el texto canónico, la huella SHA-256 encadenada y su revisión. |
@@ -237,10 +335,26 @@ https (GitHub Pages). En el iPhone de Joan, con Safari:
   una ventana** (13-nov): se queda «cargando» para siempre, aunque el servidor
   responda. Ahí se verifica con el Edge sin ventana del Taller (no abre nada ni
   suena), y se matan sus procesos `captura-*` al terminar.
+- **La placa de una foto del VIDEO pierde el último carácter** (13-nov): el
+  video llega en YUV 4:2:0, con el color a media resolución, y la mancha
+  amarilla sale un poco más chica. Con las esquinas justas el lector del taller
+  leyó «JRK24»; con las esquinas 1,25 × 1,12 más afuera, «JRK248» (0,988).
+  `lector-de-placa.js` prueba márgenes solo si la primera lectura no es segura.
+- **En el carro del taller, la placa, la parrilla y los faros paran el dedo**
+  (allá no se pintan): tocar el centro del bómper delantero no marcaba nada.
+  `visor-danos.js` los vuelve transparentes al toque; los vidrios no.
+- **La tinta del taller (`resaltar`) es suave a propósito**, y el rojo de
+  «roto» salía rosado. `visor-danos.js` pinta el color entero de la leyenda.
+- **El servidor tiene que mandar `.wasm` como `application/wasm`**: si no, el
+  navegador no compila el motor mientras baja y lo avisa como error.
 
 ## Licencias de terceros
 
 Datos de vías © colaboradores de OpenStreetMap (ODbL), con el crédito visible
 en el mapa y en el análisis. Las teselas de tile.openstreetmap.org sirven para
 el demo, no para una app con tráfico. Open-Meteo es gratis solo para uso no
-comercial. Leaflet: BSD-2 (`js/vendor/leaflet/LICENSE`).
+comercial. Leaflet: BSD-2 (`js/vendor/leaflet/LICENSE`). Three.js: MIT
+(`js/vendor/three/LICENSE`). El modelo de placas fast-plate-ocr: MIT
+(`js/vendor/placa/LICENSE-fast-plate-ocr`); ONNX Runtime Web: MIT (aviso en
+la primera línea de `ort.wasm.min.mjs`). Las medidas del catálogo citan su
+fuente en cada línea.

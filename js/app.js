@@ -1,16 +1,29 @@
 // El recorrido del reporte: una pantalla por paso, con el paso en el #hash
 // de la dirección para que el botón "atrás" del celular funcione.
 //
-// Los pasos 5 a 8 (carros, daños, croquis y enviar) aún no existen: la
-// pantalla de los carros lo dice con su fecha, no finge (PLAN.md).
+// Los pasos 7 y 8 (croquis y enviar) aún no existen: la pantalla del croquis
+// lo dice con su fecha, no finge (PLAN.md).
+//
+// Las pantallas que toman fotos (escena, carros y daños) comparten UN reporte
+// en curso (reporte-en-curso.js): una sola cadena de huellas, una sola copia.
 import { iniciarPantallaDonde } from './pantalla-donde.js';
 import { iniciarPantallaEscena } from './pantalla-escena.js';
+import { iniciarPantallaCarros } from './pantalla-carros.js';
+import { iniciarPantallaDanos } from './pantalla-danos.js';
+import { crearReporteEnCurso } from './reporte-en-curso.js';
 
-const PASOS = { inicio: 1, heridos: 1, 'a-salvo': 2, donde: 3, escena: 4, carros: 5 };
+const PASOS = { inicio: 1, heridos: 1, 'a-salvo': 2, donde: 3, escena: 4, carros: 5, danos: 6, croquis: 7 };
 const TOTAL_PASOS = 8;
+const reporte = crearReporteEnCurso();
 let donde = null;
-let escena = null;
 let actual = null;
+// Las pantallas con cámara: se crean la primera vez que se entra y se apagan al salir.
+const conCamara = {};
+const INICIAR = {
+  escena: () => iniciarPantallaEscena(document.querySelector('#p-escena'), { reporte, puntoDelChoque }),
+  carros: () => iniciarPantallaCarros(document.querySelector('#p-carros'), { reporte }),
+  danos: () => iniciarPantallaDanos(document.querySelector('#p-danos'), { reporte }),
+};
 
 // El punto que se marcó en el mapa, para decirle a la persona si está lejos de
 // él al hacer la vuelta. El ejemplo no cuenta: es una curva de otra parte.
@@ -21,8 +34,8 @@ function puntoDelChoque() {
 
 function mostrar(nombre) {
   if (!(nombre in PASOS)) nombre = 'inicio';
-  // Salir de la escena apaga la cámara: nunca queda prendida detrás de otra pantalla.
-  if (actual === 'escena' && nombre !== 'escena') escena.salir();
+  // Salir de una pantalla con cámara la apaga: nunca queda prendida detrás de otra.
+  if (actual !== nombre && conCamara[actual]) conCamara[actual].salir();
   for (const pantalla of document.querySelectorAll('.pantalla')) pantalla.hidden = pantalla.id !== 'p-' + nombre;
   document.querySelector('#paso').textContent = `Paso ${PASOS[nombre]} de ${TOTAL_PASOS}`;
   if (nombre === 'donde') {
@@ -30,9 +43,9 @@ function mostrar(nombre) {
     // Leaflet mide el contenedor al crearse; si estaba oculto, mide cero.
     requestAnimationFrame(() => donde.ajustar());
   }
-  if (nombre === 'escena') {
-    if (!escena) escena = iniciarPantallaEscena(document.querySelector('#p-escena'), { puntoDelChoque });
-    escena.entrar();
+  if (INICIAR[nombre]) {
+    if (!conCamara[nombre]) conCamara[nombre] = INICIAR[nombre]();
+    conCamara[nombre].entrar();
   }
   actual = nombre;
   window.scrollTo(0, 0);
@@ -49,4 +62,10 @@ window.addEventListener('hashchange', () => mostrar(location.hash.slice(1)));
 mostrar(location.hash.slice(1));
 
 // Para las pruebas en el navegador.
-globalThis.__choqueClaro = { pantallaDonde: () => donde, pantallaEscena: () => escena };
+globalThis.__choqueClaro = {
+  reporte,
+  pantallaDonde: () => donde,
+  pantallaEscena: () => conCamara.escena,
+  pantallaCarros: () => conCamara.carros,
+  pantallaDanos: () => conCamara.danos,
+};

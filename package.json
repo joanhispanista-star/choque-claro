@@ -13,6 +13,7 @@
   "devDependencies": {
     "fake-indexeddb": "^6.2.5",
     "leaflet": "1.9.4",
-    "maplibre-gl": "4.7.1"
+    "maplibre-gl": "4.7.1",
+    "three": "0.169.0"
   }
 }

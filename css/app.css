@@ -288,3 +288,196 @@ p { margin: 0 0 12px; }
 .cadena { padding: 10px 12px; border: 1px solid var(--borde); border-radius: 10px; background: var(--panel); font-size: 15px; }
 .cadena[data-estado="bien"] { border-color: var(--acento); }
 .cadena[data-estado="mal"] { border-color: var(--atencion); color: var(--atencion); font-weight: 600; }
+
+/* Los carros (paso 5). */
+.tarjetas-carros { display: grid; gap: 10px; margin: 12px 0; }
+.tarjeta-carro {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+.tarjeta-carro.completa { border-color: var(--acento); }
+.tarjeta-carro-foto {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #dcdfe4;
+  color: var(--texto-suave);
+  font-size: 28px;
+  font-weight: 700;
+}
+.tarjeta-carro-foto img { width: 100%; height: 100%; object-fit: cover; }
+.tarjeta-carro h2 { margin: 0 0 2px; font-size: 17px; }
+.tarjeta-carro p { margin: 0; color: var(--texto-suave); font-size: 14px; }
+.tarjeta-carro .boton { margin: 0; }
+.titulo-carro { margin: 4px 0 8px; font-size: 22px; }
+.bloque { margin: 16px 0; padding: 4px 16px 10px; background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; }
+.bloque h3 { margin: 12px 0 4px; font-size: 18px; }
+/* La placa como se ve en la calle: amarilla con letras negras. */
+.placa {
+  display: inline-block;
+  margin: 6px 0;
+  padding: 4px 16px;
+  border: 3px solid var(--texto);
+  border-radius: 8px;
+  background: #f7c600;
+  color: var(--texto);
+  font: 700 30px/1.2 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+.linea-elegida { margin: 6px 0; font-weight: 600; }
+.sugerencias { display: grid; gap: 6px; }
+.sugerencia {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sugerencia strong { display: block; }
+.sugerencia span { color: var(--texto-suave); font-size: 14px; }
+.quien-en-camara { margin: 0 0 6px; font-weight: 700; }
+
+/* La silueta guía: borde blanco con sombra oscura, para que se vea sobre una
+   calle clara y sobre un carro oscuro. El relleno casi transparente deja ver
+   el carro de verdad. */
+.visor-silueta {
+  position: absolute;
+  top: 14%;
+  left: 6%;
+  width: 88%;
+  height: 72%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+.visor-vista {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.visor-vista:empty { display: none; }
+
+/* Los daños (paso 6). */
+.selector-carros { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.selector-carros button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 2px solid var(--borde);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.selector-carros button[aria-selected="true"] { border-color: var(--acento); background: var(--acento-suave); color: var(--acento); }
+.visor-3d {
+  position: relative;
+  height: 46vh;
+  min-height: 260px;
+  max-height: 460px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #e9ecf0;
+}
+.visor-3d canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.visor-3d-cargando { position: absolute; left: 0; right: 0; top: 45%; margin: 0; color: var(--texto-suave); text-align: center; }
+/* Cinco botones en una fila aun a 375 px: con flex y su ancho natural, Arriba
+   quedaba cortado y salía una barra de desplazamiento. */
+.vistas-3d { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 8px 0; }
+.vistas-3d button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 2px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.leyenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0 8px; padding: 0; list-style: none; color: var(--texto-suave); font-size: 14px; }
+.leyenda li { display: flex; align-items: center; gap: 6px; }
+.muestra { display: inline-block; flex: none; width: 14px; height: 14px; border-radius: 4px; }
+.piezas-lista { margin: 4px 0 12px; }
+.piezas-lista summary { display: flex; align-items: center; min-height: 44px; color: var(--acento); font-weight: 600; cursor: pointer; }
+.piezas-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.piezas-botones button {
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 2px solid var(--borde);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.hoja-dano { margin: 12px 0; padding: 6px 14px 4px; background: var(--panel); border: 2px solid var(--acento); border-radius: 14px; }
+.hoja-dano h2 { margin: 8px 0 4px; }
+.tipos-dano { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0; }
+.tipo-dano {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 2px solid var(--borde);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tipo-dano[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); }
+.tipo-dano .muestra { width: 16px; height: 16px; margin-top: 4px; }
+.tipo-dano strong { display: block; font-size: 16px; }
+.tipo-dano small { display: block; color: var(--texto-suave); font-size: 13px; line-height: 1.3; }
+.filas-danos { display: grid; gap: 8px; margin: 6px 0 12px; padding: 0; list-style: none; }
+.fila-dano {
+  display: grid;
+  grid-template-columns: 16px 1fr 64px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fila-dano.sin-foto { grid-template-columns: 16px 1fr; border-style: dashed; border-color: var(--atencion); }
+.fila-dano img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+.fila-dano-texto strong { display: block; }
+.fila-dano-texto span { display: block; color: var(--texto-suave); font-size: 14px; }
+.fila-dano-texto .problemas { color: var(--atencion); }

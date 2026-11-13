@@ -1,0 +1,11 @@
+Three.js 0.169.0 (licencia MIT, ver LICENSE), copiado del Taller de Pintura
+(commit 4502d41) el 13-nov-2026: three.module.min.js, y de sus ejemplos
+OrbitControls.js (girar el carro con el dedo) y RoomEnvironment.js (la luz
+que hace que la pintura se vea como metal pintado). No se editan.
+
+index.html los conecta con un import map ("three" → este archivo). Las
+pruebas en Node usan el paquete three@0.169.0 de node_modules: si se
+actualiza uno, se actualiza el otro.
+
+Solo se cargan al llegar a los carros (las siluetas guía) y a los daños (el
+carro en 3D): las pantallas de antes no los bajan.

@@ -11,6 +11,11 @@
 // Sin brújula (un computador, un celular sin magnetómetro o el permiso negado)
 // la vuelta se hace igual: las tomas se llenan en orden y la guía dice cuánto
 // girar. Esas fotos quedan con rumbo null, y el expediente lo dice.
+//
+// La misma cuenta sirve para la vuelta a cada carro (paso 5, carros.js): quien
+// camina alrededor de un carro apuntándole, también le da la vuelta entera al
+// rumbo de la cámara. Por eso las funciones reciben qué fotos cuentan
+// (`filtro`) y qué decir (`textos`); sin ellos, son las de la escena.
 import { conSigno, normalizar } from './orientacion.js';
 import { distancia, numero, planoLocal, puntoCardinal } from './geo.js';
 
@@ -27,6 +32,9 @@ export const MARGEN_DEL_CENTRO = 15;
 // vuelta se hace donde fue el golpe. El GPS en la ciudad se equivoca de 5 a 30 m.
 export const LEJOS_DEL_PUNTO = 30;
 
+// `derecha` e `izquierda` son el sentido en que cambia el rumbo (a la derecha,
+// crece), no hacia dónde camina la persona: alrededor de un carro, el rumbo
+// crece caminando hacia la izquierda (carros.js).
 export const TEXTOS = {
   primera: 'Apunta hacia los carros y toma la primera foto',
   tomar: 'Quieto… y toma la foto',
@@ -35,7 +43,13 @@ export const TEXTOS = {
   izquierda: 'Gira despacio a tu izquierda: falta una de ese lado',
   completa: 'Listo: la vuelta está completa',
   yaTiene: 'Esa dirección ya tiene su foto.',
+  // Sin brújula, en orden.
+  repetirSinBrujula: (sector) => `Apunta hacia donde tomaste la foto ${sector + 1} y repítela`,
+  siguienteSinBrujula: (sector) => `Gira un octavo de vuelta a tu derecha y toma la foto ${sector + 1}`,
+  sinBrujula: 'Sin brújula, la app no sabe hacia dónde apunta cada foto. Sigue igual: gira un octavo de vuelta entre una y otra (lo que va de las 12 a la 1 y media en un reloj).',
 };
+
+export const esDeLaEscena = (registro) => registro.paso === 'escena';
 
 export function centroDelSector(sector, origen) {
   return normalizar(origen + sector * GRADOS_POR_TOMA);
@@ -47,9 +61,11 @@ export function sectorDelRumbo(rumbo, origen) {
 
 // La vuelta según las fotos ya guardadas, en el orden de la cadena. Si una toma
 // se repitió, vale la última. `porRepetir`: la toma que la persona pidió
-// repetir; cuenta como vacía hasta que llegue la nueva.
-export function estadoDeLaVuelta(registros, { porRepetir = null } = {}) {
-  const deLaEscena = registros.filter((r) => r.paso === 'escena' && Number.isInteger(r.sector) && r.sector >= 0 && r.sector < TOMAS);
+// repetir; cuenta como vacía hasta que llegue la nueva. `filtro`: qué fotos son
+// de esta vuelta (la cadena del reporte trae también las de los carros y los
+// daños).
+export function estadoDeLaVuelta(registros, { porRepetir = null, filtro = esDeLaEscena } = {}) {
+  const deLaEscena = registros.filter((r) => filtro(r) && Number.isInteger(r.sector) && r.sector >= 0 && r.sector < TOMAS);
   const primera = deLaEscena[0] ?? null;
   // El modo lo decide la primera foto y no cambia en toda la vuelta: si la
   // brújula aparece o se cae a mitad de camino, el anillo no se reacomoda.
@@ -91,22 +107,22 @@ const siguienteEnOrden = (vuelta) => vuelta.porRepetir ?? vuelta.tomadas.indexOf
 // Qué decirle a la persona ahora mismo, con el rumbo de la cámara (null si no
 // hay brújula). `accion`: 'tomar', 'seguir', 'girar' o 'completa'; `sector`, la
 // toma de la que se habla.
-export function guiaDeLaVuelta(vuelta, rumbo = null) {
-  if (vuelta.completa) return { accion: 'completa', sector: null, texto: TEXTOS.completa };
+export function guiaDeLaVuelta(vuelta, rumbo = null, textos = TEXTOS) {
+  if (vuelta.completa) return { accion: 'completa', sector: null, texto: textos.completa };
   if (!usaBrujula(vuelta, rumbo)) {
     const sector = siguienteEnOrden(vuelta);
     let texto;
-    if (vuelta.cuantas === 0 && sector === 0) texto = TEXTOS.primera;
-    else if (sector === vuelta.porRepetir) texto = `Apunta hacia donde tomaste la foto ${sector + 1} y repítela`;
-    else texto = `Gira un octavo de vuelta a tu derecha y toma la foto ${sector + 1}`;
+    if (vuelta.cuantas === 0 && sector === 0) texto = textos.primera;
+    else if (sector === vuelta.porRepetir) texto = textos.repetirSinBrujula(sector);
+    else texto = textos.siguienteSinBrujula(sector);
     return { accion: 'tomar', sector, texto, sinBrujula: true };
   }
   const origen = vuelta.origen ?? rumbo;
   const aqui = sectorDelRumbo(rumbo, origen);
   if (!vuelta.tomadas[aqui]) {
     const desvio = conSigno(rumbo - centroDelSector(aqui, origen));
-    if (vuelta.cuantas > 0 && desvio < -MARGEN_DEL_CENTRO) return { accion: 'seguir', sector: aqui, desvio, texto: TEXTOS.seguir };
-    return { accion: 'tomar', sector: aqui, desvio, texto: vuelta.cuantas === 0 ? TEXTOS.primera : TEXTOS.tomar };
+    if (vuelta.cuantas > 0 && desvio < -MARGEN_DEL_CENTRO) return { accion: 'seguir', sector: aqui, desvio, texto: textos.seguir };
+    return { accion: 'tomar', sector: aqui, desvio, texto: vuelta.cuantas === 0 ? textos.primera : textos.tomar };
   }
   let destino;
   if (vuelta.porRepetir !== null) {
@@ -115,16 +131,16 @@ export function guiaDeLaVuelta(vuelta, rumbo = null) {
   } else {
     destino = vaciaMasCercana(vuelta.tomadas, aqui);
   }
-  return { accion: 'girar', sector: destino.sector, sentido: destino.sentido, texto: TEXTOS[destino.sentido] };
+  return { accion: 'girar', sector: destino.sector, sentido: destino.sentido, texto: textos[destino.sentido] };
 }
 
 // A qué toma va una foto tomada ahora: { sector } o { error } si esa
 // dirección ya tiene foto.
-export function sectorParaLaFoto(vuelta, rumbo = null) {
+export function sectorParaLaFoto(vuelta, rumbo = null, textos = TEXTOS) {
   if (vuelta.completa) return { error: 'La vuelta ya está completa.' };
   if (!usaBrujula(vuelta, rumbo)) return { sector: siguienteEnOrden(vuelta) };
   const sector = sectorDelRumbo(rumbo, vuelta.origen ?? rumbo);
-  if (vuelta.tomadas[sector]) return { error: `${TEXTOS.yaTiene} ${guiaDeLaVuelta(vuelta, rumbo).texto}.` };
+  if (vuelta.tomadas[sector]) return { error: `${textos.yaTiene} ${guiaDeLaVuelta(vuelta, rumbo, textos).texto}.` };
   return { sector };
 }
 
@@ -160,8 +176,11 @@ export function textoDeLaCuenta(vuelta) {
   return `${vuelta.cuantas} de ${TOMAS} tomas`;
 }
 
-// "Foto 3 · noreste, 47°" (el rumbo es magnético: lo da la brújula).
-export function etiquetaDeLaFoto(registro) {
+// "Foto 3 · noreste, 47°" (el rumbo es magnético: lo da la brújula). Con
+// `nombreDeLaToma` (la vuelta a un carro), "Foto 3 · el lado derecho": ahí lo
+// que dice algo es qué lado del carro se ve, no hacia dónde apuntaba.
+export function etiquetaDeLaFoto(registro, nombreDeLaToma = null) {
+  if (nombreDeLaToma) return `Foto ${registro.sector + 1} · ${nombreDeLaToma(registro.sector)}`;
   const rumbo = registro.rumbo === null ? 'sin rumbo' : `${puntoCardinal(registro.rumbo)}, ${numero(registro.rumbo)}°`;
   return `Foto ${registro.sector + 1} · ${rumbo}`;
 }

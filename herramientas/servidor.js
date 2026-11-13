@@ -34,6 +34,10 @@ const TIPOS = {
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  // El motor del lector de placas: sin este tipo, el navegador no lo compila
+  // mientras baja y lo avisa como error en la consola (GitHub Pages sí lo manda).
+  '.wasm': 'application/wasm',
+  '.onnx': 'application/octet-stream',
 };
 
 http

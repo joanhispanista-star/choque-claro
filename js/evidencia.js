@@ -1,6 +1,6 @@
 // Lo que guarda cada foto como prueba, y la cadena de huellas que la amarra a
-// las demás. Sirve a la escena y servirá igual a los carros y a los daños: un
-// solo reporte, una sola cadena.
+// las demás. Sirve a la escena, a los carros y a los daños: un solo reporte,
+// una sola cadena.
 //
 // Cada foto lleva la hora, el GPS con su precisión, el rumbo y la inclinación
 // del celular, lo que dio la revisión de calidad y la huella SHA-256 de sus
@@ -58,7 +58,12 @@ export async function sha256Hex(datos, sutil = globalThis.crypto?.subtle) {
 
 // El registro de una foto, con los números ya redondeados: lo que se guarda es
 // exactamente lo que se sella, sin decimales sueltos que cambien al leerlos.
-export function registroDeFoto({ reporte, paso, indice, sector = null, hora, gps = null, orientacion = null, calidad, foto, reemplaza = null }) {
+//
+// `carro` (la letra: 'A', 'B'…), `pieza` (el id de piezas.js) y `dano` (el
+// tipo, danos.js) solo van en las fotos de los carros y de los daños, y se
+// sellan con la foto: lo que la persona dijo que mostraba en el momento de
+// tomarla. En las de la escena no aparecen, y su huella sale igual que antes.
+export function registroDeFoto({ reporte, paso, indice, sector = null, carro = null, pieza = null, dano = null, hora, gps = null, orientacion = null, calidad, foto, reemplaza = null }) {
   const conRumbo = orientacion && Number.isFinite(orientacion.rumbo);
   const conInclinacion = orientacion && Number.isFinite(orientacion.elevacion) && Number.isFinite(orientacion.giro);
   return {
@@ -67,6 +72,9 @@ export function registroDeFoto({ reporte, paso, indice, sector = null, hora, gps
     paso,
     indice,
     sector,
+    ...(carro !== null ? { carro } : {}),
+    ...(pieza !== null ? { pieza } : {}),
+    ...(dano !== null ? { dano } : {}),
     hora: new Date(hora).toISOString(),
     gps:
       gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lon)

@@ -7,6 +7,12 @@
 <title>Choque Claro</title>
 <link rel="stylesheet" href="js/vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="css/app.css">
+<!-- Three.js se pide por su nombre ("three") desde carro.js, toque.js y el
+     visor, como en el taller y en las pruebas de Node. Solo baja al llegar a
+     los carros. El import map tiene que ir antes de cualquier módulo. -->
+<script type="importmap">
+  { "imports": { "three": "./js/vendor/three/three.module.min.js" } }
+</script>
 </head>
 <body>
 <header class="barra">
@@ -102,9 +108,9 @@
         <video id="escena-video" playsinline muted autoplay></video>
         <div class="visor-horizonte" id="escena-horizonte" hidden></div>
         <div class="pastillas">
-          <span class="pastilla" id="pastilla-nitidez" data-estado="neutro">Revisando…</span>
-          <span class="pastilla" id="pastilla-gps" data-estado="neutro">Buscando GPS…</span>
-          <span class="pastilla" id="pastilla-brujula" data-estado="neutro">Buscando brújula…</span>
+          <span class="pastilla" id="escena-pastilla-nitidez" data-estado="neutro">Revisando…</span>
+          <span class="pastilla" id="escena-pastilla-gps" data-estado="neutro">Buscando GPS…</span>
+          <span class="pastilla" id="escena-pastilla-brujula" data-estado="neutro">Buscando brújula…</span>
         </div>
         <div class="visor-revision" id="escena-revision" hidden>
           <img id="escena-revision-foto" alt="La foto que no pasó la revisión">
@@ -142,9 +148,188 @@
 
   <section class="pantalla" id="p-carros" hidden>
     <h1>Los carros</h1>
-    <p>Aquí la app te guiará para fotografiar cada carro por todos los lados y leer su placa.</p>
-    <p class="nota">Este paso todavía no está construido: llega el miércoles 18 de noviembre.</p>
-    <button class="boton boton-suave" type="button" data-ir="escena">Volver a la escena</button>
+    <p class="estado-ubicacion error" id="carros-error" role="alert" hidden></p>
+
+    <div id="carros-lista">
+      <p>Una vuelta de 8 fotos alrededor de cada carro, y la app lee la placa. Empieza por el tuyo.</p>
+      <div class="tarjetas-carros" id="carros-tarjetas"></div>
+      <button class="boton boton-suave" type="button" id="carros-agregar">Agregar otro carro</button>
+      <button class="boton" type="button" data-ir="danos">Siguiente: los daños</button>
+      <button class="boton boton-suave" type="button" data-ir="escena">Volver a la escena</button>
+    </div>
+
+    <div id="carros-carro" hidden>
+      <h2 class="titulo-carro" id="carros-titulo"></h2>
+      <div id="carros-instrucciones">
+        <ul class="pasos">
+          <li><strong>La primera foto es el frente, con la placa.</strong> Párate a unos tres pasos, que se vea el carro entero.</li>
+          <li>Después camina alrededor del carro hacia tu izquierda, apuntándole. La silueta te dice qué lado va.</li>
+          <li><strong>Solo por donde sea seguro.</strong> Si un lado da a la vía, termina con las fotos que tengas.</li>
+        </ul>
+        <p class="nota">Solo con la cámara en vivo. Cada foto guarda la hora, el GPS, hacia dónde apuntaba el celular y su huella, igual que en la escena.</p>
+      </div>
+      <button class="boton" type="button" id="carros-empezar">Empezar la vuelta</button>
+      <p class="nota" id="carros-faltan" hidden></p>
+      <div class="resumen" id="carros-fotos"></div>
+
+      <section class="bloque" aria-labelledby="carro-placa-titulo">
+        <h3 id="carro-placa-titulo">La placa</h3>
+        <p class="nota" id="carro-placa-estado" aria-live="polite"></p>
+        <div id="carro-placa-propuesta" hidden>
+          <p class="placa" id="carro-placa-leida"></p>
+          <div class="dos-botones">
+            <button class="boton" type="button" id="carro-placa-si">Sí, es esa</button>
+            <button class="boton boton-suave" type="button" id="carro-placa-corregir">Corregir</button>
+          </div>
+        </div>
+        <p class="placa" id="carro-placa-lista" hidden><span id="carro-placa-lista-texto"></span></p>
+        <button class="boton boton-suave boton-chico" type="button" id="carro-placa-cambiar" hidden>Cambiar</button>
+        <form id="carro-placa-formulario" hidden>
+          <label class="campo">Escribe la placa
+            <input id="carro-placa-texto" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
+          </label>
+          <div class="dos-botones">
+            <button class="boton" type="submit">Guardar la placa</button>
+            <button class="boton boton-suave" type="button" id="carro-sin-placa">No tiene placa</button>
+          </div>
+        </form>
+        <button class="boton boton-suave boton-chico" type="button" id="carro-placa-otra-vez" hidden>Volver a leerla</button>
+        <p class="alerta" id="carro-placa-aviso" role="status" hidden></p>
+      </section>
+
+      <section class="bloque" aria-labelledby="carro-linea-titulo">
+        <h3 id="carro-linea-titulo">Marca y línea <span class="suave">(si la sabes)</span></h3>
+        <p class="linea-elegida" id="carro-linea-elegida" hidden></p>
+        <button class="boton boton-suave boton-chico" type="button" id="carro-linea-quitar" hidden>Quitar</button>
+        <label class="campo" id="carro-linea-campo">Búscala en el catálogo
+          <input id="carro-linea-buscar" type="search" autocomplete="off" spellcheck="false" placeholder="Ej.: Spark GT, Onix, Duster">
+        </label>
+        <div class="sugerencias" id="carro-linea-sugerencias"></div>
+        <p class="nota">Con la línea, el carro de los daños sale con su forma (sedán, hatchback, camioneta) y sus medidas.</p>
+      </section>
+
+      <button class="boton" type="button" id="carros-volver">Listo: volver a los carros</button>
+      <button class="boton boton-claro" type="button" id="carros-quitar" hidden>Quitar este carro</button>
+    </div>
+
+    <div id="carros-camara" hidden>
+      <p class="quien-en-camara" id="carro-quien"></p>
+      <div class="visor" id="carro-visor">
+        <video id="carro-video" playsinline muted autoplay></video>
+        <img class="visor-silueta" id="carro-silueta" alt="" hidden>
+        <div class="visor-horizonte" id="carro-horizonte" hidden></div>
+        <div class="pastillas">
+          <span class="pastilla" id="carro-pastilla-nitidez" data-estado="neutro">Revisando…</span>
+          <span class="pastilla" id="carro-pastilla-gps" data-estado="neutro">Buscando GPS…</span>
+          <span class="pastilla" id="carro-pastilla-brujula" data-estado="neutro">Buscando brújula…</span>
+        </div>
+        <p class="visor-vista" id="carro-vista"></p>
+        <div class="visor-revision" id="carro-revision" hidden>
+          <img id="carro-revision-foto" alt="La foto que no pasó la revisión">
+          <div class="visor-revision-caja">
+            <p id="carro-revision-texto"></p>
+            <button class="boton" type="button" id="carro-repetir">Repetir la foto</button>
+            <button class="boton boton-claro" type="button" id="carro-usar-asi" hidden>Usarla así</button>
+          </div>
+        </div>
+      </div>
+      <div class="vuelta">
+        <svg class="anillo" id="carro-anillo" viewBox="-60 -60 120 120" role="img" aria-label="Anillo de las 8 tomas"></svg>
+        <div>
+          <p class="vuelta-guia" id="carro-guia" aria-live="polite"></p>
+          <p class="vuelta-cuenta" id="carro-cuenta"></p>
+        </div>
+      </div>
+      <p class="alerta" id="carro-alerta" role="alert" hidden></p>
+      <button class="boton" type="button" id="carro-disparar">Tomar la foto</button>
+      <div class="tira" id="carro-tira"></div>
+      <p class="nota">Toca una foto de la tira para repetirla.</p>
+      <div class="avisos" id="carro-avisos"></div>
+      <button class="boton boton-claro" type="button" id="carro-terminar">Terminar con las que hay</button>
+    </div>
+  </section>
+
+  <section class="pantalla" id="p-danos" hidden>
+    <h1>Los daños</h1>
+    <p class="estado-ubicacion error" id="danos-error" role="alert" hidden></p>
+
+    <div id="danos-carro">
+      <div class="selector-carros" id="danos-selector" role="tablist" aria-label="Qué carro"></div>
+      <p class="nota" id="danos-ayuda">Toca la pieza dañada. Gira el carro con un dedo; acércalo con dos.</p>
+      <p class="nota">Por ahora solo se marcan las piezas de lata. Los vidrios, los faros y las llantas todavía no: si están dañados, se ven en las fotos de la vuelta al carro.</p>
+      <div class="visor-3d" id="danos-visor">
+        <canvas id="danos-lienzo" aria-label="El carro en 3D: toca la pieza dañada"></canvas>
+        <p class="visor-3d-cargando" id="danos-cargando">Abriendo el carro en 3D…</p>
+      </div>
+      <div class="vistas-3d" id="danos-vistas">
+        <button type="button" data-vista="frente">Frente</button>
+        <button type="button" data-vista="izquierdo">Izquierdo</button>
+        <button type="button" data-vista="derecho">Derecho</button>
+        <button type="button" data-vista="atras">Atrás</button>
+        <button type="button" data-vista="arriba">Arriba</button>
+      </div>
+      <ul class="leyenda" id="danos-leyenda" aria-label="Colores de los daños"></ul>
+      <details class="piezas-lista" id="danos-piezas-caja">
+        <summary>Elegir la pieza de una lista</summary>
+        <div class="piezas-botones" id="danos-piezas"></div>
+      </details>
+
+      <section class="hoja-dano" id="danos-hoja" hidden aria-live="polite">
+        <h2 id="danos-hoja-pieza"></h2>
+        <div id="danos-hoja-tipos">
+          <p class="nota">¿Qué le pasó? Si tiene varias cosas, elige la más grave.</p>
+          <div class="tipos-dano" id="danos-tipos"></div>
+        </div>
+        <div id="danos-hoja-foto" hidden>
+          <p id="danos-hoja-foto-texto"></p>
+          <button class="boton" type="button" id="danos-tomar">Tomar la foto de cerca</button>
+          <button class="boton boton-suave" type="button" id="danos-cambiar-tipo">Cambiar lo que le pasó</button>
+        </div>
+        <div class="dos-botones">
+          <button class="boton boton-claro" type="button" id="danos-quitar" hidden>Quitar la marca</button>
+          <button class="boton boton-claro" type="button" id="danos-cerrar">Listo</button>
+        </div>
+      </section>
+
+      <h2>Lo marcado en este carro</h2>
+      <p class="nota" id="danos-resumen"></p>
+      <ul class="filas-danos" id="danos-lista"></ul>
+      <p class="nota">Las marcas son lo que tú dices; las fotos de cerca se sellan con su huella en el momento, como las de la escena. Todo se queda en este teléfono.</p>
+
+      <button class="boton" type="button" data-ir="croquis">Siguiente: el croquis</button>
+      <button class="boton boton-suave" type="button" data-ir="carros">Volver a los carros</button>
+    </div>
+
+    <div id="danos-camara" hidden>
+      <p class="quien-en-camara" id="dano-que"></p>
+      <div class="visor" id="dano-visor">
+        <video id="dano-video" playsinline muted autoplay></video>
+        <div class="pastillas">
+          <span class="pastilla" id="dano-pastilla-nitidez" data-estado="neutro">Revisando…</span>
+          <span class="pastilla" id="dano-pastilla-gps" data-estado="neutro">Buscando GPS…</span>
+        </div>
+        <div class="visor-revision" id="dano-revision" hidden>
+          <img id="dano-revision-foto" alt="La foto que no pasó la revisión">
+          <div class="visor-revision-caja">
+            <p id="dano-revision-texto"></p>
+            <button class="boton" type="button" id="dano-repetir">Repetir la foto</button>
+            <button class="boton boton-claro" type="button" id="dano-usar-asi" hidden>Usarla así</button>
+          </div>
+        </div>
+      </div>
+      <p class="vuelta-guia">De cerca, a un paso: que se vea el daño entero y un poco de la pieza alrededor.</p>
+      <p class="alerta" id="dano-alerta" role="alert" hidden></p>
+      <button class="boton" type="button" id="dano-disparar">Tomar la foto</button>
+      <div class="avisos" id="dano-avisos"></div>
+      <button class="boton boton-claro" type="button" id="dano-cancelar">Cancelar</button>
+    </div>
+  </section>
+
+  <section class="pantalla" id="p-croquis" hidden>
+    <h1>El croquis</h1>
+    <p>Aquí vas a dibujar en el mapa cómo iba cada carro y dónde fue el golpe.</p>
+    <p class="nota">Este paso todavía no está construido: llega el jueves 19 de noviembre.</p>
+    <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
   </section>
 </main>
 

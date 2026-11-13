@@ -1,0 +1,15 @@
+El lector de placas, copiado del Taller de Pintura (commit 4502d41) el 13-nov-2026.
+
+- cct_xs_v2_global.onnx: el modelo de fast-plate-ocr (licencia MIT, ver
+  LICENSE-fast-plate-ocr), 3,3 MB. En el taller leyó 56 de 60 placas
+  colombianas de ejemplo en el PC; nunca se ha medido en un celular.
+- ort.wasm.min.mjs: ONNX Runtime Web 1.31.0-dev.20260914 (Microsoft,
+  licencia MIT; el aviso va en la primera línea del archivo), solo el motor
+  wasm.
+- ort-wasm-simd-threaded.mjs y ort-wasm-simd-threaded.wasm (14 MB): el motor
+  que ese archivo carga. Allá viven en js/vendor/transformers, con el
+  reconocedor de carros, que aquí no se copió.
+
+Son de la misma versión y no se editan: si se actualiza uno, se actualizan los
+tres. La primera placa que se lee baja unos 17 MB; después el navegador los
+guarda.

@@ -152,6 +152,34 @@ export function abrirBaseDelReporte({ indexedDB: fabrica = globalThis.indexedDB,
         });
       }),
 
+      // Lo que la persona declara y no es una foto (los carros con su placa y
+      // su línea, los daños marcados) va en el mismo registro del reporte. Se
+      // mezcla dentro de una transacción con lo que haya en la base, no con
+      // una copia vieja: agregarFoto también toca este registro (la hora).
+      // Esto NO entra a la cadena: se sella al enviar (paso 8).
+      guardarDatos: conexion.protegida(
+        (reporteId, cambios) =>
+          new Promise((resolver, rechazar) => {
+            const { id, orden, creado, ...permitidos } = cambios || {};
+            const tx = conexion.actual.transaction('reportes', 'readwrite');
+            const reportes = tx.objectStore('reportes');
+            let guardado = null;
+            let error = null;
+            reportes.get(reporteId).onsuccess = (e) => {
+              const reporte = e.target.result;
+              if (!reporte) {
+                error = new Error('El reporte ya no está en este teléfono');
+                tx.abort();
+                return;
+              }
+              guardado = { ...reporte, ...permitidos, actualizado: reloj().toISOString() };
+              reportes.put(guardado);
+            };
+            tx.oncomplete = () => resolver(guardado);
+            tx.onabort = () => rechazar(error || tx.error || new Error('No se pudo guardar el reporte'));
+          }),
+      ),
+
       // Pedirle al navegador que no borre las fotos cuando le falte espacio.
       // Si dice que no, todo sigue igual; solo que el teléfono podría borrarlas.
       async pedirQueNoSeBorren() {
