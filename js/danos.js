@@ -93,7 +93,8 @@ export function resumenDeDanos(filas) {
   if (!filas.length) return 'Sin daños marcados.';
   const conFoto = filas.filter((f) => f.foto).length;
   const piezas = filas.length === 1 ? '1 pieza marcada' : `${filas.length} piezas marcadas`;
-  if (conFoto === filas.length) return `${piezas}, todas con su foto de cerca.`;
+  // «1 pieza marcada, todas con su foto» suena a error de la app: con una sola, «con su foto».
+  if (conFoto === filas.length) return `${piezas}, ${filas.length === 1 ? 'con su foto' : 'todas con su foto'} de cerca.`;
   const faltan = filas.length - conFoto;
   return `${piezas}; ${faltan === 1 ? 'falta 1 foto' : `faltan ${faltan} fotos`} de cerca.`;
 }

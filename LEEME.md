@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 213 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 274 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
@@ -31,9 +31,9 @@ repositorio**, que es público: ver `.gitignore`.
 - `npm run ejemplos-via` vuelve a bajar los dos ejemplos reales de las pruebas
   (ver `pruebas/datos/LEEME.md`).
 
-## Lo que hay (13-nov-2026)
+## Lo que hay (14-nov-2026)
 
-Los pasos 1 a 7 de 8:
+Los 8 pasos:
 
 1. **¿Hay alguien herido?** Con heridos, el botón llama al 123 y la app no pide
    nada más hasta que estén atendidos.
@@ -93,9 +93,17 @@ Los pasos 1 a 7 de 8:
        clave falsa vuelve a la maqueta y dice «Google no aceptó la clave del
        3D (InvalidKeyMapError)». El carro sale como .glb (595 KB). La altura
        del suelo cuadra: 2.919 m en Los Verjones y 2.582 m en Chapinero.
-     - **Falta probarlo con la clave de Joan:** el giro del carro
-       (`GIRO_DEL_MODELO`), la altura de las flechas sobre la vía de la foto, y
-       si Google acepta el .glb desde un `blob:`.
+     - **Probado con la clave de demostración de Joan, el 14-nov** (la «Maps
+       Demo Key» de su cuenta, en el Edge oculto; la clave se metía al vuelo y
+       nunca entró al repositorio). Sale el 3D de Los Verjones con los dos
+       carros sobre la vía de la foto. Lo que se ajustó con él está en
+       «Trampas»: el carro parado sobre la cola, el .glb por `blob:`, la
+       pintura negra, la cámara a 397 m y el texto del pin dos veces.
+     - **La clave de demostración no se puede restringir** a los sitios de
+       Choque Claro, y sus términos no la dejan para producción. En el
+       repositorio (que es público) cualquiera la puede copiar: no cuesta
+       plata (no tiene facturación), pero le pueden gastar el cupo. Por eso
+       `js/clave-de-google.js` sigue vacía hasta que Joan decida.
    - **La escena en 360°** (13-nov, la opción C), en la misma página: las 8
      fotos de la vuelta del paso 4 de este teléfono, en círculo según su rumbo,
      en un cilindro de CSS 3D sin librerías. Se gira con el dedo o con
@@ -203,13 +211,57 @@ Los pasos 1 a 7 de 8:
      recargar. Si después se marca otro punto a más de 30 m, el croquis lo
      avisa. No va en la cadena de huellas (no es una foto): se sella al enviar.
    - **«Ver el croquis en la zona 3D»** lo lleva a la maqueta (ver el paso 3).
+8. **Enviar el reporte** (14-nov). Una sola pantalla:
+   - **Lo que va en el reporte**: dónde y cuándo, la escena, cada carro, los
+     daños y el croquis, cada uno con ✓ o «!» y un botón para ir a
+     completarlo. **No bloquea**: en la vía no siempre se puede todo (llegó
+     la grúa, empezó a llover), y el expediente dice lo que faltó. Solo
+     impiden sellar no tener ni una foto y la cadena rota. Si el punto de
+     «¿Dónde fue?» está a más de 30 m del croquis, lo avisa: el expediente
+     diría una vía y dibujaría otra.
+   - **Sellar**: el SHA-256 del texto canónico de lo declarado (el lugar
+     como lo mostró el paso 3, los carros, los daños y el croquis) junto con
+     la última huella de la cadena de fotos (`sello.js`). El número es
+     `CC-AAMMDD-XXXXXX`: el día del sello en Colombia y las 6 primeras de la
+     huella. No es el número del siniestro (ese lo da la aseguradora), y la
+     pantalla lo dice.
+   - **Después de sellar se puede corregir.** Si algo cambia, la pantalla
+     dice qué («cambiaron los carros»), tacha el número viejo y pide sellar
+     otra vez: el número cambia.
+   - **Compartir el expediente (PDF)**: la hoja de compartir del teléfono
+     (WhatsApp, correo, Archivos) con el PDF; en un computador se descarga.
+     El PDF se arma al entrar, ANTES del toque (ver «Trampas»).
+   - **Enviar el número por WhatsApp**: el número y la huella entera. Quien
+     lo recibe queda con la huella en su chat, con la fecha de WhatsApp: si
+     el reporte cambia después, ya no cuadra.
 
 Las fotos de la escena, de los carros y de los daños van en **una sola cadena
 de huellas** por reporte (`reporte-en-curso.js`): la lista de la escena revisa
 la cadena entera. Lo declarado que no es foto (los carros con su placa y su
 línea, las marcas de daño) se guarda en el reporte y se sella al enviar (paso 8).
 
-El paso 8 (enviar) todavía no está, y la pantalla del croquis lo dice.
+**El expediente** (`expediente.js` decide qué dice; `expediente-pdf.js` lo
+pone en hojas carta; `pdf.js` escribe el PDF a mano, sin librerías):
+portada con el número, la huella y lo que el expediente NO afirma; dónde y
+cuándo (la vía y la luz como las mostró el paso 3, con enlaces a Maps y
+Street View); el croquis dibujado a escala, con el norte y una regla; la
+escena y cada carro en rejillas de 4, con lo que se selló con cada foto
+(hora, GPS, rumbo y la revisión); los daños con y sin foto de cerca; un
+anexo con las fotos repetidas, y la tabla de la cadena con el SHA-256 de
+cada foto. Lo que falta se dice («Faltan la 6 y la 7») y la placa que nadie
+revisó va como «SIN revisar». Con el ejemplo, cada hoja dice EJEMPLO.
+
+**Cómo se comprueba un expediente sin la app** (lo dice su última hoja):
+
+- Las fotos van dentro del PDF con sus bytes intactos (el JPEG tal cual,
+  sin volver a comprimir): `pdfimages -all expediente.pdf foto` y
+  `sha256sum foto-*` dan los SHA-256 de la tabla.
+- El PDF lleva dos adjuntos: `contenido-sellado-<número>.json`, el texto
+  exacto que se selló (su SHA-256 es la huella de la portada), y
+  `cadena-de-fotos-<número>.json`, el registro de cada foto.
+- Comprobado el 14-nov fuera de la app, con PyMuPDF y pypdf: las 25 fotos
+  sacadas del PDF de la app tienen el SHA-256 de la cadena, y el adjunto
+  sellado, la huella del sello.
 
 **Verificado (pasos 1 a 3)** en el panel del navegador del PC a 375 px: el
 recorrido, el ejemplo (análisis en 0,8 a 1,5 s), el toque en el mapa, el
@@ -247,6 +299,15 @@ relato; recargar y encontrarlo igual, sin el paso 3; «Otro caso» y «Ninguno s
 parece» con una flecha a dedo que no movió ni el carro ni el mapa; la zona 3D
 con el croquis en la leyenda y en la maqueta; y, sin lugar, la pantalla que
 pide marcarlo. Sin errores en la página.
+
+**Verificado (paso 8, 14-nov)** en el mismo Edge sin ventana a 390×844: 25
+fotos de muestra entraron por la puerta de la app (`agregarFoto`: se
+reducen, se sellan y van a la base del teléfono), y 17 de 17: la revisión
+con lo que falta, sellar, el PDF listo antes del toque (5,3 MB, 8 hojas), la
+hoja de compartir con el archivo, WhatsApp con el número y la huella
+entera, cambiar la placa de B después de sellar (lo nota y tacha el número)
+y sellar otra vez (otro número, otro PDF). Sin errores en la página ni en la
+consola.
 
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
@@ -303,6 +364,16 @@ La zona en el 3D de Google (cuando esté la clave):
 13. ¿Carga en Safari y se mueve con el dedo sin trabarse? ¿Aguanta la memoria
     del iPhone con los dos carros encima, o Safari recarga la página?
 
+El envío (paso 8):
+
+14. **Compartir el PDF en Safari**: ¿abre la hoja de compartir con el PDF y
+    llega entero a WhatsApp y a Archivos? Con 25 fotos pesa unos 5 MB:
+    medir cuánto tarda en armarse y si Safari aguanta la memoria.
+15. **«Enviar el número por WhatsApp»**: ¿abre WhatsApp con el texto
+    completo, huella incluida?
+16. Abrir en otro teléfono el PDF que llegó por WhatsApp: ¿se ven las fotos y
+    los enlaces a Maps abren?
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
@@ -315,8 +386,10 @@ La zona en el 3D de Google (cuando esté la clave):
 - **La huella no lo prueba todo.** Deja ver si una foto o un dato cambió
   después de tomarse, pero mientras la cadena viva solo en el teléfono, alguien
   con el teléfono podría rehacerla entera. Para que valga contra eso, la última
-  huella tiene que salir del teléfono en el momento (paso 8 o fase 2). La lista
-  lo dice. Y la hora es la del reloj del celular.
+  huella tiene que salir del teléfono en el momento: el paso 8 la manda por
+  WhatsApp, donde queda con la fecha del chat, y el expediente lo dice.
+  Guardarla en un servidor llega con el piloto. Y la hora es la del reloj del
+  celular.
 - **El rumbo es magnético** y lo da la brújula del celular, que se desvía al
   lado de un carro. Cada foto dice de dónde salió (`rumboFuente`).
 - **La placa leída es una propuesta** hasta que la persona la ve. Nunca se da
@@ -326,6 +399,10 @@ La zona en el 3D de Google (cuando esté la clave):
 - **El croquis es lo que declara la persona**, no una medición ni una
   reconstrucción: lo dicen su pantalla y la leyenda de la zona 3D. Lo que la
   app puso por defecto se lee en el relato antes de «Listo».
+- **El expediente no decide la culpa** ni la insinúa: ni velocidades, ni
+  «responsable», ni colores de culpa (A y B llevan el color de su letra). Su
+  primera hoja dice lo que NO afirma, y lo declarado va como declarado:
+  «según la persona», «SIN revisar».
 
 ## Archivos
 
@@ -349,9 +426,16 @@ La zona en el 3D de Google (cuando esté la clave):
 | `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |
 | `js/pantalla-zona-google.js` | Carga Maps JavaScript con la clave, pide la altura del suelo, monta el `gmp-map-3d` con carros, flechas y marcas, y avisa si Google falla. |
 | `js/carro-glb.js` | El carro del paso 6 como .glb, hecho con el exportador de Three.js, para el 3D de Google. |
-| `js/clave-de-google.js` | La clave de navegador de Google Maps. Vacía = maqueta abierta. No es un secreto: la protege la restricción a los sitios de Choque Claro. |
+| `js/clave-de-google.js` | La clave de navegador de Google Maps. Vacía = maqueta abierta. Una clave de pago se restringe a los sitios de Choque Claro y así no es un secreto; la de demostración no se puede restringir y no va aquí. |
 | `js/croquis.js` | **Puro.** El croquis del paso 7: la vía en metros (tangentes promediadas, para que la curva cerrada no quiebre los carriles), los seis casos, poner, mover, girar y cambiar carros, las flechas automáticas y a mano, el relato, guardar y reabrir. |
 | `js/pantalla-croquis.js` | "El croquis": las tarjetas, el mapa con las manijas, la de girar y la estrella, el dibujo a dedo, los botones y el guardado. |
+| `js/pantalla-enviar.js` | "Enviar el reporte" (paso 8): la revisión, sellar, el PDF armado antes del toque, compartir y WhatsApp. |
+| `js/enviar.js` | **Puro.** Qué tiene y qué le falta al reporte, lo que impide sellar, el mensaje de WhatsApp y el nombre del PDF. |
+| `js/sello.js` | **Puro.** El sello: el lugar del paso 3 para el reporte, lo que se sella, la huella, el número y qué parte cambió después. |
+| `js/expediente.js` | **Puro.** Qué dice el expediente y en qué orden: el resumen, cada foto con lo que se selló con ella, lo que falta, el anexo, la cadena y el plano del croquis. |
+| `js/expediente-pdf.js` | El expediente en hojas carta: portada, dónde y cuándo, croquis, escena, carros, anexo y cadena, con el pie de cada hoja. |
+| `js/pdf.js` | **Puro.** Un PDF escrito a mano: texto en WinAnsi con los anchos de Helvetica, JPEG sin recomprimir, enlaces, transparencia, recortes y adjuntos. |
+| `js/fechas.js` | **Puro.** Fechas y horas en la hora de Colombia (UTC−5), sin depender de la zona del teléfono. |
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
 | `js/escena-360.js` | **Puro.** Dónde va cada foto en el círculo, las medidas del cilindro (70° de visor, 50° por foto), la foto de frente y su texto. |
 | `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). |
@@ -381,7 +465,7 @@ La zona en el 3D de Google (cuando esté la clave):
 | `js/vendor/leaflet/` | Leaflet 1.9.4 (BSD-2), copiado: sin CDN. |
 | `herramientas/servidor.js` | El servidor del taller, sin COOP/COEP (COEP bloquearía las teselas). |
 | `herramientas/guardar-ejemplo-via.mjs` | Baja los ejemplos reales de las pruebas. |
-| `pruebas/` | `node --test`; `datos/` tiene dos respuestas reales de Overpass (ODbL). La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). |
+| `pruebas/` | `node --test`; `datos/` tiene dos respuestas reales de Overpass (ODbL). La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). `reporte-de-prueba.js` arma un reporte entero para el paso 8 (la curva del ejemplo, 26 fotos, una repetida, B a medias) y `jpeg-de-prueba.js`, JPEG mínimos válidos. |
 
 ## Trampas que ya mordieron
 
@@ -467,13 +551,41 @@ La zona en el 3D de Google (cuando esté la clave):
   suelo: con altura 0, en Bogotá la cámara mira a un punto 2.600 m bajo tierra.
   La altura sale del píxel del mosaico terrarium de AWS, leído sin corrección
   de color.
+- **En el 3D de Google, Z es hacia arriba** (14-nov, con la clave de
+  demostración): el carro del paso 6 tiene Y hacia arriba y salía parado
+  sobre la cola. Con `tilt` 270 queda sobre sus ruedas (con 90, con el techo
+  abajo y enterrado) y el `heading` es el rumbo tal cual
+  (`GIRO_DEL_MODELO` = 0).
+- **El 3D de Google no dibuja un .glb desde `blob:`** (14-nov): el mismo
+  archivo por `data:` o por http sí. Va como `data:`, unos 800 KB de texto
+  por carro.
+- **La pintura metálica sale negra en el 3D de Google**: allá no hay entorno
+  que reflejar, y la A verde no se distinguía de las llantas. `carro-glb.js`
+  pasa copias mates de los materiales; el carro del paso 6 no se toca.
+- **Con la cámara de la maqueta, en el 3D de Google los carros eran una
+  mota**: a 397 m un carro de 4,4 m mide 6 px. `acercarALosCarros` se acerca
+  hasta que quepan, nunca a menos de 80 m: más cerca, la foto de Google en el
+  campo es una mancha.
+- **El pin de Google con `label` escribe el texto dos veces** (encima y al
+  lado): los marcadores son SVG propios dentro de un `<template>`.
+- **Safari abre la hoja de compartir solo dentro del toque**, y no si antes
+  hubo un `await` largo: el PDF se arma al entrar al paso 8 y el botón solo
+  comparte. Es la misma regla del permiso de la brújula.
+- **Una sección sin cerrar escondió el paso 8** (14-nov): al agregar
+  `#p-enviar` se perdió el `</section>` del croquis, y la pantalla nueva
+  quedó dentro de una oculta. Ningún error: la página medía 98 px y el
+  pantallazo salía en blanco.
+- **«5:44 p. m.» ya termina en punto**: armar frases con `+ '.'` daba
+  «p. m..». `frase()` en `enviar.js`.
 
 ## Licencias de terceros
 
 Datos de vías © colaboradores de OpenStreetMap (ODbL), con el crédito visible
 en el mapa y en el análisis. Las teselas de tile.openstreetmap.org sirven para
 el demo, no para una app con tráfico. Open-Meteo es gratis solo para uso no
-comercial. Leaflet: BSD-2 (`js/vendor/leaflet/LICENSE`). Three.js: MIT
+comercial: para vender hace falta su plan comercial. El expediente cita las
+dos fuentes («© colaboradores de OpenStreetMap (ODbL)» y «Open-Meteo.com
+(CC BY 4.0)»). Leaflet: BSD-2 (`js/vendor/leaflet/LICENSE`). Three.js: MIT
 (`js/vendor/three/LICENSE`). El modelo de placas fast-plate-ocr: MIT
 (`js/vendor/placa/LICENSE-fast-plate-ocr`); ONNX Runtime Web: MIT (aviso en
 la primera línea de `ort.wasm.min.mjs`). Las medidas del catálogo citan su

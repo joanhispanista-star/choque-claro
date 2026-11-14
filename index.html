@@ -139,7 +139,7 @@
       <p>La vuelta está completa: 8 fotos alrededor del punto del golpe.</p>
       <div class="resumen" id="escena-resumen"></div>
       <p class="cadena" id="escena-cadena"></p>
-      <p class="nota">Las fotos están guardadas solo en este teléfono. La huella deja ver si una foto cambió después de tomarla. Para que valga también ante quien tenga el teléfono, tiene que salir de él al enviar el reporte, en el último paso (todavía no está construido).</p>
+      <p class="nota">Las fotos están guardadas solo en este teléfono. La huella deja ver si una foto cambió después de tomarla. Para que valga también ante quien tenga el teléfono, tiene que salir de él al enviar el reporte, en el último paso.</p>
       <button class="boton" type="button" data-ir="carros">Siguiente: los carros</button>
       <button class="boton boton-suave" type="button" id="escena-nuevo">Empezar un reporte nuevo</button>
       <p class="nota">El reporte de ahora queda guardado en el teléfono.</p>
@@ -333,6 +333,7 @@
     <div id="croquis-sin-lugar" hidden>
       <p>Para armar el croquis, la app tiene que saber dónde fue el choque. Márcalo primero en el mapa.</p>
       <button class="boton" type="button" data-ir="donde">Marcar dónde fue</button>
+      <button class="boton boton-suave" type="button" data-ir="enviar">Seguir sin croquis</button>
       <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
     </div>
 
@@ -342,6 +343,7 @@
       <p class="nota">A es tu carro y B el otro.</p>
       <button class="boton boton-claro" type="button" id="croquis-a-mano">Ninguno se parece: lo dibujo yo</button>
       <button class="boton boton-suave" type="button" id="croquis-volver-al-mapa" hidden>Volver a mi croquis</button>
+      <button class="boton boton-suave" type="button" data-ir="enviar">Seguir sin croquis</button>
       <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
     </div>
 
@@ -381,12 +383,56 @@
         <ul class="relato" id="croquis-relato" aria-label="El croquis en palabras"></ul>
         <a class="boton boton-suave" id="croquis-ver-3d" href="zona-3d.html">Ver el croquis en la zona 3D</a>
         <button class="boton boton-claro" type="button" id="croquis-cambiar-croquis">Cambiar el croquis</button>
-        <p class="nota">El paso 8, enviar el reporte, todavía no está construido. Lo que hiciste se queda guardado en este teléfono.</p>
+        <button class="boton" type="button" data-ir="enviar">Seguir: enviar el reporte</button>
         <button class="boton boton-suave" type="button" data-ir="danos">Volver a los daños</button>
       </div>
 
       <p class="nota">El croquis es lo que tú declaras, no una medición. La app no decide quién tuvo la culpa.</p>
     </div>
+  </section>
+
+  <section class="pantalla" id="p-enviar" hidden>
+    <h1>Enviar el reporte</h1>
+    <p class="estado-ubicacion error" id="enviar-error" role="alert" hidden></p>
+    <p class="nota" id="enviar-ejemplo" hidden>Es el ejemplo: el lugar es real y el choque, inventado. El expediente lo dice en cada hoja.</p>
+
+    <h2>Lo que va en el reporte</h2>
+    <ul class="revision" id="enviar-lista" aria-label="Lo que va en el reporte"></ul>
+    <p class="suave" id="enviar-resumen"></p>
+
+    <div id="enviar-sin-sellar" hidden>
+      <h2>Sellarlo</h2>
+      <p>Sellar junta en una sola huella las fotos y lo que declaraste: los carros, las placas, los daños y el croquis. Desde ahí, si algo cambia, se nota.</p>
+      <p class="alerta" id="enviar-impide" hidden></p>
+      <button class="boton" type="button" id="enviar-sellar">Sellar el reporte</button>
+      <p class="nota">Puedes seguir corrigiendo después. Si cambias algo, lo vuelves a sellar y el número cambia.</p>
+    </div>
+
+    <div id="enviar-cambio" hidden>
+      <h2>Sellarlo otra vez</h2>
+      <p class="alerta" id="enviar-cambio-texto"></p>
+      <p class="nota">El número <span class="numero-viejo" id="enviar-numero-viejo"></span> ya no vale para lo que hay ahora. Si ya lo enviaste, envía el nuevo.</p>
+      <button class="boton" type="button" id="enviar-resellar">Sellar otra vez</button>
+    </div>
+
+    <div id="enviar-sellado" hidden>
+      <div class="sello" aria-live="polite">
+        <p class="sello-etiqueta">Número del reporte</p>
+        <p class="sello-numero" id="enviar-numero"></p>
+        <p class="sello-hora" id="enviar-hora"></p>
+        <p class="sello-etiqueta">Huella (SHA-256)</p>
+        <p class="sello-huella" id="enviar-huella"></p>
+      </div>
+      <p class="nota">No es el número del siniestro: ese te lo da tu aseguradora cuando le avisas del choque. Este es el de tu expediente, y la huella deja ver si alguien lo cambia.</p>
+      <button class="boton" type="button" id="enviar-compartir" disabled>Compartir el expediente (PDF)</button>
+      <p class="nota" id="enviar-pdf-estado" aria-live="polite">Preparando el expediente…</p>
+      <a class="boton boton-claro" id="enviar-ver" href="#" target="_blank" rel="noopener" hidden>Ver el expediente</a>
+      <a class="boton boton-suave" id="enviar-whatsapp" href="#" target="_blank" rel="noopener">Enviar el número por WhatsApp</a>
+      <p class="nota">Quien reciba el mensaje queda con la huella en su chat: si el reporte cambia después, ya no cuadra.</p>
+    </div>
+
+    <p class="nota">Todo está guardado solo en este teléfono, y sale cuando tú compartes el PDF o el número. Guardarlo en la nube, con un enlace para la aseguradora, llega con el piloto.</p>
+    <button class="boton boton-suave" type="button" data-ir="croquis">Volver al croquis</button>
   </section>
 </main>
 

@@ -568,3 +568,47 @@ p { margin: 0 0 12px; }
 .relato { margin: 12px 0; padding: 10px 14px 10px 32px; background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; }
 .relato li { margin: 3px 0; }
 .relato li:first-child { font-weight: 700; }
+
+/* Enviar el reporte (paso 8). */
+.revision { display: grid; gap: 8px; margin: 8px 0 10px; padding: 0; list-style: none; }
+/* El botón va debajo del texto, como en las tarjetas de los carros: al lado apretaba la columna
+   del texto a 390 px de ancho. */
+.revision-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 4px 10px;
+  align-items: start;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+.revision-item strong { display: block; }
+.revision-item span:not(.revision-marca) { display: block; color: var(--texto-suave); font-size: 15px; }
+.revision-item .boton { grid-column: 2; justify-self: start; margin: 4px 0 0; }
+.revision-marca {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+.revision-item[data-completo="false"] .revision-marca { background: var(--atencion-suave); color: var(--atencion); border: 2px solid var(--atencion); }
+.sello {
+  margin: 16px 0 12px;
+  padding: 14px 16px 12px;
+  background: var(--acento-suave);
+  border: 2px solid var(--acento);
+  border-radius: 14px;
+}
+.sello p { margin: 0; }
+.sello-etiqueta { color: var(--acento); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+/* El número se dicta por teléfono: grande, sin partirse y con letras que no se confunden. */
+.sello-numero { margin: 2px 0 2px !important; font-size: 28px; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sello-hora { margin-bottom: 10px !important; color: var(--texto-suave); font-size: 15px; }
+.sello-huella { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.numero-viejo { font-weight: 700; text-decoration: line-through; }

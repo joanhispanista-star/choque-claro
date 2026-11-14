@@ -65,7 +65,7 @@ test('la foto vigente de cada pieza es la última, y la lista dice si se tomó c
     ],
   );
   assert.equal(resumenDeDanos(filas), '2 piezas marcadas; falta 1 foto de cerca.');
-  assert.equal(resumenDeDanos(filas.slice(1)), '1 pieza marcada, todas con su foto de cerca.');
+  assert.equal(resumenDeDanos(filas.slice(1)), '1 pieza marcada, con su foto de cerca.');
   assert.equal(resumenDeDanos([]), 'Sin daños marcados.');
 });
 
