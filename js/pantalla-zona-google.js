@@ -6,7 +6,7 @@
 // DESPUÉS de dibujarse: Google dice que no acepta la clave cuando el mapa ya está puesto (ver
 // motivoDeGoogle). Al fallar, el mapa de Google se quita entero antes de que salga el otro: Google
 // no deja su 3D junto a un mapa que no sea suyo.
-import { alturaTerrarium, camaraDeGoogle, camaraDesdeArriba, elementosDeGoogle, motivoDeGoogle, orientacionDelCarro, pixelDelSuelo } from './zona-google.js';
+import { acercarALosCarros, alturaTerrarium, camaraDeGoogle, camaraDesdeArriba, elementosDeGoogle, motivoDeGoogle, orientacionDelCarro, pixelDelSuelo, svgDeLetrero, svgDePin } from './zona-google.js';
 
 // El canal de Maps JavaScript que trae el 3D: el de la guía de Google («v=beta&libraries=maps3d»).
 const CANAL = 'beta';
@@ -44,7 +44,7 @@ function cargarGoogle(clave) {
     const listo = '__choqueClaroGoogle';
     globalThis[listo] = () => resolver();
     const s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?' + new URLSearchParams({ key: clave, v: CANAL, libraries: 'maps3d,marker', language: 'es', region: 'CO', loading: 'async', callback: listo });
+    s.src = 'https://maps.googleapis.com/maps/api/js?' + new URLSearchParams({ key: clave, v: CANAL, libraries: 'maps3d', language: 'es', region: 'CO', loading: 'async', callback: listo });
     s.async = true;
     s.onerror = () => fallar(new Error('sin-conexion'));
     document.head.append(s);
@@ -53,12 +53,22 @@ function cargarGoogle(clave) {
   return guion;
 }
 
-// Un letrero redondo con la letra del carro (o el texto del sol), del color de su letra. Google dibuja
-// un SVG dentro de un <template> como imagen: sin clases ni estilos de la página.
-function svgDeLetrero(texto, color) {
-  const ancho = Math.max(28, Math.round(14 + texto.length * 8.6));
-  const limpio = texto.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="28" viewBox="0 0 ${ancho} 28"><rect x="1" y="1" width="${ancho - 2}" height="26" rx="13" fill="${color}" stroke="#ffffff" stroke-width="2"/><text x="${ancho / 2}" y="19" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">${limpio}</text></svg>`;
+// El .glb del carro va como data: y no como blob:. Por blob: el Map3DElement no dibujó el carro, y
+// el mismo .glb por data: o por http sí (medido el 14-nov-2026 con la clave de Joan): seguramente lo
+// baja otro contexto, que no ve los blob de la página. Son unos 800 KB de texto por carro.
+const comoDataUrl = (glb) =>
+  new Promise((resolver, fallar) => {
+    const lector = new FileReader();
+    lector.onload = () => resolver(lector.result);
+    lector.onerror = () => fallar(lector.error);
+    lector.readAsDataURL(new Blob([glb], { type: 'model/gltf-binary' }));
+  });
+
+// Un <template> con un SVG: así pide Google lo que va dentro de un marcador propio.
+function plantilla(svg) {
+  const t = document.createElement('template');
+  t.innerHTML = svg;
+  return t;
 }
 
 // Monta el 3D de Google en `caja`. Devuelve el motor (los mismos botones que la maqueta abierta) o
@@ -74,7 +84,7 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
     if (caido) return;
     caido = true;
     mapa?.remove();
-    for (const url of glbs.values()) url.then((u) => URL.revokeObjectURL(u), () => {});
+    glbs.clear();
     alFallar(MOTIVOS[motivo] || motivo || MOTIVOS.mapa);
   };
   // Google llama a gm_authFailure cuando no acepta la clave de un mapa 2D. Con el 3D no la llama: solo
@@ -100,20 +110,19 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
     return null;
   }
   let biblioteca;
-  let marcadores;
   try {
     biblioteca = await google.maps.importLibrary('maps3d');
-    marcadores = await google.maps.importLibrary('marker');
   } catch {
     fallar('mapa');
     return null;
   }
   if (caido) return null;
   const { Map3DElement, Marker3DElement, Model3DElement, Polygon3DElement, Polyline3DElement, MapMode } = biblioteca;
-  const { PinElement } = marcadores;
 
   const altoPx = () => caja.clientHeight || 400;
-  let camara = camaraDeGoogle(camaraDeLaMaqueta, { altoPx: altoPx(), suelo: altura });
+  const anchoPx = () => caja.clientWidth || 360;
+  const camaraPara = (deLaMaqueta, losCarros) => acercarALosCarros(camaraDeGoogle(deLaMaqueta, { altoPx: altoPx(), suelo: altura }), losCarros, { anchoPx: anchoPx(), altoPx: altoPx() });
+  let camara = camaraPara(camaraDeLaMaqueta, carros);
   try {
     // Satélite, sin los nombres de las calles encima: la vía la dicen el tramo y la leyenda.
     mapa = new Map3DElement({ ...camara, mode: MapMode?.SATELLITE ?? 'SATELLITE' });
@@ -136,16 +145,12 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
         llave,
         import('./carro-glb.js')
           .then(({ glbDelCarro }) => glbDelCarro({ color: e.color, carroceria, medidas }))
-          .then((glb) => URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }))),
+          .then(comoDataUrl),
       );
     }
     return glbs.get(llave);
   };
 
-  const pin = (color) => {
-    const p = new PinElement({ background: color, borderColor: '#ffffff', glyphColor: '#ffffff' });
-    return p instanceof Node ? p : p.element;
-  };
   function crear(e) {
     // Todo a unos centímetros del suelo y visible aunque lo tape la malla de la foto (un árbol, un
     // alero): un pedazo de flecha que desaparece cambia lo que se lee.
@@ -155,16 +160,17 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
       const borde = e.outerColor ? { outerColor: e.outerColor, outerWidth: e.outerWidth } : {};
       return new Polyline3DElement({ ...comun, ...borde, path: e.path, strokeColor: e.strokeColor, strokeWidth: e.strokeWidth });
     }
+    // Los marcadores y letreros, del mismo tamaño a cualquier distancia y visibles aunque los tape un
+    // árbol de la foto. Los que van colgados (el pin, el golpe, la letra de cada carro) bajan con una
+    // raya hasta el suelo: así se ve sobre qué punto de la vía están.
     if (e.tipo === 'marcador') {
-      const m = new Marker3DElement({ position: e.position, altitudeMode: 'RELATIVE_TO_GROUND', extruded: true, ...(e.texto ? { label: e.texto } : {}) });
-      m.append(pin(e.color));
+      const m = new Marker3DElement({ position: e.position, altitudeMode: 'RELATIVE_TO_GROUND', extruded: true, sizePreserved: true, drawsWhenOccluded: true });
+      m.append(plantilla(svgDePin(e.texto, e.color, e.clave === 'golpe' ? 'golpe' : 'pin')));
       return m;
     }
     if (e.tipo === 'letrero') {
-      const m = new Marker3DElement({ position: e.position, altitudeMode: 'RELATIVE_TO_GROUND', sizePreserved: true, drawsWhenOccluded: true });
-      const plantilla = document.createElement('template');
-      plantilla.innerHTML = svgDeLetrero(e.texto, e.color);
-      m.append(plantilla);
+      const m = new Marker3DElement({ position: e.position, altitudeMode: 'RELATIVE_TO_GROUND', extruded: Boolean(e.colgado), sizePreserved: true, drawsWhenOccluded: true });
+      m.append(plantilla(svgDeLetrero(e.texto, e.color)));
       return m;
     }
     if (e.tipo === 'carro') {
@@ -210,9 +216,6 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
   mapa.addEventListener('gmp-steadychange', (evento) => {
     if (evento.isSteady) quieto = true;
   });
-  addEventListener('pagehide', () => {
-    for (const url of glbs.values()) url.then((u) => URL.revokeObjectURL(u), () => {});
-  });
 
   return {
     nombre: 'google',
@@ -231,7 +234,7 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
     // ejemplo, los carros inventados (salen del tramo).
     actualizar({ camaraDeLaMaqueta: nueva, capas: otras, carros: otros }) {
       if (caido) return;
-      camara = camaraDeGoogle(nueva, { altoPx: altoPx(), suelo: altura });
+      camara = camaraPara(nueva, otros);
       poner(elementosDeGoogle(otras, otros));
       if (!tocado) mapa.flyCameraTo({ endCamera: camara, durationMillis: 1500 });
     },

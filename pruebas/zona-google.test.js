@@ -8,7 +8,7 @@ import { planoLocal, distancia } from '../js/geo.js';
 import { analizarVia } from '../js/via.js';
 import { camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, colorDeCarro, COLORES } from '../js/zona-3d.js';
 import { armarCaso, cambiarCarro, croquisParaGuardar, viaDesdeElAnalisis } from '../js/croquis.js';
-import { ALTURAS, CAMPO_DE_VISION, alturaTerrarium, camaraDeGoogle, camaraDesdeArriba, conTransparencia, elementosDeGoogle, metrosPorPixelMapLibre, motivoDeGoogle, orientacionDelCarro, pixelDelSuelo } from '../js/zona-google.js';
+import { ALTURAS, CAMPO_DE_VISION, RANGO_MINIMO, acercarALosCarros, alturaTerrarium, camaraDeGoogle, camaraDesdeArriba, conTransparencia, elementosDeGoogle, metrosPorPixelMapLibre, motivoDeGoogle, orientacionDelCarro, pixelDelSuelo, svgDeLetrero, svgDePin } from '../js/zona-google.js';
 
 const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const ejemplo = () => {
@@ -88,7 +88,7 @@ test('lo que va encima: los carros del croquis, la flecha con su punta y el golp
     assert.equal(c.color, colorDeCarro(c.letra));
   }
   assert.equal(carros[0].largo, 3.6, 'A es un Picanto');
-  assert.deepEqual(de('letrero', 'carros').map((l) => [l.texto, l.position.altitude]), [['A', ALTURAS.letrero], ['B', ALTURAS.letrero]]);
+  assert.deepEqual(de('letrero', 'carros').map((l) => [l.texto, l.position.altitude, l.colgado]), [['A', ALTURAS.letra, true], ['B', ALTURAS.letra, true]]);
 
   // B está quieto: solo A tiene flecha. La línea sigue los puntos del croquis y la punta termina en
   // el último.
@@ -104,19 +104,28 @@ test('lo que va encima: los carros del croquis, la flecha con su punta y el golp
   assert.ok(distancia(plano.aMetros({ lat: punta.path[0].lat, lon: punta.path[0].lng }), fin) < 0.01);
   assert.equal(lista.filter((e) => e.clave === 'flechas').length, 2);
 
-  // El golpe, y el pin del paso 3 sin letrero: con croquis caía encima del carro A.
+  // El golpe. Aquí está en el punto (así arranca el croquis), y el pin del paso 3 no se pone: salían
+  // uno encima del otro.
   assert.equal(de('marcador', 'golpe').length, 1);
   assert.deepEqual(de('marcador', 'golpe')[0].position, { lat: g.golpe.lat, lng: g.golpe.lon, altitude: ALTURAS.golpe });
-  assert.equal(de('marcador', 'punto')[0].texto, '');
+  assert.equal(de('marcador', 'punto').length, 0);
+  // Con el golpe movido a 20 m, el pin vuelve, sin letrero: con croquis caía encima del carro A.
+  const lejos = planoLocal(CENTRO).aGrados({ x: 20, y: 0 });
+  const conGolpeMovido = elementosDeGoogle(capasDeLaZona({ centro: CENTRO, analisis, sol: { altura: 30, azimut: 250 }, ejemplo: true, croquis: { ...g, golpe: lejos } }), carrosDeLaZona({ croquis: { ...g, golpe: lejos } }));
+  assert.deepEqual(conGolpeMovido.filter((e) => e.clave === 'punto').map((e) => e.texto), ['']);
 
   // El tramo, la precisión y el sol, con sus colores (Google acepta rgba).
   assert.equal(de('linea', 'tramo')[0].strokeColor, 'rgba(29, 158, 117, 0.6)');
   assert.equal(de('linea', 'tramo')[0].path.length, analisis.tramo.length);
   assert.equal(de('poligono', 'precision').length, 1);
-  assert.equal(de('letrero', 'sol')[0].texto, 'Sol a 30°');
-  // Lo de abajo va primero y el pin del choque al final, encima de todo.
+  // El sol: solo el rayo, de 35 m (la mitad del de la maqueta); el ángulo lo dice la leyenda.
+  assert.equal(de('letrero', 'sol').length, 0);
+  const rayo = de('linea', 'sol')[0].path;
+  const largo = distancia(plano.aMetros({ lat: rayo[0].lat, lon: rayo[0].lng }), plano.aMetros({ lat: rayo[1].lat, lon: rayo[1].lng }));
+  assert.ok(Math.abs(largo - 35) < 0.5, `${largo} m`);
+  // Lo de abajo va primero y el golpe al final, encima de todo.
   assert.equal(lista[0].clave, 'precision');
-  assert.equal(lista.at(-1).clave, 'punto');
+  assert.equal(lista.at(-1).clave, 'golpe');
 });
 
 test('sin croquis y sin ser el ejemplo: ni carros ni golpe, y el pin dice «Choque»', () => {
@@ -138,9 +147,51 @@ test('cuando Google no acepta la clave, el motivo en palabras y con su código',
   assert.equal(motivoDeGoogle('Google Maps JavaScript API error'), 'Google no aceptó la clave del 3D.');
 });
 
-test('el color con transparencia y el rumbo del carro, entre 0 y 360', () => {
+test('el color con transparencia y el rumbo del carro, entre 0 y 360, sobre sus ruedas', () => {
   assert.equal(conTransparencia(COLORES.precision, 0.12), 'rgba(47, 111, 183, 0.12)');
   assert.equal(orientacionDelCarro(-30).heading, 330);
   assert.equal(orientacionDelCarro(370).heading, 10);
-  assert.deepEqual(orientacionDelCarro(90), { heading: 90, tilt: 0, roll: 0 });
+  // Medido el 14-nov con la clave de Joan: tilt 270 lo pone sobre las ruedas y heading 90 mira al oriente.
+  assert.deepEqual(orientacionDelCarro(90), { heading: 90, tilt: 270, roll: 0 });
+});
+
+test('con carros, la cámara de Google se acerca hasta verlos, sin pasar de la maqueta ni de 80 m', () => {
+  const camara = { center: { lat: CENTRO.lat, lng: CENTRO.lon, altitude: 2920 }, range: 397, tilt: 62, heading: 223 };
+  const dims = { anchoPx: 356, altoPx: 523 };
+  // Sin carros, la misma.
+  assert.equal(acercarALosCarros(camara, [], dims), camara);
+  // Los carros inventados del ejemplo: a unos 22 m del centro el más lejano.
+  const carros = carrosDeLaZona({ ejemplo: true, analisis: ejemplo() });
+  assert.equal(carros.length, 2);
+  const cerca = acercarALosCarros(camara, carros, dims);
+  assert.deepEqual({ ...cerca, range: 0 }, { ...camara, range: 0 }, 'solo cambia la distancia');
+  assert.ok(cerca.range >= RANGO_MINIMO && cerca.range < 200, `${cerca.range} m`);
+  // El carro más lejano cabe de lado a lado: medio ancho de pantalla en metros > su distancia al centro.
+  const plano = planoLocal(CENTRO);
+  // Los del ejemplo no traen largo: cuentan como 4,5 m, como en acercarALosCarros.
+  const lejos = Math.max(...carros.map((c) => distancia(plano.aMetros(c.centro), { x: 0, y: 0 }) + (c.largo || 4.5) / 2));
+  const medioAncho = cerca.range * Math.tan(((CAMPO_DE_VISION / 2) * Math.PI) / 180) * (dims.anchoPx / dims.altoPx);
+  assert.ok(medioAncho > lejos && medioAncho < lejos * 1.4, `${medioAncho} m contra ${lejos} m`);
+  // Carros pegados al centro: no baja de RANGO_MINIMO (la foto de cerca es una mancha).
+  const juntos = carros.map((c) => ({ ...c, centro: CENTRO, largo: 4 }));
+  assert.equal(acercarALosCarros(camara, juntos, dims).range, RANGO_MINIMO);
+  // Y nunca se aleja más que la maqueta.
+  assert.equal(acercarALosCarros({ ...camara, range: 90 }, carros, dims).range, 90);
+});
+
+test('las marcas: un texto una sola vez, escapado, y el pin colgado del borde de abajo', () => {
+  const pin = svgDePin('Choque (ejemplo)', COLORES.punto);
+  assert.equal(pin.match(/<text/g).length, 1, 'el texto sale una vez');
+  assert.ok(pin.includes('>Choque (ejemplo)</text>'));
+  // Pastilla de 28 px + 4 de aire + el pin de 38: el vértice del pin toca el borde de abajo (y = 69).
+  assert.ok(/height="70"/.test(pin), pin.slice(0, 120));
+  assert.ok(pin.includes(`fill="${COLORES.punto}"`));
+  const solo = svgDePin('', COLORES.punto);
+  assert.ok(!solo.includes('<text') && /height="38"/.test(solo));
+  assert.ok(/<path d="M17 37 /.test(solo), 'el vértice abajo, al centro');
+  const golpe = svgDePin('Golpe', '#7a1a10', 'golpe');
+  assert.ok(golpe.includes('<polygon') && golpe.includes('>Golpe</text>'));
+  assert.equal(golpe.match(/<polygon points="([^"]+)"/)[1].split(' ').length, 16, 'estrella de 8 puntas');
+  assert.ok(svgDeLetrero('<B>&', '#000').includes('&lt;B&gt;&amp;'), 'escapa el texto');
+  assert.ok(/width="28"/.test(svgDeLetrero('A', COLORES.carroA)), 'la letra sola, redonda');
 });
