@@ -446,7 +446,8 @@ test('un teléfono envía hasta 10 reclamos al día, para que nadie llene la ban
     }
     assert.equal(enviados, 10);
     assert.equal(tope.codigo, '53400');
-    assert.match(tope.mensaje, /10 reclamos hoy/);
+    // «24 horas» y no «hoy»: la cuenta es corrida, y la pantalla no puede decir otra cosa.
+    assert.match(tope.mensaje, /10 reclamos en las últimas 24 horas/);
   });
 });
 
@@ -501,4 +502,63 @@ test('apagar a alguien le quita todo de una vez, y encenderlo se lo devuelve', a
     await ser('analistaX');
     assert.ok((await db.query('select id from public.reclamos')).rows.length > 0);
   });
+});
+
+test('reenviar el mismo reclamo a OTRA aseguradora no devuelve el viejo en silencio', async () => {
+  const args = (codigo) => [codigo, 'CC-261114-E0E0E0', sha('s'), sha('u'), '', '{}', [sha('a')]];
+  const sql = 'select public.crear_reclamo($1, $2, $3, $4, $5, $6, $7::text[]) as id';
+  await como('conductor1', async () => {
+    await db.query(sql, args('seguros-x'));
+    const r = await intentar(sql, args('seguros-y'));
+    assert.equal(r.codigo, '23505');
+    assert.equal(r.mensaje, 'Este reclamo ya se envió a otra aseguradora.');
+  });
+});
+
+test('las visitas del abogado del conductor las ven el conductor y Joan, no la aseguradora', async () => {
+  const visitas = "select id from public.bitacora where reclamo_id = $1 and accion = 'abrio_enlace'";
+  await como('anon', async () => {
+    await db.query('select public.abrir_enlace($1)', ['enlace-vigente-de-x1-000000000000']);
+    for (const [quien, cuantas] of [['jefeX', 0], ['analistaX', 0], ['conductor1', 1], ['joan', 1]]) {
+      await ser(quien);
+      assert.equal((await db.query(visitas, [ids.reclamo.x1])).rows.length, cuantas, quien);
+    }
+    // El resto de la bitácora el jefe la sigue viendo.
+    await ser('jefeX');
+    assert.ok((await db.query('select id from public.bitacora where reclamo_id = $1', [ids.reclamo.x1])).rows.length > 0);
+  });
+});
+
+test('ningún error en inglés llega a la pantalla: lo que se escribe mal contesta en español', async () => {
+  const enIngles = /violates|constraint|null value|invalid input|duplicate key|permission denied/i;
+  const reclamo = (cambios) => {
+    const base = { codigo: 'seguros-x', numero: 'CC-261114-F0F0F0', sello: sha('s'), ultima: sha('u'), lugar: '', declarado: '{}', huellas: [sha('a')] };
+    const a = { ...base, ...cambios };
+    return ['select public.crear_reclamo($1, $2, $3, $4, $5, $6, $7::text[])', [a.codigo, a.numero, a.sello, a.ultima, a.lugar, a.declarado, a.huellas]];
+  };
+  const casos = [
+    ['conductor1', ...reclamo({ numero: 'CC-2611-XYZ' })],
+    ['conductor1', ...reclamo({ sello: 'no-es-un-sha' })],
+    ['conductor1', ...reclamo({ declarado: '' })],
+    ['conductor1', ...reclamo({ lugar: 'x'.repeat(121) })],
+    ['conductor1', ...reclamo({ huellas: [] })],
+    ['conductor1', ...reclamo({ huellas: ['corta'] })],
+    ['conductor1', 'select public.crear_enlace_abogado($1, $2, 30)', [ids.reclamo.x1, 'no-es-un-sha']],
+    ['conductor1', 'select public.crear_enlace_abogado($1, $2, 30)', [ids.reclamo.x1, sha('enlace-vigente-de-x1-000000000000')]],
+    ['analistaX', 'select public.agregar_nota($1, $2)', [ids.reclamo.x1, '   ']],
+    ['analistaX', 'select public.agregar_nota($1, $2)', [ids.reclamo.x1, 'x'.repeat(4001)]],
+    ['analistaX', 'select public.cambiar_estado($1, $2)', [ids.reclamo.x1, 'subiendo']],
+    ['joan', 'select public.crear_aseguradora($1, $2)', ['A', 'seguros-a']],
+    ['joan', 'select public.crear_aseguradora($1, $2)', ['Seguros A', 'Con Mayúsculas']],
+    ['joan', 'select public.crear_aseguradora($1, $2)', ['Seguros Otra Vez', 'seguros-x']],
+    ['servidor', 'select public.registrar_miembro($1, $2, $3, $4, $5)', [ids.persona.joan, ids.persona.analistaX, ids.aseg.X, 'analista', 'Ya Está']],
+    ['servidor', 'select public.registrar_miembro($1, $2, $3, $4, $5)', [ids.persona.joan, ids.nuevo, ids.aseg.X, 'analista', 'x']],
+  ];
+  for (const [quien, sql, params] of casos) {
+    const r = await como(quien, () => intentar(sql, params));
+    const que = `${quien}: ${sql} ${JSON.stringify(params).slice(0, 80)}`;
+    assert.equal(r.ok, false, que);
+    assert.ok(['22023', '23505'].includes(r.codigo), `${que} → ${r.codigo} ${r.mensaje}`);
+    assert.doesNotMatch(r.mensaje, enIngles, que);
+  }
 });

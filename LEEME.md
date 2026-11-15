@@ -13,8 +13,8 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 312 pruebas en Node, sin internet (51 vienen del Taller con lo
-  que se copió de allá; 13 corren la base de las cuentas en un Postgres dentro
+- `npm test` → 315 pruebas en Node, sin internet (51 vienen del Taller con lo
+  que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
@@ -487,11 +487,21 @@ hacer tiene que ser exactamente lo que dice la tabla. Cómo está armada:
 - A la aseguradora no le llega un reclamo «subiendo». Solo el servidor lo pasa
   a «recibido», cuando recalcula la huella de cada foto, y le pone **su** hora.
   Eso es lo que hace valer el sello contra el dueño del teléfono.
+- Las visitas del abogado del conductor las ven el conductor y Joan, **no la
+  aseguradora**: que el conductor contrató abogado es asunto suyo.
+- Ningún error de la base llega en inglés: cada función revisa lo que recibe y
+  contesta en español antes de que un `check` de la tabla diga «violates check
+  constraint». Una prueba lo barre función por función.
+- Reenviar el mismo reclamo (se cayó la señal) sigue donde iba. Reenviarlo a
+  OTRA aseguradora no devuelve el viejo: avisa.
 
 **Falta:** crear el proyecto de Supabase (solo Joan puede), aplicar la
 migración y correr la consulta de verificación de su pie; las funciones del
 servidor (`recibir-reclamo`, `crear-miembro`, `abrir-enlace`); el envío desde
-el paso 8; y las páginas del equipo. Las fechas están en `PLAN-ROLES.md` (fuera
+el paso 8; y las páginas del equipo. Para la bandeja: hoy el analista ve el
+`user_id` de quien tiene asignado un reclamo, pero no su nombre (los nombres
+del equipo solo los lee el jefe); hace falta una función que le dé los nombres
+de su aseguradora. Las fechas están en `PLAN-ROLES.md` (fuera
 de git, como `PLAN.md`). Ningún reclamo real entra al servidor sin que un
 abogado revise el texto de la autorización y sin contrato con la aseguradora.
 

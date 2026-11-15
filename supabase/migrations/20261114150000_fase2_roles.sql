@@ -30,9 +30,15 @@
 -- se escribe otra migración.
 --
 -- Al aplicarla en Supabase, lo que no va en SQL:
---   * Authentication → Sign In / Providers: Anonymous sign-ins ENCENDIDO (el conductor) y
---     «Allow new users to sign up» APAGADO para correo (las cuentas del equipo las crea la
---     función crear-miembro, con la clave de servicio).
+--   * Authentication → Sign In / Providers: Anonymous sign-ins ENCENDIDO (el conductor).
+--     Las cuentas del equipo las crea la función crear-miembro con la clave de servicio, así
+--     que el registro abierto con correo no hace falta. Si se apaga «Allow new users to sign
+--     up», COMPROBAR que la sesión anónima siguió entrando: no está verificado qué hace
+--     Supabase con una cosa y la otra. Dejarlo encendido no abre nada: quien se registre con
+--     correo sin estar en miembros es un conductor más, con el mismo tope de 10 reclamos.
+--   * Borrar usuarios anónimos viejos (la limpieza que sugiere Supabase) va a fallar si tienen
+--     reclamos: reclamos.conductor_id no se borra en cascada, a propósito. Un reclamo no
+--     desaparece porque alguien limpió sesiones.
 --   * El primer super admin se mete a mano, con el uid de la cuenta de Joan:
 --       insert into public.miembros (user_id, rol, nombre) values ('<uid>', 'super_admin', 'Joan');
 --   * Verificar que se aplicó de verdad (una vez ya pasó que no): la consulta del final.
@@ -295,9 +301,15 @@ drop policy if exists enlaces_ver on public.enlaces_abogado;
 create policy enlaces_ver on public.enlaces_abogado for select to authenticated
   using (public.es_mi_reclamo(reclamo_id));
 
+-- Las visitas del abogado del conductor las ven el conductor y Joan, NO la aseguradora: que el
+-- conductor contrató abogado es asunto suyo. Joan lo decidió así el 14-nov («cada parte ve
+-- solo lo que su lado le comparte»).
 drop policy if exists bitacora_ver on public.bitacora;
 create policy bitacora_ver on public.bitacora for select to authenticated
-  using (public.puede_ver_bitacora(reclamo_id));
+  using (
+    public.puede_ver_bitacora(reclamo_id)
+    and (accion <> 'abrio_enlace' or public.mi_rol() = 'super_admin' or public.es_mi_reclamo(reclamo_id))
+  );
 
 -- ============================================================================================
 -- Lo que hace el conductor
@@ -324,6 +336,7 @@ declare
   v_aseguradora uuid;
   v_id uuid;
   v_dueno uuid;
+  v_previa uuid;
   v_n int;
 begin
   if auth.uid() is null then
@@ -339,19 +352,41 @@ begin
     raise exception 'Ese enlace no es de una aseguradora activa.' using errcode = '42501';
   end if;
 
-  select r.id, r.conductor_id into v_id, v_dueno from public.reclamos r where r.numero = p_numero;
+  -- Se revisa aquí y no se deja a los check de la tabla: un check roto contesta en inglés
+  -- («violates check constraint…») y eso es lo que el conductor leería en la vía.
+  if p_numero is null or p_numero !~ '^CC-[0-9]{6}-[0-9A-F]{6}$' then
+    raise exception 'El número del reclamo no tiene la forma CC-AAMMDD-XXXXXX. Vuelve a sellar el reporte.' using errcode = '22023';
+  end if;
+  if p_sello is null or p_sello !~ '^[0-9a-f]{64}$' or p_ultima_huella is null or p_ultima_huella !~ '^[0-9a-f]{64}$' then
+    raise exception 'El sello del reporte no es un SHA-256. Vuelve a sellar el reporte.' using errcode = '22023';
+  end if;
+  if p_declarado is null or length(p_declarado) not between 2 and 2000000 then
+    raise exception 'Lo declarado llegó vacío o pesa más de 2 MB.' using errcode = '22023';
+  end if;
+  if length(coalesce(p_lugar, '')) > 120 then
+    raise exception 'El nombre del lugar pasa de 120 letras.' using errcode = '22023';
+  end if;
+
+  select r.id, r.conductor_id, r.aseguradora_id into v_id, v_dueno, v_previa
+  from public.reclamos r where r.numero = p_numero;
   if v_id is not null then
-    if v_dueno = auth.uid() then return v_id; end if;
+    -- El mismo teléfono reintentando a la misma aseguradora: sigue donde iba. A OTRA
+    -- aseguradora no: devolver el reclamo viejo lo dejaría en la primera sin decirle nada.
+    if v_dueno = auth.uid() and v_previa = v_aseguradora then return v_id; end if;
+    if v_dueno = auth.uid() then
+      raise exception 'Este reclamo ya se envió a otra aseguradora.' using errcode = '23505';
+    end if;
     -- Otro teléfono con el mismo número: 1 en 16 millones el mismo día (js/sello.js).
     raise exception 'Ese número de reclamo ya existe. Vuelve a sellar el reporte.' using errcode = '23505';
   end if;
 
   -- Tope contra el abuso: una sesión anónima no cuesta nada, así que sin tope cualquiera podría
-  -- llenar la bandeja de una aseguradora. Diez al día sobra para quien de verdad chocó.
+  -- llenar la bandeja de una aseguradora. Diez en 24 horas sobra para quien de verdad chocó.
+  -- El mensaje dice «24 horas» y no «hoy» porque la cuenta es corrida, no por día calendario.
   select count(*) into v_n from public.reclamos r
   where r.conductor_id = auth.uid() and r.creado > now() - interval '1 day';
   if v_n >= 10 then
-    raise exception 'Este teléfono ya envió 10 reclamos hoy. Si es un error, llama a tu aseguradora.'
+    raise exception 'Este teléfono ya envió 10 reclamos en las últimas 24 horas. Si es un error, llama a tu aseguradora.'
       using errcode = '53400';
   end if;
 
@@ -360,7 +395,7 @@ begin
     raise exception 'Un reclamo lleva entre 1 y 200 fotos.' using errcode = '22023';
   end if;
   if exists (select 1 from unnest(p_huellas) h where h is null or h !~ '^[0-9a-f]{64}$') then
-    raise exception 'Una de las huellas no es un SHA-256.' using errcode = '22023';
+    raise exception 'Una de las huellas de las fotos no es un SHA-256.' using errcode = '22023';
   end if;
 
   insert into public.reclamos (numero, aseguradora_id, conductor_id, sello, ultima_huella, lugar, declarado, fotos_esperadas)
@@ -389,6 +424,12 @@ begin
   end if;
   if p_dias is null or p_dias < 1 or p_dias > 30 then
     raise exception 'El enlace dura entre 1 y 30 días.' using errcode = '22023';
+  end if;
+  if p_token_hash is null or p_token_hash !~ '^[0-9a-f]{64}$' then
+    raise exception 'El enlace no se pudo crear: el teléfono no mandó la huella del token.' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.enlaces_abogado e where e.token_hash = p_token_hash) then
+    raise exception 'Ese enlace ya existe. Vuelve a crearlo.' using errcode = '23505';
   end if;
   insert into public.enlaces_abogado (reclamo_id, token_hash, vence)
   values (p_reclamo, p_token_hash, now() + make_interval(days => p_dias))
@@ -513,6 +554,9 @@ begin
   if v_rol is null or v_estado is null or v_estado = 'subiendo' or not public.puede_ver_reclamo(p_reclamo) then
     raise exception 'No puedes escribir en ese reclamo.' using errcode = '42501';
   end if;
+  if p_texto is null or length(btrim(p_texto)) not between 1 and 4000 then
+    raise exception 'La nota va entre 1 y 4.000 letras.' using errcode = '22023';
+  end if;
   insert into public.notas (reclamo_id, autor, texto) values (p_reclamo, auth.uid(), p_texto) returning id into v_id;
   -- En la bitácora va que hubo una nota, no su texto: la bitácora la ve también el conductor.
   insert into public.bitacora (reclamo_id, aseguradora_id, actor, rol, accion, detalle)
@@ -608,6 +652,12 @@ begin
   if not public.permiso_crear_miembro(p_creador, p_aseguradora, p_rol) then
     raise exception 'Esa persona no puede crear esa cuenta.' using errcode = '42501';
   end if;
+  if p_nombre is null or length(btrim(p_nombre)) not between 2 and 120 then
+    raise exception 'El nombre va entre 2 y 120 letras.' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.miembros m where m.user_id = p_usuario) then
+    raise exception 'Esa persona ya tiene una cuenta del equipo.' using errcode = '23505';
+  end if;
   insert into public.miembros (user_id, aseguradora_id, rol, nombre)
   values (p_usuario, p_aseguradora, p_rol, p_nombre);
 end;
@@ -644,6 +694,15 @@ declare v_id uuid;
 begin
   if public.mi_rol() is distinct from 'super_admin' then
     raise exception 'Las aseguradoras las da de alta Choque Claro.' using errcode = '42501';
+  end if;
+  if p_nombre is null or length(btrim(p_nombre)) not between 2 and 120 then
+    raise exception 'El nombre va entre 2 y 120 letras.' using errcode = '22023';
+  end if;
+  if p_codigo is null or p_codigo !~ '^[a-z0-9-]{3,40}$' then
+    raise exception 'El código va en minúsculas, números y guiones, de 3 a 40 (va en el enlace: ?a=seguros-ejemplo).' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.aseguradoras a where a.codigo = p_codigo) then
+    raise exception 'Ya hay una aseguradora con ese código.' using errcode = '23505';
   end if;
   insert into public.aseguradoras (nombre, codigo) values (p_nombre, p_codigo) returning id into v_id;
   return v_id;

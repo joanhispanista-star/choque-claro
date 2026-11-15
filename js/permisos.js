@@ -114,7 +114,9 @@ const REGLAS = {
 
   ver_bitacora(rol, ctx) {
     // El conductor ve quién abrió su reclamo: el dueño de los datos sabe quién los usó
-    // (Ley 1581). Ve el rol y la hora, no los nombres del equipo.
+    // (Ley 1581). Ve el rol y la hora, no los nombres del equipo. Al revés no: las visitas de
+    // SU abogado no le salen al jefe de siniestros (la política bitacora_ver las filtra por
+    // fila; aquí la regla es por reclamo).
     if (rol === 'conductor') return ctx.esSuyo ? true : 'Solo ves la bitácora de tus reclamos.';
     if (rol === 'super_admin') return true;
     if (rol === 'jefe') return !llego(ctx) ? NO_LLEGO : ctx.mismaAseguradora ? true : NO_ES_TUYO;
