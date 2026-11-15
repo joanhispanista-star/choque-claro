@@ -109,17 +109,17 @@ export function filasDelClima(clima) {
   if (clima.lluvia != null) {
     filas.push(
       clima.lluvia > 0
-        ? { clave: 'lluvia', etiqueta: 'Lluvia', valor: `${numero(clima.lluvia, 1)} mm ${franja}`, nota: 'según el modelo del clima, no una estación', aviso: 'atencion' }
+        ? { clave: 'lluvia', etiqueta: 'Lluvia', valor: `${numero(clima.lluvia, 1)}\u00a0mm ${franja}`, nota: 'según el modelo del clima, no una estación', aviso: 'atencion' }
         : { clave: 'lluvia', etiqueta: 'Lluvia', valor: `Sin lluvia ${franja}`, nota: 'según el modelo del clima, no una estación', aviso: null },
     );
   }
   if (clima.texto || clima.nubes != null) {
-    const nubes = clima.nubes != null ? `nubes: ${Math.round(clima.nubes)} %` : '';
+    const nubes = clima.nubes != null ? `nubes: ${Math.round(clima.nubes)}\u00a0%` : '';
     filas.push({ clave: 'cielo', etiqueta: 'Cielo', valor: clima.texto || 'Sin dato', nota: nubes, aviso: /Niebla|Lluvia|Llovizna|Chubasco|Tormenta/.test(clima.texto || '') ? 'atencion' : null });
   }
   if (clima.visibilidad != null) {
     const v = clima.visibilidad;
-    const valor = v >= 1000 ? `${numero(v / 1000, v >= 10000 ? 0 : 1)} km` : `${Math.round(v)} m`;
+    const valor = v >= 1000 ? `${numero(v / 1000, v >= 10000 ? 0 : 1)}\u00a0km` : `${Math.round(v)}\u00a0m`;
     filas.push({ clave: 'visibilidad', etiqueta: 'Visibilidad', valor, nota: v < 1000 ? 'muy poca: niebla o lluvia densa' : 'según el modelo del clima', aviso: v < 1000 ? 'atencion' : null });
   }
   return filas;

@@ -109,7 +109,7 @@ test('una entrada de parqueadero no se cuenta como cruce de verdad', () => {
   const r = analizarVia({ elements: [a, b] }, ORIGEN);
   assert.equal(r.cruce.soloEntrada, true);
   const fila = filasDeLaVia(r).find((f) => f.clave === 'cruce');
-  assert.match(fila.valor, /^Entrada o vía de servicio a 5 m$/);
+  assert.match(fila.valor, /^Entrada o vía de servicio a 5\u00a0m$/);
   assert.equal(fila.aviso, null);
 });
 
@@ -129,7 +129,7 @@ test('sin vías alrededor lo dice, no inventa', () => {
   const r = analizarVia({ elements: [] }, ORIGEN);
   assert.equal(r.estado, 'sin-vias');
   assert.deepEqual(filasDeLaVia(r), []);
-  assert.match(resumenDeLaVia(r), /No hay vías en el mapa a menos de 80 m/);
+  assert.match(resumenDeLaVia(r), /No hay vías en el mapa a menos de 80\u00a0m/);
 });
 
 test('una avenida con separador: "un sentido en esta calzada", no "un solo sentido"', () => {
@@ -140,7 +140,7 @@ test('una avenida con separador: "un sentido en esta calzada", no "un solo senti
   const fila = filasDeLaVia(r).find((f) => f.clave === 'sentido');
   assert.equal(fila.valor, 'Un sentido en esta calzada');
   assert.match(fila.nota, /se circula hacia el este/);
-  assert.match(fila.nota, /la otra, en sentido contrario, va a 14 m/);
+  assert.match(fila.nota, /la otra, en sentido contrario, va a 14\u00a0m/);
 });
 
 test('lo que el mapa no trae sale como "Sin dato en el mapa", nunca como "no había"', () => {
@@ -163,7 +163,7 @@ test('el pin lejos de la vía se avisa', () => {
   const r = analizarVia({ elements: [via(1, recta(300).map((p) => ({ x: p.x, y: p.y + 32 })), { name: 'Calle 10' })] }, ORIGEN);
   const fila = filasDeLaVia(r)[0];
   assert.equal(fila.aviso, 'atencion');
-  assert.match(fila.nota, /a 32 m de esta vía/);
+  assert.match(fila.nota, /a 32\u00a0m de esta vía/);
 });
 
 test('las etiquetas: sentido, carriles, máxima, adelantar, superficie y alumbrado', () => {
@@ -174,10 +174,10 @@ test('las etiquetas: sentido, carriles, máxima, adelantar, superficie y alumbra
   assert.deepEqual(sentidoDe({}), { valor: 'doble', segun: 'convencion' });
   assert.equal(carrilesDe({ lanes: '2' }), 2);
   assert.equal(carrilesDe({ lanes: 'dos' }), null);
-  assert.deepEqual(maximaDe({ maxspeed: '30' }), { kmh: 30, texto: '30 km/h', enUnSentido: false });
-  assert.deepEqual(maximaDe({ maxspeed: '60 km/h' }), { kmh: 60, texto: '60 km/h', enUnSentido: false });
+  assert.deepEqual(maximaDe({ maxspeed: '30' }), { kmh: 30, texto: '30\u00a0km/h', enUnSentido: false });
+  assert.deepEqual(maximaDe({ maxspeed: '60 km/h' }), { kmh: 60, texto: '60\u00a0km/h', enUnSentido: false });
   assert.deepEqual(maximaDe({ maxspeed: 'CO:urban' }), { kmh: null, texto: 'CO:urban', enUnSentido: false });
-  assert.deepEqual(maximaDe({ 'maxspeed:forward': '50' }), { kmh: 50, texto: '50 km/h', enUnSentido: true });
+  assert.deepEqual(maximaDe({ 'maxspeed:forward': '50' }), { kmh: 50, texto: '50\u00a0km/h', enUnSentido: true });
   assert.equal(maximaDe({}), null);
   assert.equal(adelantarDe({ overtaking: 'no' }), 'prohibido');
   assert.equal(adelantarDe({ 'overtaking:forward': 'no' }), 'prohibido en un sentido');
@@ -212,7 +212,7 @@ test('REAL: la curva de la vía Los Verjones–Patios (radio 13 m el 12-nov-2026
   assert.equal(a.adelantar, null);
   assert.deepEqual(a.senales, []);
   const filas = filasDeLaVia(a);
-  assert.equal(filas.find((f) => f.clave === 'forma').valor, 'Curva cerrada, radio 13 m');
+  assert.equal(filas.find((f) => f.clave === 'forma').valor, 'Curva cerrada, radio 13\u00a0m');
   assert.ok(a.tramo.length > 10);
 });
 

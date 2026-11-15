@@ -41,6 +41,15 @@ test('envolver: cada renglón cabe, respeta los saltos y corta una huella larga'
   for (const r of partida) assert.ok(anchoDeTexto(r, 10, 'fija') <= 100);
 });
 
+test('el espacio entre número y unidad mide lo de un espacio y no deja la unidad sola', () => {
+  assert.equal(anchoDeTexto('13 m', 10), anchoDeTexto('13 m', 10));
+  assert.equal(anchoDeTexto('13 m', 10, 'negrita'), anchoDeTexto('13 m', 10, 'negrita'));
+  assert.deepEqual(aWinAnsi('13 m'), [0x31, 0x33, 0xa0, 0x6d]);
+  // Donde cabe «Curva cerrada, radio 13» pero no la «m», baja «13 m» entero.
+  const ancho = anchoDeTexto('Curva cerrada, radio 13', 10);
+  assert.deepEqual(envolver('Curva cerrada, radio 13 m', ancho, 10), ['Curva cerrada, radio', '13 m']);
+});
+
 test('medidaDeJpeg lee la marca SOF, también la progresiva; lo que no es JPEG da null', () => {
   assert.deepEqual(medidaDeJpeg(jpegDePrueba(1280, 960)), { ancho: 1280, alto: 960, canales: 3 });
   assert.deepEqual(medidaDeJpeg(jpegDePrueba(960, 1280, { sof: 0xc2 })), { ancho: 960, alto: 1280, canales: 3 });

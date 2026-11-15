@@ -173,7 +173,7 @@ export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
     $('#enviar-compartir').disabled = false;
     $('#enviar-ver').href = url;
     $('#enviar-ver').hidden = false;
-    $('#enviar-pdf-estado').textContent = `Listo: ${archivo.name}, ${numero(archivo.size / 1e6, 1)} MB.`;
+    $('#enviar-pdf-estado').textContent = `Listo: ${archivo.name}, ${numero(archivo.size / 1e6, 1)}\u00a0MB.`;
   }
 
   async function prepararPdf(textoSellado) {

@@ -72,7 +72,7 @@ test('las filas del sol', () => {
   assert.equal(tarde[1].aviso, 'atencion');
   // Con el cielo cubierto no se afirma el encandilamiento.
   const nublado = filasDelSol({ altura: 8, azimut: 251 }, 71, { nubes: 97 });
-  assert.match(nublado[1].nota, /cielo estaba cubierto \(97 % de nubes\): es menos probable/);
+  assert.match(nublado[1].nota, /cielo estaba cubierto \(97\u00a0% de nubes\): es menos probable/);
   assert.equal(nublado[1].aviso, null);
   assert.equal(filasDelSol({ altura: 8, azimut: 251 }, 71, { nubes: 40 })[1].aviso, 'atencion');
   assert.equal(filasDelSol({ altura: 8, azimut: 251 }, 160).length, 1);

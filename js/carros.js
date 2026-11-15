@@ -189,7 +189,7 @@ export function estadoDeLaPlaca(carro, { leyendo = false } = {}) {
     return { tipo: 'lista', texto: placa.texto, detalle: `Escrita por ti.${antes}` };
   }
   if (placa.fuente === 'sin-placa') return { tipo: 'sin-placa', texto: '', detalle: 'Dijiste que no tiene placa o que no se ve.' };
-  if (leyendo) return { tipo: 'leyendo', texto: '', detalle: 'Leyendo la placa en la foto… La primera vez el teléfono baja el lector (unos 17 MB).' };
+  if (leyendo) return { tipo: 'leyendo', texto: '', detalle: 'Leyendo la placa en la foto… La primera vez el teléfono baja el lector (unos 17\u00a0MB).' };
   if (lectura) {
     return {
       tipo: 'propuesta',

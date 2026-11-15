@@ -42,7 +42,7 @@ export function datosDeLaFoto(r) {
     fecha: fechaLarga(r.hora),
     hora: horaDeColombia(r.hora, { segundos: true }),
     rumbo: r.rumbo === null || r.rumbo === undefined ? 'Sin brújula' : `Mirando al ${puntoCardinal(r.rumbo)}, ${numero(r.rumbo)}°${fuente}`,
-    gps: r.gps ? `GPS ${r.gps.lat.toFixed(5)}, ${r.gps.lon.toFixed(5)}${Number.isFinite(r.gps.precision) ? ` (±${Math.round(r.gps.precision)} m)` : ''}` : 'Sin GPS',
+    gps: r.gps ? `GPS ${r.gps.lat.toFixed(5)}, ${r.gps.lon.toFixed(5)}${Number.isFinite(r.gps.precision) ? ` (±${Math.round(r.gps.precision)}\u00a0m)` : ''}` : 'Sin GPS',
     revision: problemas.length ? `Aceptada aunque salió ${problemas.map((p) => (NOMBRES_DE_PROBLEMAS[p] || p).toLowerCase()).join(', ')}` : '',
   };
 }

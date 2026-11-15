@@ -156,7 +156,7 @@ test('la etiqueta de cada foto', () => {
 
 test('las pastillas del GPS y de la brújula', () => {
   const ahora = Date.parse('2026-11-17T15:00:00Z');
-  assert.deepEqual(textoDelGps({ precision: 6.4, hora: new Date(ahora - 2000) }, null, ahora), { texto: 'GPS ±6 m', estado: 'bien' });
+  assert.deepEqual(textoDelGps({ precision: 6.4, hora: new Date(ahora - 2000) }, null, ahora), { texto: 'GPS ±6\u00a0m', estado: 'bien' });
   assert.equal(textoDelGps({ precision: 48, hora: new Date(ahora - 2000) }, null, ahora).estado, 'mal');
   // Una lectura vieja ya no dice dónde está la persona.
   assert.equal(textoDelGps({ precision: 6, hora: new Date(ahora - 60000) }, null, ahora).texto, 'Buscando GPS…');
@@ -178,10 +178,10 @@ test('la distancia al punto que se marcó en el mapa', () => {
   assert.equal(textoDeLaDistancia(null, punto), null);
   assert.equal(textoDeLaDistancia({ lat: 4.65, lon: -74.05 }, null), null);
   // Un diezmilésimo de grado de latitud son unos 11 m.
-  assert.deepEqual(textoDeLaDistancia({ lat: 4.6501, lon: -74.05 }, punto), { texto: 'A 11 m del punto que marcaste en el mapa.', lejos: false });
+  assert.deepEqual(textoDeLaDistancia({ lat: 4.6501, lon: -74.05 }, punto), { texto: 'A 11\u00a0m del punto que marcaste en el mapa.', lejos: false });
   const lejos = textoDeLaDistancia({ lat: 4.651, lon: -74.05 }, punto);
   assert.equal(lejos.lejos, true);
-  assert.match(lejos.texto, /^Estás a 111 m del punto/);
-  assert.match(textoDeLaDistancia({ lat: 4.6612, lon: -74.05 }, punto).texto, /a 1,2 km/);
+  assert.match(lejos.texto, /^Estás a 111\u00a0m del punto/);
+  assert.match(textoDeLaDistancia({ lat: 4.6612, lon: -74.05 }, punto).texto, /a 1,2\u00a0km/);
   assert.ok(LEJOS_DEL_PUNTO >= 20);
 });

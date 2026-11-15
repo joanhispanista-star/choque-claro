@@ -94,7 +94,7 @@ function horaColombia(iso) {
 export function textoDeLaFoto(registro, { conBrujula = true } = {}) {
   const partes = [`Foto ${registro.indice + 1}`, horaColombia(registro.hora)];
   if (conBrujula && Number.isFinite(registro.rumbo)) partes.push(`hacia el ${puntoCardinal(registro.rumbo)} (${Math.round(normal(registro.rumbo))}°)`);
-  partes.push(registro.gps ? `GPS ±${Math.round(registro.gps.precision)} m` : 'sin GPS');
+  partes.push(registro.gps ? `GPS ±${Math.round(registro.gps.precision)}\u00a0m` : 'sin GPS');
   if (registro.huella) partes.push(`huella ${String(registro.huella).slice(0, 8)}…`);
   if (registro.calidad?.aceptadaConProblemas) partes.push('aceptada sin pasar la revisión');
   return partes.filter(Boolean).join(' · ');

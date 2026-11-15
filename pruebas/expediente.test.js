@@ -35,7 +35,7 @@ test('cada foto lleva lo que se selló con ella, en palabras', async () => {
   assert.equal(d.fecha, '13 de noviembre de 2026');
   assert.equal(d.hora, '5:24:22 p. m.');
   assert.match(d.rumbo, /^Mirando al .+, 20° \(brújula del iPhone\)$/);
-  assert.equal(d.gps, 'GPS 4.64838, -74.01052 (±8 m)');
+  assert.equal(d.gps, 'GPS 4.64838, -74.01052 (±8\u00a0m)');
   assert.equal(d.revision, '');
   // La toma borrosa que la persona aceptó igual: se dice.
   assert.equal(datosDeLaFoto(registros[3]).revision, `Aceptada aunque salió ${NOMBRES_DE_PROBLEMAS.borrosa.toLowerCase()}`);

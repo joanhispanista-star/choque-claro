@@ -127,12 +127,12 @@ function kmh(valor) {
 export function maximaDe(etiquetas) {
   if (etiquetas.maxspeed != null) {
     const v = kmh(etiquetas.maxspeed);
-    return v != null ? { kmh: v, texto: `${v} km/h`, enUnSentido: false } : { kmh: null, texto: etiquetas.maxspeed, enUnSentido: false };
+    return v != null ? { kmh: v, texto: `${v}\u00a0km/h`, enUnSentido: false } : { kmh: null, texto: etiquetas.maxspeed, enUnSentido: false };
   }
   const porSentido = [kmh(etiquetas['maxspeed:forward']), kmh(etiquetas['maxspeed:backward'])].filter((v) => v != null);
   if (porSentido.length) {
     const v = Math.min(...porSentido);
-    return { kmh: v, texto: `${v} km/h`, enUnSentido: porSentido.length === 1 };
+    return { kmh: v, texto: `${v}\u00a0km/h`, enUnSentido: porSentido.length === 1 };
   }
   return null;
 }
@@ -467,8 +467,11 @@ export function analizarVia(respuesta, punto) {
 
 const SIN_DATO = 'Sin dato en el mapa';
 
+// Entre el n\u00famero y su unidad va el espacio que no parte rengl\u00f3n (U+00A0), aqu\u00ed y en el resto de
+// textos con medidas: en la columna angosta del paso 3, \u00abradio 13 m\u00bb dejaba la \u00abm\u00bb sola abajo. El
+// PDF lo escribe como espacio (byte 0xA0 de WinAnsi) y tampoco parte ah\u00ed.
 function metros(m) {
-  return `${Math.round(m)} m`;
+  return `${Math.round(m)}\u00a0m`;
 }
 
 // Las filas que se muestran (y que irán al expediente de la aseguradora):
@@ -490,10 +493,10 @@ export function filasDeLaVia(a) {
   if (a.forma.tipo == null) {
     filas.push({ clave: 'forma', etiqueta: 'Forma', valor: SIN_DATO, nota: 'el tramo dibujado es muy corto para medir la curva', aviso: 'sin-dato' });
   } else if (a.forma.tipo === 'recta') {
-    filas.push({ clave: 'forma', etiqueta: 'Forma', valor: 'Recta', nota: 'medida sobre 50 m de la vía dibujada en el mapa', aviso: null });
+    filas.push({ clave: 'forma', etiqueta: 'Forma', valor: 'Recta', nota: 'medida sobre 50\u00a0m de la vía dibujada en el mapa', aviso: null });
   } else {
     const tipo = a.forma.tipo[0].toUpperCase() + a.forma.tipo.slice(1);
-    filas.push({ clave: 'forma', etiqueta: 'Forma', valor: `${tipo}, radio ${metros(a.forma.radio)}`, nota: 'medida sobre 50 m de la vía dibujada en el mapa', aviso: a.forma.tipo === 'curva cerrada' ? 'atencion' : null });
+    filas.push({ clave: 'forma', etiqueta: 'Forma', valor: `${tipo}, radio ${metros(a.forma.radio)}`, nota: 'medida sobre 50\u00a0m de la vía dibujada en el mapa', aviso: a.forma.tipo === 'curva cerrada' ? 'atencion' : null });
   }
   if (a.curvaCercana) {
     filas.push({ clave: 'curva-cercana', etiqueta: 'Curva cerca', valor: `${a.curvaCercana.tipo[0].toUpperCase() + a.curvaCercana.tipo.slice(1)} de radio ${metros(a.curvaCercana.radio)}, a ${metros(a.curvaCercana.distancia)}`, nota: 'por la misma vía', aviso: 'atencion' });
@@ -519,14 +522,14 @@ export function filasDeLaVia(a) {
   if (a.cruce) {
     filas.push({ clave: 'cruce', etiqueta: 'Cruce', valor: a.cruce.soloEntrada ? `Entrada o vía de servicio a ${metros(a.cruce.distancia)}` : `Con ${a.cruce.con} a ${metros(a.cruce.distancia)}`, nota: 'según el mapa', aviso: a.cruce.soloEntrada ? null : 'atencion' });
   } else {
-    filas.push({ clave: 'cruce', etiqueta: 'Cruce', valor: `Ninguno en el mapa a menos de ${RADIO_CRUCE} m`, nota: '', aviso: null });
+    filas.push({ clave: 'cruce', etiqueta: 'Cruce', valor: `Ninguno en el mapa a menos de ${RADIO_CRUCE}\u00a0m`, nota: '', aviso: null });
   }
   if (a.senales.length) {
     const vistas = new Set();
     const cercanas = a.senales.filter((s) => (vistas.has(s.texto) ? false : vistas.add(s.texto)));
     filas.push({ clave: 'senales', etiqueta: 'Señales cerca', valor: cercanas.map((s) => `${s.texto} a ${metros(s.distancia)}`).join(' · '), nota: 'según el mapa', aviso: null });
   } else {
-    filas.push({ clave: 'senales', etiqueta: 'Señales cerca', valor: `Ninguna en el mapa a menos de ${RADIO_SENALES} m`, nota: 'que no estén en el mapa no quiere decir que no haya', aviso: 'sin-dato' });
+    filas.push({ clave: 'senales', etiqueta: 'Señales cerca', valor: `Ninguna en el mapa a menos de ${RADIO_SENALES}\u00a0m`, nota: 'que no estén en el mapa no quiere decir que no haya', aviso: 'sin-dato' });
   }
   filas.push(a.superficie ? { clave: 'superficie', etiqueta: 'Superficie', valor: a.superficie[0].toUpperCase() + a.superficie.slice(1), nota: 'según el mapa', aviso: null } : { clave: 'superficie', etiqueta: 'Superficie', valor: SIN_DATO, nota: '', aviso: 'sin-dato' });
   const alumbrado = a.alumbrado === true ? { valor: 'Con alumbrado público', nota: 'según el mapa', aviso: null } : a.alumbrado === false ? { valor: 'Sin alumbrado público', nota: 'según el mapa', aviso: 'atencion' } : { valor: SIN_DATO, nota: '', aviso: 'sin-dato' };
@@ -537,7 +540,7 @@ export function filasDeLaVia(a) {
 // Una línea de estado para encima de las filas.
 export function resumenDeLaVia(a) {
   if (!a) return '';
-  if (a.estado === 'sin-vias') return `No hay vías en el mapa a menos de ${a.radio} m de este punto. Revisa que el pin esté donde fue el choque.`;
+  if (a.estado === 'sin-vias') return `No hay vías en el mapa a menos de ${a.radio}\u00a0m de este punto. Revisa que el pin esté donde fue el choque.`;
   if (a.estado !== 'ok') return '';
   return `Pin a ${metros(a.distanciaALaVia)} de la vía${a.distanciaALaVia > LEJOS_DE_LA_VIA ? ': revisa que esté en el punto del choque' : ''}.`;
 }

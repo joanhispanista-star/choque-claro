@@ -29,7 +29,7 @@ export function revisionDelReporte({ reporte, registros = [] }) {
   const delCroquis = croquis?.punto ?? croquis?.centro ?? null;
   const separacion = lugar && delCroquis ? Math.round(distancia({ x: 0, y: 0 }, planoLocal(lugar.punto).aMetros(delCroquis))) : 0;
   if (lugar && separacion > LEJOS_DEL_CROQUIS) {
-    items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: `El punto de «¿Dónde fue?» está a ${separacion} m del croquis. Revisa cuál es el del choque.`, completo: false, ir: 'croquis', boton: 'Ver el croquis' });
+    items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: `El punto de «¿Dónde fue?» está a ${separacion}\u00a0m del croquis. Revisa cuál es el del choque.`, completo: false, ir: 'croquis', boton: 'Ver el croquis' });
   } else if (lugar) {
     items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: [lugar.via?.nombre, fechaYHora(lugar.hora)].filter(Boolean).join(' · '), completo: true, ir: 'donde', boton: 'Cambiar' });
   } else if (delCroquis) {

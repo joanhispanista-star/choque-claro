@@ -282,7 +282,7 @@ export function pdfDelExpediente(modelo, { fotos = new Map(), adjuntos = [] } = 
     const origen = { mapa: 'marcado por la persona en el mapa', 'gps-ajustado': 'del GPS, corregido a mano por la persona', gps: 'del GPS del teléfono', ejemplo: 'el del ejemplo' }[l.origen] ?? '';
     tabla([
       { etiqueta: 'Fecha y hora', valor: l.horaTexto || 'Sin hora', nota: 'la que la persona dijo en el paso 3 (por defecto, la del teléfono al abrir la app)' },
-      { etiqueta: 'Punto', valor: `${l.punto.lat.toFixed(6)}, ${l.punto.lon.toFixed(6)}`, nota: [origen, l.precision ? `precisión del GPS: ±${l.precision} m` : ''].filter(Boolean).join(' · ') },
+      { etiqueta: 'Punto', valor: `${l.punto.lat.toFixed(6)}, ${l.punto.lon.toFixed(6)}`, nota: [origen, l.precision ? `precisión del GPS: ±${l.precision}\u00a0m` : ''].filter(Boolean).join(' · ') },
       ...(l.via ? [{ etiqueta: 'Vía', valor: l.via, nota: l.resumenDeLaVia }] : []),
     ]);
     // Los enlaces: el texto azul es el área que se toca.

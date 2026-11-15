@@ -52,7 +52,7 @@ export function crearMapa(contenedor, { alTocar = () => {}, alSoltarPin = () => 
       if (!analisis || analisis.estado !== 'ok') return;
       L.polyline(analisis.tramo, { className: 'tramo-analizado', interactive: false }).addTo(capaVia);
       for (const s of analisis.senales) {
-        L.circleMarker([s.lat, s.lon], { radius: 7, className: 'senal-mapa' }).bindTooltip(`${s.texto} a ${Math.round(s.distancia)} m`).addTo(capaVia);
+        L.circleMarker([s.lat, s.lon], { radius: 7, className: 'senal-mapa' }).bindTooltip(`${s.texto} a ${Math.round(s.distancia)}\u00a0m`).addTo(capaVia);
       }
     },
     ajustar() {

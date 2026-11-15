@@ -69,16 +69,16 @@ test('los códigos del cielo', () => {
 
 test('las filas: la lluvia, la niebla y de dónde sale el dato', () => {
   const filas = Object.fromEntries(filasDelClima(climaALaHora(RESPUESTA, new Date('2026-11-11T17:15:00-05:00'))).map((f) => [f.clave, f]));
-  assert.equal(filas.lluvia.valor, '2,4 mm entre las 5:00 p. m. y las 6:00 p. m.');
+  assert.equal(filas.lluvia.valor, '2,4\u00a0mm entre las 5:00 p. m. y las 6:00 p. m.');
   assert.match(filas.lluvia.nota, /modelo del clima, no una estación/);
   assert.equal(filas.lluvia.aviso, 'atencion');
   assert.equal(filas.cielo.valor, 'Lluvia');
-  assert.equal(filas.cielo.nota, 'nubes: 100 %');
-  assert.equal(filas.visibilidad.valor, '800 m');
+  assert.equal(filas.cielo.nota, 'nubes: 100\u00a0%');
+  assert.equal(filas.visibilidad.valor, '800\u00a0m');
   assert.equal(filas.visibilidad.aviso, 'atencion');
   const seco = Object.fromEntries(filasDelClima(climaALaHora(RESPUESTA, new Date('2026-11-11T16:00:00-05:00'))).map((f) => [f.clave, f]));
   assert.equal(seco.lluvia.valor, 'Sin lluvia entre las 3:00 p. m. y las 4:00 p. m.');
-  assert.equal(seco.visibilidad.valor, '24 km');
+  assert.equal(seco.visibilidad.valor, '24\u00a0km');
 });
 
 test('si el clima no se pudo consultar, se dice', () => {

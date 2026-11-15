@@ -209,7 +209,7 @@ export function iniciarPantallaDonde(raiz) {
     // precisión sigue siendo la del GPS.
     if (moverPin) estado.precision = precision;
     if (moverPin) mapa.ponerPin(punto, { precision, acercar });
-    avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)} m). Si no es el punto exacto, arrastra el pin.` : TEXTOS_DEL_ORIGEN[origen]);
+    avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)}\u00a0m). Si no es el punto exacto, arrastra el pin.` : TEXTOS_DEL_ORIGEN[origen]);
     estado.via = null;
     actualizarEnlaces();
     $('#analisis').hidden = false;
@@ -227,7 +227,7 @@ export function iniciarPantallaDonde(raiz) {
       const lectura = await buscarUbicacion({
         alMejorar: (l) => {
           mapa.ponerPin(l, { precision: l.precision });
-          avisarUbicacion(`Buscando tu ubicación… ±${Math.round(l.precision)} m`);
+          avisarUbicacion(`Buscando tu ubicación… ±${Math.round(l.precision)}\u00a0m`);
         },
       });
       fijarPunto(lectura, { origen: 'gps', precision: lectura.precision });

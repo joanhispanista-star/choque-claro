@@ -81,7 +81,7 @@ export function filasDelSol(sol, rumboVia, { nubes = null } = {}) {
       etiqueta: 'Sol de frente',
       valor: `Para quien iba hacia el ${puntoCardinal(g.haciaRumbo)}`,
       nota: cubierto
-        ? `el sol estaba bajo (${alto}°) y casi en la línea de la vía, pero el cielo estaba cubierto (${Math.round(nubes)} % de nubes): es menos probable que encandilara`
+        ? `el sol estaba bajo (${alto}°) y casi en la línea de la vía, pero el cielo estaba cubierto (${Math.round(nubes)}\u00a0% de nubes): es menos probable que encandilara`
         : `el sol estaba bajo (${alto}°) y casi en la línea de la vía: pudo encandilar`,
       aviso: cubierto ? null : 'atencion',
     });

@@ -150,7 +150,7 @@ test('corregir lo leído deja constancia de lo que había leído la app', () => 
 });
 
 test('mientras se lee, y cuando el lector no abre, la pantalla lo dice', () => {
-  assert.match(estadoDeLaPlaca(carroNuevo('A'), { leyendo: true }).detalle, /^Leyendo la placa en la foto… La primera vez el teléfono baja el lector \(unos 17 MB\)/);
+  assert.match(estadoDeLaPlaca(carroNuevo('A'), { leyendo: true }).detalle, /^Leyendo la placa en la foto… La primera vez el teléfono baja el lector \(unos 17\u00a0MB\)/);
   const fallo = conLecturaDePlaca(carroNuevo('A'), { registro: { sector: 0, huella: 'h0' }, error: 'TypeError: Failed to fetch', cuando: CUANDO });
   assert.equal(fallo.placa.intentos[0].resultado, 'fallo');
   assert.match(estadoDeLaPlaca(fallo).detalle, /El lector de placas no abrió \(la primera vez necesita internet\)/);

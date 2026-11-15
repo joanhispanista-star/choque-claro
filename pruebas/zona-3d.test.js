@@ -112,7 +112,7 @@ test('la leyenda dice lo que falta: croquis, fotos o el sol', () => {
   assert.match(real.carros, /salen del croquis \(paso 7\), que todavía no está hecho/);
   assert.equal(real.conos, 'Aún no hay fotos de la escena en este teléfono');
   assert.match(real.sol, /no había sol/);
-  assert.match(real.tramo, /curva cerrada, radio 13 m/);
+  assert.match(real.tramo, /curva cerrada, radio 13\u00a0m/);
   const demo = Object.fromEntries(leyendaDeLaZona({ ejemplo: true, analisis: { estado: 'error' }, sol: { altura: 5 } }).map((f) => [f.clave, f.texto]));
   assert.match(demo.carros, /INVENTADO/);
   assert.equal(demo.conos, 'El ejemplo no tiene fotos de la escena: el choque es inventado');

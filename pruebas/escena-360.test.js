@@ -54,7 +54,7 @@ test('arrastrar todo el ancho gira lo que ve el visor', () => {
 });
 
 test('el texto de la foto: hora de Colombia, rumbo, GPS, huella corta y si se aceptó sin pasar', () => {
-  assert.equal(textoDeLaFoto(foto(2, 135).registro), 'Foto 3 · 5:16 p. m. · hacia el sureste (135°) · GPS ±6 m · huella a1b2c3d4…');
+  assert.equal(textoDeLaFoto(foto(2, 135).registro), 'Foto 3 · 5:16 p. m. · hacia el sureste (135°) · GPS ±6\u00a0m · huella a1b2c3d4…');
   const mala = foto(0, null, { gps: null, calidad: { aceptadaConProblemas: true } }).registro;
   assert.equal(textoDeLaFoto(mala, { conBrujula: false }), 'Foto 1 · 5:16 p. m. · sin GPS · huella a1b2c3d4… · aceptada sin pasar la revisión');
 });

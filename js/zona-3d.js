@@ -215,7 +215,7 @@ export function capasDeLaZona({ centro, precision = null, analisis = null, sol =
 export function leyendaDeLaZona({ ejemplo = false, analisis = null, fotos = [], sol = null, croquis = null }) {
   const filas = [{ clave: 'punto', color: COLORES.punto, texto: ejemplo ? 'Punto del choque (ejemplo)' : 'Punto del choque' }];
   if (analisis?.estado === 'ok') {
-    const forma = analisis.forma.tipo ? analisis.forma.tipo + (analisis.forma.radio ? `, radio ${Math.round(analisis.forma.radio)} m` : '') : 'forma sin dato';
+    const forma = analisis.forma.tipo ? analisis.forma.tipo + (analisis.forma.radio ? `, radio ${Math.round(analisis.forma.radio)}\u00a0m` : '') : 'forma sin dato';
     filas.push({ clave: 'tramo', color: COLORES.tramo, texto: `Tramo analizado: ${forma}` });
   } else if (analisis?.estado === 'cargando') {
     filas.push({ clave: 'tramo', color: null, texto: 'Analizando la vía en el mapa…' });

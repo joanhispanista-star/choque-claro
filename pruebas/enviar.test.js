@@ -55,7 +55,7 @@ test('si el punto de «¿Dónde fue?» y el del croquis no son el mismo lugar, s
   const lejos = porClave(revisionDelReporte({ reporte: corrido(50), registros })).lugar;
   assert.equal(lejos.completo, false);
   assert.equal(lejos.ir, 'croquis');
-  assert.equal(lejos.detalle, 'El punto de «¿Dónde fue?» está a 50 m del croquis. Revisa cuál es el del choque.');
+  assert.equal(lejos.detalle, 'El punto de «¿Dónde fue?» está a 50\u00a0m del croquis. Revisa cuál es el del choque.');
   // Dentro del margen del GPS no es otro lugar.
   assert.equal(porClave(revisionDelReporte({ reporte: corrido(LEJOS_DEL_CROQUIS - 5), registros })).lugar.completo, true);
   // Sin el paso 3 (la página se recargó): queda el punto del croquis y se dice qué se perdió.

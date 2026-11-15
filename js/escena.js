@@ -189,7 +189,7 @@ export function etiquetaDeLaFoto(registro, nombreDeLaToma = null) {
 // 'sinHttps' / 'sinGeo'.
 export function textoDelGps(lectura, codigoError = null, ahora = Date.now()) {
   if (lectura && ahora - new Date(lectura.hora).getTime() < 30000) {
-    return { texto: `GPS ±${Math.round(lectura.precision)} m`, estado: lectura.precision <= 20 ? 'bien' : 'mal' };
+    return { texto: `GPS ±${Math.round(lectura.precision)}\u00a0m`, estado: lectura.precision <= 20 ? 'bien' : 'mal' };
   }
   if (codigoError === 1 || codigoError === 'sinHttps' || codigoError === 'sinGeo') return { texto: 'Sin GPS', estado: 'mal' };
   return { texto: 'Buscando GPS…', estado: 'neutro' };
@@ -214,7 +214,7 @@ export function textoDeLaDistancia(lectura, punto) {
   if (!lectura || !punto) return null;
   const plano = planoLocal(punto);
   const metros = distancia(plano.aMetros(lectura), { x: 0, y: 0 });
-  const cuanto = metros < 1000 ? `${Math.round(metros)} m` : `${numero(metros / 1000, 1)} km`;
+  const cuanto = metros < 1000 ? `${Math.round(metros)}\u00a0m` : `${numero(metros / 1000, 1)}\u00a0km`;
   if (metros > LEJOS_DEL_PUNTO) return { texto: `Estás a ${cuanto} del punto que marcaste en el mapa. La vuelta se hace donde fue el golpe.`, lejos: true };
   return { texto: `A ${cuanto} del punto que marcaste en el mapa.`, lejos: false };
 }
