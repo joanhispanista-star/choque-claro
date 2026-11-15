@@ -47,10 +47,14 @@ const $ = (selector) => document.querySelector(selector);
 // Si el 3D de Google falló, el porqué va delante de cualquier otro aviso: si no, el siguiente aviso
 // lo borraba y la persona veía la maqueta sin saber que debía ser otra cosa.
 let motivoDelRespaldo = '';
+// Si el teléfono soltó el dibujo del mapa, eso manda sobre cualquier aviso que llegue después: el
+// análisis que llegaba tarde lo cambiaba por «Lista. Arrastra para moverte» con el mapa muerto
+// (revisión del 14-nov).
+let dibujoPerdido = '';
 function avisar(texto, esError = false) {
   const p = $('#zona-estado');
-  p.textContent = [motivoDelRespaldo, texto].filter(Boolean).join(' ');
-  p.classList.toggle('error', esError || !!motivoDelRespaldo);
+  p.textContent = [motivoDelRespaldo, dibujoPerdido || texto].filter(Boolean).join(' ');
+  p.classList.toggle('error', esError || !!motivoDelRespaldo || !!dibujoPerdido);
 }
 
 function leerDireccion() {
@@ -188,6 +192,13 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon, alCargar }) {
   // cada tesela. Un icono vacío de 1 px lo calla sin dibujar nada que no estuviera.
   mapa.on('styleimagemissing', (e) => {
     if (!mapa.hasImage(e.id)) mapa.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) });
+  });
+  // Safari suelta el dibujo del mapa (el contexto WebGL) al volver de otra app o con poca memoria, y
+  // MapLibre 4.7 no lo rehace entero al devolverlo: el relieve y los carros quedan colgados del dibujo
+  // viejo. No se puede arreglar en caliente; sí decirlo, en vez de dejar un mapa quieto o en blanco.
+  mapa.on('webglcontextlost', () => {
+    dibujoPerdido = 'El teléfono soltó el dibujo del mapa 3D (pasa al volver de otra app o con poca memoria). Recarga la página para volverlo a ver; el reporte no se pierde.';
+    avisar('', true);
   });
 
   // Si la persona ya movió el mapa, el análisis no le cambia la vista.
@@ -338,15 +349,22 @@ async function iniciar() {
   let motor = null;
   // La recreación va en la maqueta abierta cuando hay croquis (el del teléfono o el del ejemplo, que
   // espera al análisis) y el mapa ya cargó: lo que llegue de último la monta.
+  // Se intenta UNA vez, cuando ya hay croquis y mapa. Si este teléfono no pudo dibujar los carros, un
+  // segundo intento (al llegar el análisis) apagaba las cajas y no dibujaba ningún carro (revisión
+  // del 14-nov); y el croquis del teléfono no cambia con el análisis, así que no hay nada que ganar.
   let recreacion = null;
-  let montando = false;
+  let intentado = false;
   const intentarRecrear = async () => {
-    if (recreacion || montando || motor?.nombre !== 'abierto' || !motor.cargado) return;
+    if (intentado || motor?.nombre !== 'abierto' || !motor.cargado) return;
     const delCroquis = croquisDeLaZona({ croquis, ejemplo, analisis });
     if (!delCroquis) return;
-    montando = true;
-    recreacion = await montarRecreacion({ mapa: motor.mapa, croquis: delCroquis, sol, lineas, danos, ejemplo: !croquis && ejemplo, camaraGeneral: () => camaraDe(analisis), alTomarLaCamara: () => motor.tocar() });
-    montando = false;
+    intentado = true;
+    try {
+      recreacion = await montarRecreacion({ mapa: motor.mapa, croquis: delCroquis, sol, lineas, danos, ejemplo: !croquis && ejemplo, camaraGeneral: () => camaraDe(analisis), alTomarLaCamara: () => motor.tocar() });
+    } catch (error) {
+      // Lo que no se esperaba no tumba la zona: quedan el mapa, las cajas y la escena en 360°.
+      console.warn('Recreación:', error?.message ?? error);
+    }
   };
   // Los botones de la zona mueven la cámara: primero dejan de seguir a un carro de la recreación.
   $('#vista-3d').addEventListener('click', () => {

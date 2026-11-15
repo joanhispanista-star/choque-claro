@@ -132,7 +132,10 @@ export async function montarZonaGoogle(caja, { clave, centro, camaraDeLaMaqueta,
   }
   mapa.className = 'mapa-google';
   mapa.addEventListener('gmp-error', () => fallar('mapa'));
-  caja.replaceChildren(mapa);
+  // `append` y no `replaceChildren`: en la caja viven también el sello de la recreación y su botón
+  // (escondidos mientras está Google). Si Google se cae ya dibujado, la maqueta de respaldo los
+  // necesita; con replaceChildren se iban con él y la recreación reventaba (revisión del 14-nov).
+  caja.append(mapa);
 
   // El .glb de cada carro se arma una vez (carro-glb.js trae Three.js solo si hay carros).
   const urlDelCarro = (e) => {

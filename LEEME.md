@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 315 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 326 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
@@ -92,18 +92,39 @@ Los 8 pasos:
      cerrando sola sobre el golpe, porque el círculo donde caben se achica) y
      **«Seguir a A / B»** (12 m detrás de la cola y 4,5 m arriba, en la línea
      del golpe). Si la persona mueve el mapa, la película le suelta la cámara.
-     - **Lo que es y lo que no** (`recreacion.js`, puro): cada carro recorre su
-       flecha a ritmo parejo y todos llegan al golpe a la vez; nadie declaró
-       velocidades, así que no dice quién iba más rápido ni si alguien frenó.
-       El golpe es el primer instante en que se tocan los contornos; si las
-       flechas no los juntan (un poste), para donde termina la flecha. Después
-       del golpe se queda quieta: cómo quedaron lo cuentan las fotos, no una
-       física inventada. Donde la persona puso el carro en el croquis, pasa tal
-       cual (posición y rumbo).
+     - **Lo que es y lo que no** (`recreacion.js`, puro; rehecho el 14-nov por la noche
+       después de una revisión independiente). Nadie declaró velocidades, así
+       que **todos van a la misma rapidez** y pasan a la vez por donde los puso
+       el croquis, tal cual (posición y rumbo); después siguen hasta tocarse.
+       Todos arrancan a la misma distancia de donde los puso el croquis. Si a
+       la misma rapidez nunca se alcanzan (por detrás con los dos andando), el
+       de atrás va lo justo más rápido para alcanzar al otro donde lo dejó el
+       croquis, y la nota lo dice: «A tiene que ir más rápido que B. Cuánto
+       más, nadie lo declaró». El golpe es el primer instante en que se tocan
+       los contornos; contra algo quieto (un poste), la trompa para en el
+       golpe si la flecha llega (una que se queda hasta 3,5 m corta se
+       estira); si no llega, la película lo dice y no enciende los daños.
+       Una flecha a mano que se pasa del golpe también choca. Después del golpe se queda quieta: cómo
+       quedaron lo cuentan las fotos, no una física inventada. Las flechas se
+       suavizan para que la trompa mire hacia donde se mueve el carro (antes
+       iba hasta 22° de lado). Un carro que el croquis deja atravesado
+       respecto de su flecha (más de 45°) va por la flecha y se ladea en los
+       últimos 6 m, y la nota dice que nadie declaró si derrapó. La cámara que sigue a un carro se mide en
+       grados y se promedia: no da latigazos ni en una glorieta a mano.
+     - **Antes de reproducir se ve el croquis**, no el primer cuadro de la
+       película (12 m más atrás): la zona muestra lo declarado.
+     - **Un carro que no se mueve lo dice**: «B no tiene flecha: se queda donde
+       lo puso el croquis, no porque estuviera quieto», o que su flecha no
+       muestra de dónde venía. Si nadie se mueve, no hay botón de reproducir.
      - **En el golpe se encienden las piezas dañadas** del paso 6, cada una con
        el color de su daño (en el ejemplo, unas inventadas).
-     - **La advertencia va en el mapa mismo** («Recreación de lo declarado · no
-       es una medición»), para que ningún pantallazo salga sin ella.
+     - **La advertencia va en el mapa mismo**, para que ningún pantallazo salga
+       sin ella, y dice de quién es: «Recreación de lo declarado», «de un
+       croquis sin terminar» (sin «Listo» en el paso 7) o «de un ejemplo
+       inventado», siempre con «· no es una medición».
+     - Al volver de otra app la película espera en pausa; con «Reducir
+       movimiento» la cámara no vuela ni se cierra sola; si Safari suelta el
+       dibujo del mapa, la página pide recargar (el reporte no se pierde).
      - **No hay cámara «desde los ojos del conductor», a propósito.** Se
        construyó y se quitó el mismo día: la maqueta no tiene árboles, barrancos
        ni carros parqueados, mostraba una vía despejada y daba a entender que el
@@ -404,16 +425,6 @@ La zona en el 3D de Google (cuando esté la clave):
 13. ¿Carga en Safari y se mueve con el dedo sin trabarse? ¿Aguanta la memoria
     del iPhone con los dos carros encima, o Safari recarga la página?
 
-La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
-
-17. **¿Sale en Safari?** Dibuja los carros con Three.js dentro del mismo WebGL
-    del mapa (necesita WebGL 2). Si no puede, quedan las cajas de siempre y no
-    aparece el botón «Ver cómo fue»: anotar cuál de las dos pasó.
-18. **¿Corre pareja?** Con «Los carros» y con «Seguir a A»: si va a tirones en
-    el iPhone, anotarlo (el mapa se redibuja entero en cada cuadro).
-19. Arrastrar el mapa con la película andando: la película sigue y la cámara
-    queda en el dedo. «Desde arriba» y después «Ver cómo fue»: se queda arriba.
-
 El envío (paso 8):
 
 14. **Compartir el PDF en Safari**: ¿abre la hoja de compartir con el PDF y
@@ -423,6 +434,19 @@ El envío (paso 8):
     completo, huella incluida?
 16. Abrir en otro teléfono el PDF que llegó por WhatsApp: ¿se ven las fotos y
     los enlaces a Maps abren?
+
+La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
+
+17. **¿Sale en Safari?** Dibuja los carros con Three.js dentro del mismo WebGL
+    del mapa (necesita WebGL 2). Si no puede, quedan las cajas de siempre y no
+    aparece el botón «Ver cómo fue»: anotar cuál de las dos pasó.
+18. **¿Corre pareja?** Con «Los carros» y con «Seguir a A»: si va a tirones en
+    el iPhone, anotarlo (el mapa se redibuja entero en cada cuadro).
+19. Arrastrar el mapa con la película andando: la película sigue y la cámara
+    queda en el dedo. «Desde arriba» y después «Ver cómo fue»: se queda arriba.
+20. Irse a WhatsApp con la película andando y volver: debe estar en pausa,
+    donde iba. Y girar el teléfono con «Seguir a A» en pausa: la cámara no se
+    acerca sola.
 
 ## Lo que la pantalla nunca afirma
 
@@ -450,7 +474,8 @@ El envío (paso 8):
   reconstrucción: lo dicen su pantalla y la leyenda de la zona 3D. Lo que la
   app puso por defecto se lee en el relato antes de «Listo».
 - **La recreación es el croquis en movimiento**, no una reconstrucción: sin
-  velocidades, sin frenadas, sin lo que pasó después del golpe y sin «qué
+  velocidades (todos a la misma rapidez, y si no se puede, se dice quién tiene
+  que ir más rápido y que nadie lo declaró), sin frenadas, sin lo que pasó después del golpe y sin «qué
   alcanzaba a ver» cada conductor. Lo dicen el mapa y la nota de abajo.
 - **El expediente no decide la culpa** ni la insinúa: ni velocidades, ni
   «responsable», ni colores de culpa (A y B llevan el color de su letra). Su
@@ -531,7 +556,7 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
 | `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), el croquis inventado del ejemplo y sus daños, el ancho de la vía, la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
 | `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis, la línea y los daños de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado, cielo, el asfalto del tramo y las capas; y con croquis, monta la recreación. |
-| `js/recreacion.js` | **Puro.** La recreación: cada carro por su flecha a ritmo parejo, el primer toque de los contornos (el golpe), el fotograma de cualquier momento, y las dos cámaras (la que sigue a un carro y el encuadre de todos). |
+| `js/recreacion.js` | **Puro.** La recreación: las flechas suavizadas que pasan por la pose del croquis, todos a la misma rapidez (o cada uno a su ritmo si así no se alcanzan), el primer toque de los contornos (el golpe), el fotograma de cualquier momento y el del croquis, las dos cámaras (la que sigue a un carro, promediada, y el encuadre de todos), el sello del mapa y lo que se dice en palabras. |
 | `js/maqueta-carros.js` | Los carros 3D del paso 6 dentro del mapa de MapLibre (una capa propia con Three.js, en su mismo WebGL): sobre el relieve, inclinados con la pendiente, con su sombra y las piezas dañadas encendidas en el golpe. |
 | `js/pantalla-recreacion.js` | Los controles de la recreación: reproducir (también encima del mapa), la línea de tiempo, lento, las cámaras con su entrada suave, las letras de los carros y quién manda en la cámara (la película, los botones de la zona o el dedo). |
 | `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |

@@ -61,11 +61,22 @@
 
 /* La advertencia de la recreación, sobre el mapa: sale en cualquier pantallazo. */
 .zona-3d .mapa-3d { position: relative; }
-.sello-recreacion {
+/* El sello y «Ver cómo fue», en columna arriba a la izquierda. A la derecha quedan 66 px para el «+»
+   del mapa: en un iPhone de 375 px el sello en un renglón llegaba a 304 px y el «+» empieza en 291, y
+   el pantallazo se leía «…no es una medici[+]» (revisión del 14-nov). Mejor dos renglones. */
+.rec-encima {
   position: absolute;
   top: 8px;
   left: 8px;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: calc(100% - 66px);
+  pointer-events: none;
+}
+.sello-recreacion {
   margin: 0;
   padding: 4px 9px;
   border-radius: 999px;
@@ -79,10 +90,7 @@
 /* Reproducir, encima del mapa y debajo de la advertencia. `[hidden]` explícito: con display:flex,
    el atributo hidden a secas no esconde nada. */
 .rec-en-mapa {
-  position: absolute;
-  top: 40px;
-  left: 8px;
-  z-index: 2;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -142,10 +150,12 @@
 .rec-linea input { width: 100%; margin: 0; accent-color: var(--acento); }
 /* El golpe llega al 80 % de la película (GOLPE_EN en recreacion.js). */
 .rec-marca-golpe { position: absolute; left: 80%; top: -6px; width: 3px; height: 12px; margin-left: -1px; border-radius: 2px; background: #d92d20; pointer-events: none; }
-.rec-lento { flex: 0 0 auto; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 999px; background: transparent; color: var(--texto); font-size: 14px; cursor: pointer; }
-.rec-lento[aria-pressed="true"] { background: var(--acento-suave); border-color: var(--acento); }
+/* Del tamaño de un dedo: con 14 px y sin `font: inherit` medía unos 35 px de alto. */
+.rec-lento { flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--borde); border-radius: 999px; background: transparent; color: var(--texto); font: inherit; font-size: 15px; cursor: pointer; }
+.rec-lento[aria-pressed="true"] { background: var(--acento); border-color: var(--acento); color: #ffffff; }
 .rec-fase { margin: 8px 0; font-size: 15px; font-weight: 600; }
 /* Dos o tres cámaras (la de todos y la de cada carro que se mueve), a lo ancho en partes iguales. */
 .rec-camaras { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
 .rec-camaras .boton { width: 100%; margin: 0; padding: 8px 6px; font-size: 15px; }
-.rec-camaras .boton[aria-pressed="true"] { background: var(--acento-suave); }
+/* La cámara puesta, llena: con el verde pálido de antes no se distinguía de las otras al sol. */
+.rec-camaras .boton[aria-pressed="true"] { background: var(--acento); color: #ffffff; }

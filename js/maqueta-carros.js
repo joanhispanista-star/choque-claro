@@ -27,6 +27,19 @@ const REFLEJO_DEL_CUARTO = 0.3;
 // (MapLibre la cuenta como 0 m): mejor el carro a la altura del golpe que enterrado 2.900 m.
 const SALTO_IMPOSIBLE = 60;
 
+// Hacia dónde mira el anillo del golpe recién hecho (RingGeometry va en el plano XY).
+const HACIA_Z = new THREE.Vector3(0, 0, 1);
+
+// El color del daño, entero, como tenir() del paso 6 (visor-danos.js). resaltar() de carro.js lo
+// lleva a mitad de camino hacia la pintura, y la abolladura azul sobre el naranja de B salía lila,
+// casi el morado de «suelto» (revisión del 14-nov).
+function tenir(malla, color) {
+  if (color == null || malla.userData.pintarVelo) return resaltar(malla, color);
+  malla.material.color.set(color);
+  malla.material.emissive.set(color);
+  malla.material.emissiveIntensity = BRILLO_DEL_DANO;
+}
+
 // La sombra de contacto: una mancha suave debajo del carro. Sin ella el carro parece flotar, porque
 // la luz del mapa no proyecta sombras.
 function texturaDeSombra() {
@@ -105,8 +118,8 @@ export function capaDeLosCarros({ maplibregl, origen, plano, carros, danos = [],
     modelos.set(c.letra, { raiz, golpeadas, enRojo: false });
   }
 
+  // El anillo se acuesta sobre la vía en cada cuadro (render), con la pendiente del golpe.
   const anillo = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.15, 48), new THREE.MeshBasicMaterial({ color: ROJO, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
-  anillo.rotation.x = -Math.PI / 2;
   anillo.visible = false;
   escena.add(anillo);
 
@@ -159,14 +172,23 @@ export function capaDeLosCarros({ maplibregl, origen, plano, carros, danos = [],
       }
       for (const modelo of modelos.values()) {
         if (modelo.enRojo === golpe) continue;
-        for (const { malla, color } of modelo.golpeadas) {
-          resaltar(malla, golpe ? color : null);
-          if (golpe) malla.material.emissiveIntensity = BRILLO_DEL_DANO;
-        }
+        for (const { malla, color } of modelo.golpeadas) tenir(malla, golpe ? color : null);
         modelo.enRojo = golpe;
       }
       anillo.visible = golpe;
-      anillo.position.set(0, 0.08, 0);
+      if (golpe) {
+        // Inclinado con la vía, como los carros: plano, en una pendiente del 15 % el borde de subida
+        // quedaba 9 cm bajo el asfalto y se veía un arco cortado (revisión del 14-nov).
+        const r = 1.15;
+        const norte = alturaEn(0, r) - base;
+        const sur = alturaEn(0, -r) - base;
+        const este = alturaEn(r, 0) - base;
+        const oeste = alturaEn(-r, 0) - base;
+        // En la escena z va al sur: la subida hacia el sur es (sur - norte).
+        const normal = new THREE.Vector3(-(este - oeste) / (2 * r), 1, -(sur - norte) / (2 * r)).normalize();
+        anillo.quaternion.setFromUnitVectors(HACIA_Z, normal);
+        anillo.position.set(0, (norte + sur + este + oeste) / 4 + 0.08, 0);
+      }
       const transformacion = new THREE.Matrix4()
         .makeTranslation(centro.x, centro.y, base * escala)
         .scale(new THREE.Vector3(escala, -escala, escala))

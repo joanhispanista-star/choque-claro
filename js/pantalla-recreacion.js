@@ -6,9 +6,13 @@
 // Solo en la maqueta abierta, no en el 3D de Google: las condiciones de Google no dejan guardar ni
 // sacar su 3D, y la recreación es justo lo que más adelante tiene que salir en el expediente.
 //
-// Lo que se dice siempre, en el mapa mismo y no solo debajo: que es lo declarado y no una medición.
-// Un pantallazo de la recreación no puede salir sin esa advertencia.
-import { DURACION_MS, GOLPE_EN, camaraQueSigue, encuadreDeLosCarros, fotograma, recreacionDelCroquis } from './recreacion.js';
+// Lo que se dice siempre, en el mapa mismo y no solo debajo: que no es una medición, y de quién es lo
+// que se ve (lo declarado, un croquis sin terminar o el ejemplo inventado). Un pantallazo de la
+// recreación no puede salir sin esa advertencia.
+//
+// Antes de reproducir, los carros están donde los puso el croquis, no al comienzo de su flecha: la
+// zona muestra lo declarado, y el primer cuadro de la película (12 m más atrás) no lo es.
+import { DURACION_MS, GOLPE_EN, avisosDeLaRecreacion, camaraQueSigue, encuadreDeLosCarros, fotograma, fotogramaDelCroquis, recreacionDelCroquis, selloDeLaRecreacion, textoDeLaFase } from './recreacion.js';
 import { colorDeCarro } from './zona-3d.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -18,6 +22,11 @@ const LENTO = 4;
 // Lo que tarda la cámara en llegar a su sitio al cambiar de cámara: sin esto saltaba de golpe y no
 // se entendía desde dónde se estaba mirando.
 const ENTRADA_MS = 900;
+// Lo más que avanza la película entre dos cuadros. Al volver de otra app o de la pantalla bloqueada,
+// Safari entrega en el primer cuadro todo el tiempo que estuvo fuera, y la película saltaba al final
+// sin mostrar el golpe (revisión del 14-nov). Un cuarto de segundo: con un tope de 100 ms, en el Edge
+// oculto del PC (de 5 a 10 cuadros por segundo) la película tardaba más de 11 s en vez de 9.
+const SALTO_MAXIMO_MS = 250;
 // La cámara que los muestra a todos: inclinada, y con el círculo del encuadre ocupando casi todo el
 // ancho del mapa (los créditos y los botones se comen el resto).
 const INCLINACION_DE_TODOS = 58;
@@ -31,21 +40,40 @@ const giro = (a, b) => ((((b - a) % 360) + 540) % 360) - 180;
 const TEXTOS = { listo: 'Ver cómo fue', jugando: 'Pausar', pausa: 'Continuar', fin: 'Verlo otra vez' };
 const PARA_LECTORES = { listo: 'Ver la recreación', jugando: 'Pausar la recreación', pausa: 'Continuar la recreación', fin: 'Ver la recreación otra vez' };
 
-function textoDeLaFase(rec, t) {
-  if (t < GOLPE_EN) return 'Antes del golpe: cada carro por su flecha.';
-  return rec.toque
-    ? 'El golpe. De aquí en adelante la recreación se queda quieta: cómo quedaron los carros lo cuentan las fotos de la escena.'
-    : 'Fin de las flechas: no juntan los carros, así que la recreación para donde termina la flecha. Las fotos de la escena cuentan el resto.';
-}
+// Con «Reducir movimiento» encendido (Ajustes › Accesibilidad › Movimiento en el iPhone), la cámara
+// no vuela ni se va cerrando sola: MapLibre lo respeta en sus animaciones, pero la película mueve la
+// cámara con jumpTo en cada cuadro, y eso no pasa por su filtro.
+const quiereMenosMovimiento = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
 // `camaraGeneral()`: la cámara de la zona en ese momento (la de la maqueta, con el análisis si llegó).
-// Devuelve { soltar() } para que los botones de la zona le quiten la cámara a la película, o null
-// si no hay nada que recrear o este teléfono no pudo dibujar los carros.
+// Devuelve { soltar(), irA(), camara() } para que los botones de la zona le quiten la cámara a la
+// película, o null si no hay nada que recrear, si falta algo de la página o si este teléfono no pudo
+// dibujar los carros. En los tres casos no apagó nada: quedan las cajas de siempre.
 // `alTomarLaCamara()`: se llama cada vez que la película se queda con la cámara, para que la zona
 // deje de moverla por su cuenta (la vuelta, o el análisis de la vía que llega tarde).
+// `croquis.hecho`: cuándo la persona dijo «Listo: así fue» en el paso 7, o null si no lo ha dicho.
 export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos = [], ejemplo = false, camaraGeneral, alTomarLaCamara = () => {} }) {
   const rec = recreacionDelCroquis(croquis);
   if (!rec) return null;
+  // Lo de la página, antes de tocar el mapa. Si el 3D de Google se cayó ya dibujado, antes se llevaba
+  // el sello y el botón de encima del mapa: la recreación reventaba a medias, con las cajas de los
+  // carros ya apagadas y los carros 3D sin película (revisión del 14-nov).
+  const seccion = $('#recreacion');
+  const barra = $('#rec-barra');
+  const boton = $('#rec-jugar');
+  const enMapa = $('#rec-jugar-mapa');
+  const textoEnMapa = $('#rec-jugar-mapa-texto');
+  const sello = $('#sello-recreacion');
+  const linea = $('#rec-tiempo');
+  const lento = $('#rec-lento');
+  const camaras = $('#rec-camaras');
+  const fase = $('#rec-fase');
+  const nota = $('#rec-nota');
+  if (![seccion, barra, boton, enMapa, textoEnMapa, sello, linea, lento, camaras, fase, nota].every(Boolean)) {
+    console.warn('Recreación: a la página le falta una parte; quedan las cajas de siempre.');
+    return null;
+  }
+
   let capa;
   try {
     const { capaDeLosCarros } = await import('./maqueta-carros.js');
@@ -62,7 +90,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     mapa.addLayer(capa, mapa.getLayer('choque-carros-nombre') ? 'choque-carros-nombre' : undefined);
   } catch (error) {
     // Sin WebGL 2 (Three.js lo necesita) quedan las cajas de siempre, que ya estaban dibujadas.
+    // MapLibre anota la capa ANTES de llamar a su onAdd: si onAdd revienta, la capa rota se queda en
+    // el mapa sin dibujar nada. Se saca, para que nadie la dé por buena después.
     console.warn('Recreación:', error?.message ?? error);
+    if (mapa.getLayer('choque-carros-3d')) mapa.removeLayer('choque-carros-3d');
     return null;
   }
   if (mapa.getLayer('choque-carros')) mapa.setLayoutProperty('choque-carros', 'visibility', 'none');
@@ -100,20 +131,25 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     }
   };
 
-  const seccion = $('#recreacion');
-  const boton = $('#rec-jugar');
-  const enMapa = $('#rec-jugar-mapa');
-  const linea = $('#rec-tiempo');
-  const lento = $('#rec-lento');
-  const camaras = $('#rec-camaras');
-  const fase = $('#rec-fase');
-  $('#sello-recreacion').hidden = false;
-  $('#rec-nota').textContent = (ejemplo ? 'Ejemplo inventado: los carros, sus flechas y sus daños no son de nadie. ' : '') +
-    'Es el croquis del paso 7 en movimiento: cada carro sigue su flecha a ritmo parejo y todos llegan al golpe a la vez. Nadie declaró velocidades, así que no dice quién iba más rápido ni si alguien frenó. ' +
-    (danos.length ? 'En el golpe se encienden las piezas que se marcaron como dañadas en el paso 6, cada una con el color de su daño. ' : '') +
-    'La maqueta no tiene árboles, barrancos ni carros parqueados: no dice qué alcanzaba a ver cada conductor.';
+  sello.textContent = selloDeLaRecreacion({ ejemplo, hecho: !!croquis.hecho });
+  sello.hidden = false;
+  // Lo de abajo sale de lo que la película hace con ESTE croquis (recreacion.js): a la misma rapidez,
+  // o quién tiene que ir más rápido para que se junten, y por qué algún carro no se mueve. Antes decía
+  // siempre «todos llegan al golpe a la vez» y «no dice quién iba más rápido», también cuando una
+  // flecha más larga hacía ver a un carro el doble de rápido (revisión del 14-nov).
+  // Sin película (nadie se mueve) no hay «en movimiento» ni golpe que encienda las piezas.
+  const conGolpe = !rec.nadaSeMueve && rec.hayGolpe;
+  nota.textContent = [
+    ejemplo ? 'Ejemplo inventado: los carros, sus flechas y sus daños no son de nadie.' : rec.nadaSeMueve ? 'Es el croquis del paso 7 en 3D, quieto.' : 'Es el croquis del paso 7 en movimiento: cada carro por su flecha.',
+    ...avisosDeLaRecreacion(rec),
+    danos.length && conGolpe ? (ejemplo ? 'En el golpe se encienden las piezas dañadas del ejemplo, cada una con el color de su daño.' : 'En el golpe se encienden las piezas que se marcaron como dañadas en el paso 6, cada una con el color de su daño.') : '',
+    'La maqueta no tiene árboles, barrancos ni carros parqueados: no dice qué alcanzaba a ver cada conductor.',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  let t = 0;
+  // `t` null: todavía no se ha reproducido, y se ve el croquis tal cual.
+  let t = null;
   let jugando = false;
   let yaJugo = false;
   let ultimo = 0;
@@ -127,18 +163,31 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
   // De dónde viene la cámara mientras llega a su sitio, o null si ya llegó.
   let entrada = null;
   let cuadroDeEntrada = 0;
+  const menosMovimiento = quiereMenosMovimiento();
+  // El momento de la película que corresponde a lo que se ve. Con el croquis quieto: el instante en
+  // que la película pasa por él, o el golpe si la película no pasa por ahí (cuando uno tiene que ir
+  // más rápido, ver recreacion.js).
+  const momento = () => t ?? rec.tCroquis ?? GOLPE_EN;
+
+  // Con menos movimiento, «Los carros» no se va cerrando: un solo encuadre donde cabe toda la
+  // película, hecho con los de varios momentos.
+  const encuadreFijo = (() => {
+    const todos = [0, 0.2, 0.4, 0.6, GOLPE_EN].map((m) => encuadreDeLosCarros(rec, m));
+    const centro = todos[0].centro;
+    return { centro, radio: Math.max(...todos.map((e) => Math.hypot(e.centro.x - centro.x, e.centro.y - centro.y) + e.radio)) };
+  })();
 
   // Adónde quiere ir la cámara en este momento de la película, o null si la mueve la persona.
   const camaraDelModo = () => {
     if (modo === 'todos') {
-      const e = encuadreDeLosCarros(rec, t);
+      const e = menosMovimiento ? encuadreFijo : encuadreDeLosCarros(rec, momento());
       const c = rec.plano.aGrados(e.centro);
       // Un píxel de MapLibre mide 78.271,5 × cos(latitud) / 2^zoom metros (teselas de 512).
       const metrosPorPixel = (2 * e.radio) / ((mapa.getContainer().clientWidth || 360) * LLENO);
       return { center: [c.lon, c.lat], zoom: Math.log2((78271.517 * Math.cos(c.lat * GRADO)) / metrosPorPixel), pitch: INCLINACION_DE_TODOS, bearing: rumboDeTodos };
     }
     if (modo === 'sigue') {
-      const c = camaraQueSigue(rec, letra, t);
+      const c = camaraQueSigue(rec, letra, momento());
       if (!c) return null;
       const desde = rec.plano.aGrados(c.desde);
       const hacia = rec.plano.aGrados(c.hacia);
@@ -177,24 +226,29 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     if (entrada) cuadroDeEntrada = requestAnimationFrame(pasoDeEntrada);
   };
   const entrar = () => {
+    cancelAnimationFrame(cuadroDeEntrada);
+    // Con menos movimiento la cámara llega de una vez: un corte, no un vuelo.
+    if (menosMovimiento) {
+      entrada = null;
+      return;
+    }
     const c = mapa.getCenter();
     entrada = { center: [c.lng, c.lat], zoom: mapa.getZoom(), pitch: mapa.getPitch(), bearing: mapa.getBearing(), t0: performance.now() };
-    cancelAnimationFrame(cuadroDeEntrada);
     if (!jugando) cuadroDeEntrada = requestAnimationFrame(pasoDeEntrada);
   };
 
-  const estado = () => (jugando ? 'jugando' : t >= 1 ? 'fin' : t > 0 ? 'pausa' : 'listo');
+  const estado = () => (jugando ? 'jugando' : t === null ? 'listo' : t >= 1 ? 'fin' : t > 0 ? 'pausa' : 'listo');
   const ponerBotones = () => {
     const e = estado();
     if (boton.dataset.estado === e) return;
     boton.dataset.estado = e;
     boton.setAttribute('aria-label', PARA_LECTORES[e]);
     enMapa.dataset.estado = e;
-    $('#rec-jugar-mapa-texto').textContent = TEXTOS[e];
+    textoEnMapa.textContent = TEXTOS[e];
   };
 
   const pintar = (ahora) => {
-    const f = fotograma(rec, t);
+    const f = t === null ? fotogramaDelCroquis(rec) : fotograma(rec, t);
     apagarLosPuntos(modo === 'sigue');
     capa.poner(f);
     // Primero la cámara y después las letras: un marcador se acomoda con la cámara que encuentra.
@@ -203,7 +257,8 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
       const g = rec.plano.aGrados(c);
       letras.get(c.letra)?.setLngLat([g.lon, g.lat]);
     }
-    linea.value = String(Math.round(t * 1000));
+    // Con el croquis quieto, la línea marca el instante en que la película pasa por él.
+    linea.value = String(Math.round((t ?? rec.tCroquis ?? 0) * 1000));
     // Solo si cambia: el renglón se lee en voz alta (aria-live) y repetirlo en cada cuadro lo trababa.
     const texto = textoDeLaFase(rec, t);
     if (fase.textContent !== texto) fase.textContent = texto;
@@ -222,8 +277,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     // esconden (a 85° de inclinación MapLibre aplasta la brújula hasta dejarla en una raya).
     mapa.getContainer().classList.toggle('siguiendo-carro', modo === 'sigue');
     marcar();
-    if (modo === 'libre') entrada = null;
-    else {
+    if (modo === 'libre') {
+      entrada = null;
+      cancelAnimationFrame(cuadroDeEntrada);
+    } else {
       alTomarLaCamara();
       entrar();
     }
@@ -233,19 +290,26 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
   const parar = () => {
     jugando = false;
     cancelAnimationFrame(cuadro);
+    // Si la cámara iba llegando a su sitio, que termine de llegar: sin esto, pausar en ese momento la
+    // dejaba congelada a medio camino (revisión del 14-nov).
+    if (entrada) {
+      cancelAnimationFrame(cuadroDeEntrada);
+      cuadroDeEntrada = requestAnimationFrame(pasoDeEntrada);
+    }
     ponerBotones();
   };
   const paso = (ahora) => {
     if (!jugando) return;
     const duracion = DURACION_MS * (lento.getAttribute('aria-pressed') === 'true' ? LENTO : 1);
-    t = Math.min(1, t + Math.max(0, ahora - ultimo) / duracion);
+    t = Math.min(1, t + Math.min(SALTO_MAXIMO_MS, Math.max(0, ahora - ultimo)) / duracion);
     ultimo = ahora;
-    if (t >= 1) jugando = false;
     pintar(ahora);
-    if (jugando) cuadro = requestAnimationFrame(paso);
+    // Al terminar, como una pausa: si la cámara iba llegando a su sitio, que termine de llegar.
+    if (t >= 1) parar();
+    else cuadro = requestAnimationFrame(paso);
   };
   const jugar = () => {
-    if (t >= 1) t = 0;
+    if (t === null || t >= 1) t = 0;
     // La primera vez, con la cámara que los muestra a todos: la de la zona deja los carros de 30 px.
     // Si la persona ya escogió desde dónde mirar, no se le mueve.
     if (!eligioCamara && modo === 'libre') ponerModo('todos');
@@ -264,6 +328,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     pintar();
   });
   lento.addEventListener('click', () => lento.setAttribute('aria-pressed', String(lento.getAttribute('aria-pressed') !== 'true')));
+  // Si la persona se va a otra app, la película la espera en pausa.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && jugando) parar();
+  });
 
   // Las cámaras: la de todos y la de cada carro que se mueve (uno quieto no va a ninguna parte).
   const opciones = [{ modo: 'todos', letra: null, texto: rec.carros.length > 1 ? 'Los carros' : 'El carro' }, ...rec.carros.filter((c) => c.camino).map((c) => ({ modo: 'sigue', letra: c.letra, texto: `Seguir a ${c.letra}` }))];
@@ -289,17 +357,32 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
   const soltar = () => {
     if (modo !== 'libre') ponerModo('libre');
   };
+  const laPersonaTomaLaCamara = () => {
+    // Antes de la primera vez que se reproduce, mover el mapa es mirar la zona, no escoger cámara.
+    if (yaJugo || modo !== 'libre') eligioCamara = true;
+    soltar();
+  };
   for (const evento of ['mousedown', 'touchstart', 'wheel', 'movestart']) {
     mapa.on(evento, (e) => {
-      if (!e.originalEvent) return;
-      // Antes de la primera vez que se reproduce, mover el mapa es mirar la zona, no escoger cámara.
-      if (yaJugo || modo !== 'libre') eligioCamara = true;
-      soltar();
+      if (e.originalEvent) laPersonaTomaLaCamara();
     });
   }
+  // Arrastrar la brújula gira e inclina el mapa sin que MapLibre lo cuente como un gesto de la persona
+  // (su movestart llega sin originalEvent), y el dedo cae fuera del lienzo: la película le devolvía la
+  // cámara en cada cuadro, debajo del dedo (revisión del 14-nov).
+  mapa.getContainer().querySelector('.maplibregl-ctrl-top-right')?.addEventListener('pointerdown', laPersonaTomaLaCamara);
+  // Al girar el teléfono, MapLibre conserva el zoom y la cámara que sigue al carro se acercaba sola a
+  // 8 m (la distancia sale del alto del mapa). Con la película andando cada cuadro la rehace.
+  mapa.on('resize', () => {
+    if (!jugando && modo !== 'libre') pintar();
+  });
 
+  // Si nadie se mueve (ninguna flecha dice de dónde venían, o se tocan desde que arrancan), no hay qué
+  // reproducir: se queda el croquis en 3D y abajo se dice por qué.
   seccion.hidden = false;
-  enMapa.hidden = false;
+  barra.hidden = rec.nadaSeMueve;
+  camaras.hidden = rec.nadaSeMueve;
+  enMapa.hidden = rec.nadaSeMueve;
   pintar();
   return {
     // Para los botones de la zona (Vista 3D, Desde arriba, Dar la vuelta): escogen cámara ellos.
@@ -307,10 +390,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
       eligioCamara = true;
       soltar();
     },
-    // Para el arnés de pruebas: ir a un momento y a una cámara sin esperar la película.
-    irA(momento) {
+    // Para el arnés de pruebas: ir a un momento y a una cámara sin esperar la película. null: el croquis.
+    irA(nuevoMomento) {
       parar();
-      t = Math.min(1, Math.max(0, momento));
+      t = nuevoMomento === null ? null : Math.min(1, Math.max(0, nuevoMomento));
       pintar();
     },
     camara(nuevoModo, nuevaLetra = null) {
