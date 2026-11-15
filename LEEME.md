@@ -13,8 +13,9 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 287 pruebas en Node, sin internet (51 vienen del Taller con lo
-  que se copió de allá).
+- `npm test` → 312 pruebas en Node, sin internet (51 vienen del Taller con lo
+  que se copió de allá; 13 corren la base de las cuentas en un Postgres dentro
+  de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
   en vivo ni brújula. Para probar de verdad está en GitHub Pages, encendido el
@@ -456,6 +457,51 @@ El envío (paso 8):
   primera hoja dice lo que NO afirma, y lo declarado va como declarado:
   «según la persona», «SIN revisar».
 
+## Cuentas y roles (fase 2, en construcción desde el sáb 14-nov)
+
+Joan lo decidió el 14-nov: cuentas de verdad ya, sin esperar al piloto. **Nada
+de esto está todavía en el sitio ni en un servidor.** La demo del vie 20-nov
+sigue entera en el teléfono, y no se toca hasta que la fase 2 esté completa y
+probada.
+
+| Rol | Quién es | Cuenta |
+|---|---|---|
+| conductor | el que reporta el choque | no: sesión anónima en su teléfono |
+| analista | el de siniestros de la aseguradora | correo y clave |
+| jefe | el jefe de siniestros: arma su equipo, asigna y ve la bitácora | correo y clave |
+| abogado | el de la aseguradora: solo lo que le asignan | correo y clave |
+| abogado del conductor | el que el conductor elija | no: un enlace que vence a 30 días |
+| super_admin | Joan: ve todo, y cada apertura queda en la bitácora | correo y clave |
+
+**Hecho (pieza 1, 14-nov):** la tabla de quién puede qué (`js/permisos.js`) y
+la base con RLS (`supabase/migrations/20261114150000_fase2_roles.sql`).
+`pruebas/roles-postgres.test.js` corre la migración en PGlite y le hace probar
+a cada persona cada acción sobre cada reclamo: 976 casos, y lo que la base deja
+hacer tiene que ser exactamente lo que dice la tabla. Cómo está armada:
+- El equipo **solo lee** de las tablas. Lo que cambia algo pasa por una
+  función que escribe en la bitácora, y la bitácora no tiene política de
+  insert.
+- Lo declarado no tiene permiso de select para nadie: solo sale por
+  `abrir_reclamo()`, que deja el rastro antes. Las fotos del almacenamiento
+  solo se bajan con un «abrió» propio de las últimas 2 horas.
+- A la aseguradora no le llega un reclamo «subiendo». Solo el servidor lo pasa
+  a «recibido», cuando recalcula la huella de cada foto, y le pone **su** hora.
+  Eso es lo que hace valer el sello contra el dueño del teléfono.
+
+**Falta:** crear el proyecto de Supabase (solo Joan puede), aplicar la
+migración y correr la consulta de verificación de su pie; las funciones del
+servidor (`recibir-reclamo`, `crear-miembro`, `abrir-enlace`); el envío desde
+el paso 8; y las páginas del equipo. Las fechas están en `PLAN-ROLES.md` (fuera
+de git, como `PLAN.md`). Ningún reclamo real entra al servidor sin que un
+abogado revise el texto de la autorización y sin contrato con la aseguradora.
+
+**Trampa que cazó la prueba el mismo día:** en PL/pgSQL, un `if not (v_rol =
+'super_admin' or …)` con `v_rol` en null da null, y un `if` con null **no
+frena**. Así un conductor sin rol podía asignar reclamos y apagar cuentas del
+equipo. Toda condición con un rol que puede faltar va con `coalesce(…, false)`.
+Por eso la prueba solo cuenta como «no» el código 42501: cualquier otro error
+sale como defecto. Si no, una función rota se leería como «no tiene permiso».
+
 ## Archivos
 
 | Archivo | Qué hace |
@@ -520,6 +566,9 @@ El envío (paso 8):
 | `js/vendor/leaflet/` | Leaflet 1.9.4 (BSD-2), copiado: sin CDN. |
 | `herramientas/servidor.js` | El servidor del taller, sin COOP/COEP (COEP bloquearía las teselas). |
 | `herramientas/guardar-ejemplo-via.mjs` | Baja los ejemplos reales de las pruebas. |
+| `js/permisos.js` | **Puro.** Quién puede qué cuando haya cuentas (fase 2): seis roles, doce acciones y el motivo del no en español. No protege nada: la pantalla lo usa para mostrar solo los botones que la base va a aceptar. |
+| `supabase/migrations/20261114150000_fase2_roles.sql` | La base de las cuentas: tablas, RLS, las funciones que dejan rastro y el almacenamiento de las fotos. Idempotente. Al pie, la consulta para verificar que se aplicó (las seis en true). **Sin aplicar todavía.** |
+| `pruebas/roles-postgres.test.js`, `pruebas/supabase-de-mentira.sql` | La migración corrida en PGlite (Postgres dentro de Node, solo para pruebas) sobre un Supabase de mentira que imita sus roles, `auth.uid()`, el almacenamiento y sus permisos por defecto abiertos. |
 | `pruebas/` | `node --test`; `datos/` tiene dos respuestas reales de Overpass (ODbL). La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). `reporte-de-prueba.js` arma un reporte entero para el paso 8 (la curva del ejemplo, 26 fotos, una repetida, B a medias) y `jpeg-de-prueba.js`, JPEG mínimos válidos. |
 
 ## Trampas que ya mordieron
