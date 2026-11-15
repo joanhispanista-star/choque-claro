@@ -14,6 +14,7 @@
 // teléfono para este mismo lugar. Sin croquis, solo el ejemplo trae carros, y son
 // inventados: la leyenda lo dice.
 import { distancia, planoLocal, rumbo as rumboEntre } from './geo.js';
+import { armarCaso, croquisParaGuardar, viaDesdeElAnalisis } from './croquis.js';
 
 const GRADO = Math.PI / 180;
 
@@ -147,6 +148,39 @@ export function croquisDeEjemplo(analisis) {
   ];
 }
 
+// El croquis del EJEMPLO tal como lo arma el paso 7: el caso «de frente» sobre la curva de verdad,
+// A subiendo por su carril, B bajando por el suyo y el golpe en el eje. Desde el sáb 14-nov-2026
+// reemplaza en la zona a los rectángulos de croquisDeEjemplo, montados sobre el eje de la vía a 20 m
+// del golpe y sin golpe marcado: con la forma del croquis de un teléfono, la recreación y los
+// carros 3D lo tratan igual. Inventado, como dice la leyenda.
+export function croquisGuardadoDeEjemplo(analisis) {
+  if (analisis?.estado !== 'ok' || !Array.isArray(analisis.tramo) || analisis.tramo.length < 2 || !analisis.enLaVia) return null;
+  const via = viaDesdeElAnalisis(analisis, analisis.enLaVia);
+  return croquisParaGuardar(armarCaso('frente', via, [{ letra: 'A', quien: 'tuyo' }, { letra: 'B', quien: 'otro' }]), via, { ejemplo: true });
+}
+
+// Los daños del ejemplo, inventados como su croquis: de frente y cerrándose los dos hacia el eje, el
+// golpe cae en la trompa y la esquina izquierda de cada uno. La recreación los pinta en el golpe.
+export const DANOS_DEL_EJEMPLO = [
+  { carro: 'A', pieza: 'bomper-del', tipo: 'roto' },
+  { carro: 'A', pieza: 'capo', tipo: 'abolladura' },
+  { carro: 'A', pieza: 'guardafango-del-izq', tipo: 'abolladura' },
+  { carro: 'B', pieza: 'bomper-del', tipo: 'roto' },
+  { carro: 'B', pieza: 'guardafango-del-izq', tipo: 'abolladura' },
+];
+
+// El croquis que se dibuja en la zona: el del teléfono (ya filtrado por croquisDeEstaZona) o, en el
+// ejemplo sin croquis, el inventado, que necesita el análisis de la vía.
+export function croquisDeLaZona({ croquis = null, ejemplo = false, analisis = null }) {
+  return croquis ?? (ejemplo ? croquisGuardadoDeEjemplo(analisis) : null);
+}
+
+// El ancho con que se dibuja la vía, el mismo del plano del expediente: unos 7 m para dos carriles
+// y, con el número del mapa, 3,3 m por carril, entre 5 y 14.
+export function anchoDeLaVia(carriles) {
+  return Number.isFinite(carriles) && carriles > 0 ? Math.min(14, Math.max(5, carriles * 3.3)) : 7;
+}
+
 // El croquis del teléfono sirve para esta zona si es de este mismo lugar (su pin a menos de 150 m)
 // y del mismo tipo: el croquis que alguien hizo sobre el ejemplo no se le pega a un choque de
 // verdad, ni al revés (lo mismo que con las fotos de la escena).
@@ -187,14 +221,15 @@ export function fotosConCono(registros = []) {
 // inventados que salen del tramo (por eso cambian cuando llega el análisis). Los usan la maqueta y el
 // 3D de Google (zona-google.js), que pone en cada uno el carro 3D del paso 6.
 export function carrosDeLaZona({ croquis = null, ejemplo = false, analisis = null }) {
-  const via = analisis?.estado === 'ok' ? analisis : null;
-  return croquis ? carrosDelCroquis(croquis) : ejemplo ? croquisDeEjemplo(via) ?? [] : [];
+  const delCroquis = croquisDeLaZona({ croquis, ejemplo, analisis });
+  return delCroquis ? carrosDelCroquis(delCroquis) : [];
 }
 
 // Todo lo que se dibuja encima de la maqueta, en GeoJSON. `croquis`: el de croquisDeEstaZona.
 export function capasDeLaZona({ centro, precision = null, analisis = null, sol = null, ejemplo = false, fotos = [], croquis = null }) {
   const via = analisis?.estado === 'ok' ? analisis : null;
-  const carros = carrosDeLaZona({ croquis, ejemplo, analisis });
+  const delCroquis = croquisDeLaZona({ croquis, ejemplo, analisis });
+  const carros = delCroquis ? carrosDelCroquis(delCroquis) : [];
   const conSol = sol && sol.altura > 0;
   const finDelRayo = conSol ? desplazar(centro, sol.azimut, 70) : null;
   return {
@@ -207,7 +242,7 @@ export function capasDeLaZona({ centro, precision = null, analisis = null, sol =
     carros: coleccion(carros.map((c) => rasgo(rectanguloDeCarro(c.centro, c.rumbo, c.largo, c.ancho), { nombre: c.nombre, color: c.color, altura: 1.5 }))),
     nombresDeCarros: coleccion(carros.map((c) => rasgo(punto(c.centro.lon, c.centro.lat), { nombre: c.nombre }))),
     trayectorias: coleccion(carros.filter((c) => c.trayectoria).map((c) => rasgo(c.trayectoria, { nombre: c.nombre, color: c.color }))),
-    golpe: coleccion(croquis?.golpe ? [rasgo(punto(croquis.golpe.lon, croquis.golpe.lat))] : []),
+    golpe: coleccion(delCroquis?.golpe ? [rasgo(punto(delCroquis.golpe.lon, delCroquis.golpe.lat))] : []),
   };
 }
 

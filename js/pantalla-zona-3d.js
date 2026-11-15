@@ -25,9 +25,10 @@ import { analizarVia, consultaDeLaVia } from './via.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { posicionDelSol } from './sol.js';
 import { abrirBaseDelReporte } from './reporte-bd.js';
-import { COLORES, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, croquisDeEstaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
+import { COLORES, DANOS_DEL_EJEMPLO, anchoDeLaVia, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, croquisDeEstaZona, croquisDeLaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
 import { montarEscena360 } from './pantalla-escena-360.js';
 import { montarZonaGoogle } from './pantalla-zona-google.js';
+import { montarRecreacion } from './pantalla-recreacion.js';
 import { CLAVE_DE_GOOGLE } from './clave-de-google.js';
 
 const ESTILO = 'https://tiles.openfreemap.org/styles/liberty';
@@ -92,12 +93,12 @@ async function delReporte() {
       const reporte = await base.reporteEnCurso();
       const fotos = await base.fotos(reporte.id);
       for (const f of fotos) if (f.registro.paso === 'escena') f.archivo = await base.foto(f.id);
-      return { fotos, croquis: reporte.croquis || null, lineas: lineasDeLosCarros(reporte.carros) };
+      return { fotos, croquis: reporte.croquis || null, lineas: lineasDeLosCarros(reporte.carros), danos: Array.isArray(reporte.danos) ? reporte.danos : [] };
     } finally {
       base.cerrar();
     }
   } catch {
-    return { fotos: [], croquis: null, lineas: {} };
+    return { fotos: [], croquis: null, lineas: {}, danos: [] };
   }
 }
 
@@ -117,11 +118,29 @@ function pintarLeyenda(filas) {
   );
 }
 
-function ponerCapas(mapa, capas, { conCroquis = false } = {}) {
+// Un ancho en metros como ancho de línea de MapLibre, que va en píxeles: en teselas de 512 un píxel
+// mide 78.271,5 × cos(latitud) / 2^zoom metros, y entre dos zooms crece en base 2, así que con dos
+// paradas exponenciales queda exacto en cualquier zoom.
+function metrosEnPixeles(metros, lat) {
+  const px = (zoom) => metros / ((78271.517 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom);
+  return ['interpolate', ['exponential', 2], ['zoom'], 14, px(14), 22, px(22)];
+}
+
+// El tramo analizado se dibuja como la vía: asfalto del ancho que le da el mapa (anchoDeLaVia) con
+// sus dos bordes en verde, el color del tramo en la leyenda. Hasta el 14-nov era una raya verde de
+// 10 px encima de la calle del mapa. Sin líneas pintadas en el medio, a propósito: el mapa no sabe si
+// la del día era doble o punteada (sale en las fotos), y dibujarla sería afirmar si se podía adelantar.
+function pintarElTramo(mapa, ancho, lat) {
+  mapa.setPaintProperty('choque-asfalto', 'line-width', metrosEnPixeles(ancho, lat));
+  mapa.setPaintProperty('choque-tramo', 'line-gap-width', metrosEnPixeles(ancho, lat));
+}
+
+function ponerCapas(mapa, capas, { conCroquis = false, lat = 0 } = {}) {
   for (const [nombre, datos] of Object.entries(capas)) mapa.addSource('choque-' + nombre, { type: 'geojson', data: datos });
   mapa.addLayer({ id: 'choque-precision', type: 'fill', source: 'choque-precision', paint: { 'fill-color': COLORES.precision, 'fill-opacity': 0.12 } });
   mapa.addLayer({ id: 'choque-precision-borde', type: 'line', source: 'choque-precision', paint: { 'line-color': COLORES.precision, 'line-width': 2, 'line-dasharray': [2, 2] } });
-  mapa.addLayer({ id: 'choque-tramo', type: 'line', source: 'choque-tramo', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': COLORES.tramo, 'line-width': 10, 'line-opacity': 0.6 } });
+  mapa.addLayer({ id: 'choque-asfalto', type: 'line', source: 'choque-tramo', layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': '#5b6067', 'line-width': metrosEnPixeles(anchoDeLaVia(null), lat) } });
+  mapa.addLayer({ id: 'choque-tramo', type: 'line', source: 'choque-tramo', layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': COLORES.tramo, 'line-width': 2.5, 'line-gap-width': metrosEnPixeles(anchoDeLaVia(null), lat) } });
   mapa.addLayer({ id: 'choque-conos', type: 'fill', source: 'choque-conos', paint: { 'fill-color': COLORES.conos, 'fill-opacity': 0.25, 'fill-outline-color': COLORES.conos } });
   mapa.addLayer({ id: 'choque-trayectorias', type: 'line', source: 'choque-trayectorias', layout: { 'line-cap': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-dasharray': [1.5, 1.5] } });
   mapa.addLayer({ id: 'choque-carros', type: 'fill-extrusion', source: 'choque-carros', paint: { 'fill-extrusion-color': ['get', 'color'], 'fill-extrusion-height': ['get', 'altura'], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.95 } });
@@ -140,7 +159,7 @@ function ponerCapas(mapa, capas, { conCroquis = false } = {}) {
 
 // La maqueta abierta. Devuelve el motor (los mismos botones que el 3D de Google) o null si este
 // teléfono no puede dibujarla, y entonces ya lo dijo.
-function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
+function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon, alCargar }) {
   if (!globalThis.maplibregl) {
     avisar('El motor del mapa 3D no cargó. Recarga la página.', true);
     return null;
@@ -150,7 +169,10 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
   try {
     // Arranca desde arriba y entra al 3D cuando el relieve ya llegó: con la cámara inclinada
     // desde el principio, el mapa salía gris (ver camaraDeArranque).
-    mapa = new maplibregl.Map({ container: 'mapa-3d', style: ESTILO, ...camaraDeArranque(centro), maxPitch: 75, attributionControl: { compact: true } });
+    // `antialias`: suaviza los bordes de los carros 3D de la recreación, que en una pantalla de
+    // computador salían en escalera. En las pantallas de 3 píxeles por punto (los iPhone) no se nota
+    // la escalera y sí el costo, que es nueve veces más píxeles: ahí va apagado.
+    mapa = new maplibregl.Map({ container: 'mapa-3d', style: ESTILO, ...camaraDeArranque(centro), maxPitch: 75, attributionControl: { compact: true }, antialias: (globalThis.devicePixelRatio || 1) < 2.5 });
   } catch {
     // Sin WebGL, MapLibre no arranca: se dice, no se deja la caja en blanco.
     avisar('Este teléfono no puede dibujar mapas en 3D (le falta WebGL). La leyenda y la escena en 360° siguen sirviendo.', true);
@@ -160,6 +182,12 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
   mapa.on('error', (e) => {
     // Una tesela que no llega no tumba el mapa; solo se cuenta si no hay nada.
     if (!mapa.loaded()) console.warn('Mapa 3D:', e?.error?.message);
+  });
+  // El estilo de OpenFreeMap nombra iconos que su hoja no trae (treinta en el ejemplo, medido el
+  // 14-nov: «office», «gate», «atm»…). MapLibre avisa en la consola por cada uno y lo repite con
+  // cada tesela. Un icono vacío de 1 px lo calla sin dibujar nada que no estuviera.
+  mapa.on('styleimagemissing', (e) => {
+    if (!mapa.hasImage(e.id)) mapa.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) });
   });
 
   // Si la persona ya movió el mapa, el análisis no le cambia la vista.
@@ -181,7 +209,12 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
   let pendiente = null;
   let enTresD = false;
   const aplicar = (analisis) => {
-    for (const [nombre, datosDeLaCapa] of Object.entries(capasCon(analisis))) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
+    const capas = capasCon(analisis);
+    for (const [nombre, datosDeLaCapa] of Object.entries(capas)) mapa.getSource('choque-' + nombre).setData(datosDeLaCapa);
+    if (analisis?.estado === 'ok') pintarElTramo(mapa, anchoDeLaVia(analisis.carriles), centro.lat);
+    // El croquis inventado del ejemplo llega con el análisis: su golpe cae junto al letrero
+    // «Choque (ejemplo)», que tapaba al carro A. Con golpe, el letrero se apaga, como con un croquis.
+    if (capas.golpe.features.length) mapa.setLayoutProperty('choque-punto-texto', 'visibility', 'none');
     camara = camaraDe(analisis);
     // La cámara entera, no solo el rumbo: si la entrada al 3D va a medio camino, un easeTo de
     // solo el rumbo la cortaría y dejaría el mapa a media inclinación.
@@ -189,7 +222,11 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
   };
 
   mapa.on('load', () => {
-    mapa.addSource('relieve', { type: 'raster-dem', tiles: [RELIEVE], encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles (Mapzen, AWS)</a>' });
+    // Hasta z14, el tope de las teselas de OpenFreeMap: con el relieve hasta z15, de zoom 15 para
+    // arriba MapLibre 4.7 no sabía colgar las teselas de calles sobre el relieve («cannot calculate
+    // elevation if elevation maxzoom > source.maxzoom», medido el 14-nov con la recreación de cerca).
+    // Debajo hay datos de unos 30 m: z14 (unos 9,5 m por píxel) no pierde nada.
+    mapa.addSource('relieve', { type: 'raster-dem', tiles: [RELIEVE], encoding: 'terrarium', tileSize: 256, maxzoom: 14, attribution: 'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles (Mapzen, AWS)</a>' });
     // Exageración 1: el relieve como es. Una pendiente aumentada sería mentir sobre la vía.
     mapa.setTerrain({ source: 'relieve', exaggeration: 1 });
     // Sin sombreado, el relieve en 3D se ve plano desde arriba (se comprobó el
@@ -197,11 +234,14 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
     // con su propia fuente, como recomienda MapLibre, y debajo de las vías y
     // los nombres. La luz del sombreado es la de siempre (del noroeste), no la
     // del sol: no son sombras de esa hora.
-    mapa.addSource('relieve-sombra', { type: 'raster-dem', tiles: [RELIEVE], encoding: 'terrarium', tileSize: 256, maxzoom: 15 });
+    mapa.addSource('relieve-sombra', { type: 'raster-dem', tiles: [RELIEVE], encoding: 'terrarium', tileSize: 256, maxzoom: 14 });
     const debajoDe = mapa.getStyle().layers.find((capa) => capa.type === 'line' || capa.type === 'symbol')?.id;
     mapa.addLayer({ id: 'relieve-sombra', type: 'hillshade', source: 'relieve-sombra', paint: { 'hillshade-exaggeration': 0.45, 'hillshade-shadow-color': '#4a4a4a' } }, debajoDe);
     mapa.setLight(luzDelSol(sol));
-    ponerCapas(mapa, capasCon(null), { conCroquis: !!croquis });
+    // El cielo: sin él, con la cámara inclinada el horizonte era un corte gris. La neblina del
+    // horizonte esconde dónde se acaban las teselas.
+    mapa.setSky({ 'sky-color': '#9cc4e8', 'horizon-color': '#e3edf5', 'fog-color': '#eef2f5', 'sky-horizon-blend': 0.55, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.6 });
+    ponerCapas(mapa, capasCon(null), { conCroquis: !!croquis, lat: centro.lat });
 
     // El primer "quieto" del mapa después de encender el relieve es cuando ya llegaron sus
     // teselas: ahí se entra al 3D. Se lee `camara` en ese momento, así que si el análisis llegó
@@ -212,15 +252,25 @@ function montarMaqueta({ centro, sol, croquis, camaraDe, capasCon }) {
     });
     cargado = true;
     if (pendiente) aplicar(pendiente);
+    alCargar?.();
   });
 
   return {
     nombre: 'abierto',
     mapa,
+    get cargado() {
+      return cargado;
+    },
     // Las capas no se pueden tocar antes del 'load': si el análisis llega antes, espera.
     conAnalisis(analisis) {
       if (cargado) aplicar(analisis);
       else pendiente = analisis;
+    },
+    // La recreación tomó la cámara: cuenta como si la persona la hubiera movido. El análisis que
+    // llegue después no se la quita, y la vuelta deja de girar (las dos movían la cámara a la vez).
+    tocar() {
+      tocado = true;
+      detenerGiro();
     },
     vista3d() {
       detenerGiro();
@@ -266,6 +316,9 @@ async function iniciar() {
   const fotosDelChoque = ejemplo ? [] : delTelefono.fotos;
   const croquis = croquisDeEstaZona(delTelefono.croquis, centro, ejemplo);
   const lineas = croquis ? delTelefono.lineas : {};
+  // Las piezas que se encienden en el golpe de la recreación, cada una con el color de su daño: las
+  // del paso 6 de este reporte si el croquis es suyo; las inventadas si es el croquis del ejemplo.
+  const danos = croquis ? delTelefono.danos : ejemplo ? DANOS_DEL_EJEMPLO : [];
   const fotos = fotosDelChoque.map((f) => f.registro);
   let analisis = { estado: 'cargando' };
   pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
@@ -273,15 +326,41 @@ async function iniciar() {
   const escena360 = montarEscena360($('#escena-360'), fotosDelChoque, { ejemplo });
   addEventListener('pagehide', () => escena360?.cerrar());
 
-  // Con croquis, la cámara se acerca al golpe: a la distancia de la zona sus carros eran una mota.
-  const camaraDe = (deLaVia) => (croquis ? camaraDelCroquis(centro, deLaVia, croquis) : camaraDeLaZona(centro, deLaVia));
+  // Con croquis, la cámara se acerca al golpe: a la distancia de la zona sus carros eran una mota. El
+  // del ejemplo también, en cuanto llega el análisis que lo arma.
+  const camaraDe = (deLaVia) => {
+    const delCroquis = croquisDeLaZona({ croquis, ejemplo, analisis: deLaVia });
+    return delCroquis ? camaraDelCroquis(centro, deLaVia, delCroquis) : camaraDeLaZona(centro, deLaVia);
+  };
   const capasCon = (deLaVia) => capasDeLaZona({ centro, precision, analisis: deLaVia, sol, ejemplo, fotos, croquis });
   const carrosCon = (deLaVia) => carrosDeLaZona({ croquis, ejemplo, analisis: deLaVia });
 
   let motor = null;
-  $('#vista-3d').addEventListener('click', () => motor?.vista3d());
-  $('#vista-arriba').addEventListener('click', () => motor?.desdeArriba());
-  $('#dar-vuelta').addEventListener('click', () => motor?.darLaVuelta());
+  // La recreación va en la maqueta abierta cuando hay croquis (el del teléfono o el del ejemplo, que
+  // espera al análisis) y el mapa ya cargó: lo que llegue de último la monta.
+  let recreacion = null;
+  let montando = false;
+  const intentarRecrear = async () => {
+    if (recreacion || montando || motor?.nombre !== 'abierto' || !motor.cargado) return;
+    const delCroquis = croquisDeLaZona({ croquis, ejemplo, analisis });
+    if (!delCroquis) return;
+    montando = true;
+    recreacion = await montarRecreacion({ mapa: motor.mapa, croquis: delCroquis, sol, lineas, danos, ejemplo: !croquis && ejemplo, camaraGeneral: () => camaraDe(analisis), alTomarLaCamara: () => motor.tocar() });
+    montando = false;
+  };
+  // Los botones de la zona mueven la cámara: primero dejan de seguir a un carro de la recreación.
+  $('#vista-3d').addEventListener('click', () => {
+    recreacion?.soltar();
+    motor?.vista3d();
+  });
+  $('#vista-arriba').addEventListener('click', () => {
+    recreacion?.soltar();
+    motor?.desdeArriba();
+  });
+  $('#dar-vuelta').addEventListener('click', () => {
+    recreacion?.soltar();
+    motor?.darLaVuelta();
+  });
 
   const textosAbiertos = { nota: $('#zona-nota').textContent, fuente: $('#zona-fuente').textContent };
   const ponerTextos = (t) => {
@@ -291,7 +370,7 @@ async function iniciar() {
   const yaLlegoElAnalisis = () => analisis.estado !== 'cargando';
   const abrirMaqueta = () => {
     ponerTextos(textosAbiertos);
-    motor = montarMaqueta({ centro, sol, croquis, camaraDe, capasCon });
+    motor = montarMaqueta({ centro, sol, croquis, camaraDe, capasCon, alCargar: () => intentarRecrear() });
     if (motor && yaLlegoElAnalisis()) motor.conAnalisis(analisis);
   };
 
@@ -325,6 +404,7 @@ async function iniciar() {
     analisis = llegado;
     pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
     motor?.conAnalisis(analisis);
+    intentarRecrear();
     // Con el 3D de Google, el aviso de junto al mapa sigue diciendo que sus fotos no son del día.
     const deGoogle = motor?.nombre === 'google';
     const queSale = deGoogle ? 'El 3D' : 'La maqueta';
@@ -341,6 +421,9 @@ async function iniciar() {
     },
     get google() {
       return motor?.nombre === 'google' ? motor : null;
+    },
+    get recreacion() {
+      return recreacion;
     },
     analisis: () => analisis,
     fotos,

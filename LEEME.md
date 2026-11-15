@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 274 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 287 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
   `http://192.168…`) se ve la app, pero el navegador no da ubicación, cámara
@@ -70,10 +70,49 @@ Los 8 pasos:
      teléfono, si es de este lugar (a menos de 150 m) y del mismo tipo (del
      ejemplo o de verdad): entonces la cámara se acerca al golpe y la leyenda
      dice si ya se dio por hecho o es un borrador. Sin croquis, el ejemplo
-     muestra unos inventados y marcados así. Sin clave ni tarjeta. Es una maqueta, no del
+     muestra uno inventado y marcado así: un choque de frente armado con el
+     mismo `armarCaso` del paso 7, con cada carro en su carril
+     (`croquisGuardadoDeEjemplo`). Sin clave ni tarjeta. Es una maqueta, no del
      día, y la página lo dice. Nada espera al análisis de la vía: con los
      servidores públicos lentos (hasta 75 s) la página se quedaba en blanco; el
      tramo y la cámara a lo largo de la vía llegan después.
+     - **Cómo se ve desde el 14-nov** (Joan: «se ve muy pobre»): el tramo
+       analizado va como asfalto del ancho que da el mapa (3,3 m por carril, 7 m
+       si no lo dice) con sus bordes en verde, en vez de una raya verde; hay
+       cielo y neblina en el horizonte; y los carros son el carro 3D del paso 6
+       sobre el relieve, inclinados con la pendiente, en vez de dos cajas
+       oscuras. Sin líneas pintadas en la vía, a propósito: el mapa no sabe si
+       la del día era doble o punteada.
+   - **La recreación** (14-nov; Joan pidió «recrear con videos interactivos
+     cómo fue el accidente»). En la misma página, sobre la maqueta abierta: el
+     croquis del paso 7 en movimiento. Un botón **«Ver cómo fue»** encima del
+     mapa, una línea de tiempo con la marca del golpe, «Lento» (4 veces más
+     despacio) y tres cámaras: **«Los carros»** (los encuadra a todos y se va
+     cerrando sola sobre el golpe, porque el círculo donde caben se achica) y
+     **«Seguir a A / B»** (12 m detrás de la cola y 4,5 m arriba, en la línea
+     del golpe). Si la persona mueve el mapa, la película le suelta la cámara.
+     - **Lo que es y lo que no** (`recreacion.js`, puro): cada carro recorre su
+       flecha a ritmo parejo y todos llegan al golpe a la vez; nadie declaró
+       velocidades, así que no dice quién iba más rápido ni si alguien frenó.
+       El golpe es el primer instante en que se tocan los contornos; si las
+       flechas no los juntan (un poste), para donde termina la flecha. Después
+       del golpe se queda quieta: cómo quedaron lo cuentan las fotos, no una
+       física inventada. Donde la persona puso el carro en el croquis, pasa tal
+       cual (posición y rumbo).
+     - **En el golpe se encienden las piezas dañadas** del paso 6, cada una con
+       el color de su daño (en el ejemplo, unas inventadas).
+     - **La advertencia va en el mapa mismo** («Recreación de lo declarado · no
+       es una medición»), para que ningún pantallazo salga sin ella.
+     - **No hay cámara «desde los ojos del conductor», a propósito.** Se
+       construyó y se quitó el mismo día: la maqueta no tiene árboles, barrancos
+       ni carros parqueados, mostraba una vía despejada y daba a entender que el
+       conductor veía al otro. Además, un teléfono en vertical solo abre 26° a
+       lo ancho. Esa vista solo tendría sentido sobre un 3D con lo que había.
+     - **Solo en la maqueta abierta, no en el 3D de Google**: sus condiciones no
+       dejan guardar ni sacar su 3D, y la recreación es lo que más adelante debe
+       salir en el expediente como video.
+     - **Lo que falta**: sacarla como video para el expediente; probarla en el
+       iPhone (ver abajo); velocidades declaradas, si algún día se piden.
    - **El 3D fotorrealista de Google** (opción A: Joan la eligió el vie 13-nov
      después de ver la hoja con Google Earth). Es la misma página, pero con el
      `Map3DElement` de Maps JavaScript en vez de MapLibre, y **solo cuando hay
@@ -364,6 +403,16 @@ La zona en el 3D de Google (cuando esté la clave):
 13. ¿Carga en Safari y se mueve con el dedo sin trabarse? ¿Aguanta la memoria
     del iPhone con los dos carros encima, o Safari recarga la página?
 
+La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
+
+17. **¿Sale en Safari?** Dibuja los carros con Three.js dentro del mismo WebGL
+    del mapa (necesita WebGL 2). Si no puede, quedan las cajas de siempre y no
+    aparece el botón «Ver cómo fue»: anotar cuál de las dos pasó.
+18. **¿Corre pareja?** Con «Los carros» y con «Seguir a A»: si va a tirones en
+    el iPhone, anotarlo (el mapa se redibuja entero en cada cuadro).
+19. Arrastrar el mapa con la película andando: la película sigue y la cámara
+    queda en el dedo. «Desde arriba» y después «Ver cómo fue»: se queda arriba.
+
 El envío (paso 8):
 
 14. **Compartir el PDF en Safari**: ¿abre la hoja de compartir con el PDF y
@@ -399,6 +448,9 @@ El envío (paso 8):
 - **El croquis es lo que declara la persona**, no una medición ni una
   reconstrucción: lo dicen su pantalla y la leyenda de la zona 3D. Lo que la
   app puso por defecto se lee en el relato antes de «Listo».
+- **La recreación es el croquis en movimiento**, no una reconstrucción: sin
+  velocidades, sin frenadas, sin lo que pasó después del golpe y sin «qué
+  alcanzaba a ver» cada conductor. Lo dicen el mapa y la nota de abajo.
 - **El expediente no decide la culpa** ni la insinúa: ni velocidades, ni
   «responsable», ni colores de culpa (A y B llevan el color de su letra). Su
   primera hoja dice lo que NO afirma, y lo declarado va como declarado:
@@ -421,8 +473,11 @@ El envío (paso 8):
 | `js/enlaces-google.js` | **Puro.** Los enlaces a Google Maps y Street View (URL de Maps, sin clave) y la fecha corta en hora de Colombia. |
 | `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
 | `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
-| `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
-| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis y la línea de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado y capas. |
+| `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), el croquis inventado del ejemplo y sus daños, el ancho de la vía, la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
+| `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis, la línea y los daños de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado, cielo, el asfalto del tramo y las capas; y con croquis, monta la recreación. |
+| `js/recreacion.js` | **Puro.** La recreación: cada carro por su flecha a ritmo parejo, el primer toque de los contornos (el golpe), el fotograma de cualquier momento, y las dos cámaras (la que sigue a un carro y el encuadre de todos). |
+| `js/maqueta-carros.js` | Los carros 3D del paso 6 dentro del mapa de MapLibre (una capa propia con Three.js, en su mismo WebGL): sobre el relieve, inclinados con la pendiente, con su sombra y las piezas dañadas encendidas en el golpe. |
+| `js/pantalla-recreacion.js` | Los controles de la recreación: reproducir (también encima del mapa), la línea de tiempo, lento, las cámaras con su entrada suave, las letras de los carros y quién manda en la cámara (la película, los botones de la zona o el dedo). |
 | `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |
 | `js/pantalla-zona-google.js` | Carga Maps JavaScript con la clave, pide la altura del suelo, monta el `gmp-map-3d` con carros, flechas y marcas, y avisa si Google falla. |
 | `js/carro-glb.js` | El carro del paso 6 como .glb, hecho con el exportador de Three.js, para el 3D de Google. |
@@ -451,7 +506,7 @@ El envío (paso 8):
 | `js/pantalla-danos.js` | "Los daños": el carro 3D, la hoja de la pieza, la lista de lo marcado, la lista de piezas y la cámara de la foto de cerca. |
 | `js/danos.js` | **Puro.** Los 4 tipos con su color, las piezas que se marcan (las 17 de afuera), marcar y quitar, la foto vigente de cada pieza, las filas de la lista y la revisión de la foto de cerca. |
 | `js/visor-danos.js` | El carro en 3D mínimo: Three.js, giro con un dedo, el toque (toque.js), la tinta de cada daño y las vistas. Se dibuja solo cuando algo cambia. |
-| `js/carro.js`, `js/piezas.js`, `js/carrocerias.js`, `js/toque.js`, `js/encuadre.js` | **Copiados del Taller** (commit 4502d41) sin más cambio que el encabezado: el carro por piezas en cuatro carrocerías, los nombres del gremio, el toque y el encuadre. `visor.js` NO se copió (arrastra los escaneos y los modelos del catálogo). |
+| `js/carro.js`, `js/piezas.js`, `js/carrocerias.js`, `js/toque.js`, `js/encuadre.js` | **Copiados del Taller** (commit 4502d41) sin más cambio que el encabezado (y, en `carro.js`, el nombre `pintura` del material de la pintura, que busca la maqueta de la zona): el carro por piezas en cuatro carrocerías, los nombres del gremio, el toque y el encuadre. `visor.js` NO se copió (arrastra los escaneos y los modelos del catálogo). |
 | `js/placa-foto.js`, `js/placa-ocr.js` | **Copiados del Taller** (4502d41): encontrar la placa amarilla, enderezarla y leerla con fast-plate-ocr. `placa-ocr.js` solo cambia la carpeta del motor. |
 | `js/catalogo.js`, `js/catalogo-carros.js` | **Copiados del Taller** (4502d41): el buscador y las 1.137 líneas de Colombia (se baja solo al buscar). |
 | `js/vendor/three/` | Three.js 0.169.0 con OrbitControls y RoomEnvironment (MIT), copiado del Taller; `index.html` lo conecta con un import map. |
@@ -480,6 +535,32 @@ El envío (paso 8):
   entra al 3D en el primer `idle` después de encender el relieve. Para
   medirlo: `__zona3d.mapa.transform.elevation` tiene que dar la altura real,
   no 0.
+- **Un carro de Three.js dentro del mapa de MapLibre** (14-nov, la
+  recreación; todo medido en MapLibre 4.7.1):
+  - *La altura.* La matriz que recibe una capa propia no resta la altura del
+    terreno en el centro de la pantalla (la de los mosaicos sí), y
+    `queryTerrainElevation` devuelve la altura del punto **menos** la del
+    centro: justo lo que le falta a esa matriz. Sin eso el carro queda a
+    2.921 m, la altura del cerro, o enterrado.
+  - *El relieve pide `maxzoom` 14*, el tope de las teselas de calles: con 15,
+    de zoom 15 para arriba MapLibre avisaba «cannot calculate elevation if
+    elevation maxzoom > source.maxzoom».
+  - *Los puntos de la zona se pintaban encima de los carros*: la capa de los
+    carros va justo debajo de las letras, encima de todo lo demás.
+  - *Las letras A y B se quedaban atrás con la película andando*: una capa de
+    letreros se rehace en otro hilo. Ahora son marcadores (HTML), que se
+    mueven en el mismo cuadro.
+  - *La pintura salía lavada*: la del paso 6 es metálica y refleja su cuarto;
+    a cielo abierto el naranja de B quedaba rosado. En la maqueta va casi mate
+    (`maqueta-carros.js` la busca por el nombre `pintura` del material).
+  - *La cámara que sigue, en curva*: mirando al frente no salía nunca el otro
+    carro, y detrás de la cola mirando al golpe se salía el propio. Va en la
+    línea golpe–carro, y cerca del golpe vuelve detrás de la cola.
+  - *Los bordes en escalera*: el mapa nace con `antialias`, salvo en pantallas
+    de 3 píxeles por punto (los iPhone), donde no se nota y sí cuesta.
+- **El estilo de OpenFreeMap nombra 30 iconos que su hoja no trae** («office»,
+  «gate», «atm»…): MapLibre avisaba en la consola por cada uno y con cada
+  tesela. `styleimagemissing` les pone un icono vacío de 1 px.
 - **overpass.openstreetmap.fr le responde 403 a los navegadores ocultos**
   ("HeadlessEdg", medido el 13-nov-2026) y a un navegador que no manda
   Referer. A un iPhone que abre la app desde GitHub Pages le responde 200. Por

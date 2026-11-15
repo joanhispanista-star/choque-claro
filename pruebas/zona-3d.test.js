@@ -156,8 +156,12 @@ test('con croquis, la maqueta dibuja sus carros con su tamaño, sus flechas y el
   const [a, b, c] = capas.carros.features[0].geometry.coordinates[0].map(enMetros);
   const lados = [distancia(a, b), distancia(b, c)].sort((x, y) => x - y);
   assert.ok(Math.abs(lados[1] - 3.6) < 0.01 && Math.abs(lados[0] - 1.6) < 0.01, JSON.stringify(lados));
-  // Sin croquis, el ejemplo sigue con el inventado y no hay golpe.
-  assert.equal(capasDeLaZona({ centro: CENTRO, analisis: ejemplo(), ejemplo: true }).golpe.features.length, 0);
+  // Sin croquis, el ejemplo trae el suyo, inventado y armado como el paso 7 (de frente): con su golpe.
+  const delEjemplo = capasDeLaZona({ centro: CENTRO, analisis: ejemplo(), ejemplo: true });
+  assert.equal(delEjemplo.golpe.features.length, 1);
+  assert.equal(delEjemplo.trayectorias.features.length, 2);
+  // Y un choque de verdad sin croquis no tiene ni carros ni golpe.
+  assert.equal(capasDeLaZona({ centro: CENTRO, analisis: ejemplo() }).golpe.features.length, 0);
   const leyendaDe = (croquis) => Object.fromEntries(leyendaDeLaZona({ ejemplo: true, analisis: ejemplo(), croquis }).map((f) => [f.clave, f.texto])).carros;
   assert.equal(leyendaDe(croquisGuardado({ hecho: '2026-11-13T15:00:00.000Z' })), 'Carros A y B, sus flechas y el golpe: tu croquis del paso 7, lo que declaraste, no una medición');
   // Antes de «Listo: así fue» es un borrador; y sin flechas (todos quietos), no se nombran.

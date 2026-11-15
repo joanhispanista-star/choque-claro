@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="js/vendor/maplibre/maplibre-gl.css">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/zona-3d.css">
-<!-- Three.js solo baja si el 3D de Google tiene carros que dibujar (carro-glb.js, import dinámico). -->
+<!-- Three.js solo baja si hay carros que dibujar: en el 3D de Google (carro-glb.js) o en la recreación
+     de la maqueta (maqueta-carros.js), los dos por import dinámico. -->
 <script type="importmap">
   { "imports": { "three": "./js/vendor/three/three.module.min.js" } }
 </script>
@@ -22,12 +23,43 @@
 <main class="zona-3d">
   <h1>La zona en 3D</h1>
   <p class="nota" id="zona-estado" aria-live="polite">Armando la zona…</p>
-  <div class="mapa-3d" id="mapa-3d" role="application" aria-label="La zona del choque en 3D: arrastra para mover, dos dedos para girar e inclinar"></div>
+  <div class="mapa-3d" id="mapa-3d" role="application" aria-label="La zona del choque en 3D: arrastra para mover, dos dedos para girar e inclinar">
+    <!-- En el mapa mismo: un pantallazo de la recreación no puede salir sin la advertencia. -->
+    <p class="sello-recreacion" id="sello-recreacion" hidden>Recreación de lo declarado · no es una medición</p>
+    <!-- Reproducir, encima del mapa: en un teléfono los controles de abajo quedan fuera de la primera
+         pantalla, y una recreación que no se encuentra no existe. Los iconos son dibujos y no letras:
+         Safari en el iPhone suele pintar «▶» como emoji (no se ha medido en el de Joan). -->
+    <button class="rec-en-mapa" type="button" id="rec-jugar-mapa" data-estado="listo" hidden>
+      <svg class="ico ico-jugar" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="ico ico-pausa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      <svg class="ico ico-otra" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+      <span id="rec-jugar-mapa-texto">Ver cómo fue</span>
+    </button>
+  </div>
   <div class="tres-botones">
     <button class="boton boton-suave boton-chico" type="button" id="vista-3d">Vista 3D</button>
     <button class="boton boton-suave boton-chico" type="button" id="vista-arriba">Desde arriba</button>
     <button class="boton boton-suave boton-chico" type="button" id="dar-vuelta">Dar la vuelta</button>
   </div>
+
+  <section class="recreacion" id="recreacion" hidden>
+    <h2>Cómo fue, según el croquis</h2>
+    <div class="rec-barra">
+      <button class="rec-jugar" type="button" id="rec-jugar" data-estado="listo" aria-label="Ver la recreación">
+        <svg class="ico ico-jugar" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="ico ico-pausa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        <svg class="ico ico-otra" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+      </button>
+      <div class="rec-linea">
+        <input type="range" id="rec-tiempo" min="0" max="1000" step="1" value="0" aria-label="El momento de la recreación">
+        <span class="rec-marca-golpe" aria-hidden="true"></span>
+      </div>
+      <button class="rec-lento" type="button" id="rec-lento" aria-pressed="false">Lento</button>
+    </div>
+    <p class="rec-fase" id="rec-fase" aria-live="polite"></p>
+    <div class="rec-camaras" id="rec-camaras" role="group" aria-label="Desde dónde se mira la recreación"></div>
+    <p class="nota" id="rec-nota"></p>
+  </section>
   <ul class="leyenda" id="leyenda"></ul>
 
   <section class="escena-360" id="escena-360">
@@ -44,9 +76,10 @@
       </div>
       <p class="frente-360" id="escena-360-frente" aria-live="polite"></p>
       <div class="tres-botones">
-        <button class="boton boton-suave boton-chico" type="button" id="escena-360-izquierda">◀ Izquierda</button>
+        <!-- &#xFE0E; pide el triángulo como letra: sin eso, Safari en el iPhone suele pintarlo como emoji. -->
+        <button class="boton boton-suave boton-chico" type="button" id="escena-360-izquierda">◀&#xFE0E; Izquierda</button>
         <button class="boton boton-suave boton-chico" type="button" id="escena-360-norte">Norte</button>
-        <button class="boton boton-suave boton-chico" type="button" id="escena-360-derecha">Derecha ▶</button>
+        <button class="boton boton-suave boton-chico" type="button" id="escena-360-derecha">Derecha ▶&#xFE0E;</button>
       </div>
       <p class="nota" id="escena-360-nota"></p>
     </div>

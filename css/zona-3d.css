@@ -55,3 +55,97 @@
 
 /* Los controles de MapLibre, del tamaño de un dedo. */
 .zona-3d .maplibregl-ctrl-group button { width: 40px; height: 40px; }
+/* Los créditos del mapa siguen ahí (MapLibre los recoge al mover el mapa), pero a 16 px tapaban dos
+   renglones del fondo del mapa en un teléfono. */
+.zona-3d .maplibregl-ctrl-attrib { font-size: 11px; line-height: 1.35; }
+
+/* La advertencia de la recreación, sobre el mapa: sale en cualquier pantallazo. */
+.zona-3d .mapa-3d { position: relative; }
+.sello-recreacion {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  margin: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(20, 24, 29, 0.78);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Reproducir, encima del mapa y debajo de la advertencia. `[hidden]` explícito: con display:flex,
+   el atributo hidden a secas no esconde nada. */
+.rec-en-mapa {
+  position: absolute;
+  top: 40px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--acento);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(20, 24, 29, 0.3);
+  cursor: pointer;
+}
+.rec-en-mapa[hidden] { display: none; }
+/* La letra de cada carro de la recreación: un marcador del mapa, con el mismo borde blanco que los
+   letreros de la zona. No recibe el dedo: debajo está el mapa, que es lo que se quiere mover. */
+.rec-letra {
+  color: #14181d;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: -1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff, 0 0 3px #ffffff;
+  pointer-events: none;
+}
+/* Mientras la cámara sigue a un carro (pantalla-recreacion.js) no hay nada que acercar ni girar, y
+   las letras sobran: cada carro tiene su color. */
+.zona-3d .mapa-3d.siguiendo-carro .maplibregl-ctrl-top-right,
+.zona-3d .mapa-3d.siguiendo-carro .rec-letra { display: none; }
+/* Los tres dibujos van en el botón y se muestra el del estado (listo, jugando, pausa, fin). */
+.ico { display: none; width: 22px; height: 22px; fill: currentColor; }
+[data-estado="listo"] > .ico-jugar,
+[data-estado="pausa"] > .ico-jugar,
+[data-estado="jugando"] > .ico-pausa,
+[data-estado="fin"] > .ico-otra { display: block; }
+
+/* La recreación: reproducir, la línea de tiempo con la marca del golpe y las cámaras. */
+.recreacion { margin: 16px 0 8px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; }
+.recreacion h2 { margin: 0 0 8px; font-size: 18px; }
+.rec-barra { display: flex; align-items: center; gap: 10px; }
+.rec-jugar {
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #ffffff;
+  cursor: pointer;
+}
+.rec-linea { position: relative; flex: 1; display: flex; align-items: center; }
+.rec-linea input { width: 100%; margin: 0; accent-color: var(--acento); }
+/* El golpe llega al 80 % de la película (GOLPE_EN en recreacion.js). */
+.rec-marca-golpe { position: absolute; left: 80%; top: -6px; width: 3px; height: 12px; margin-left: -1px; border-radius: 2px; background: #d92d20; pointer-events: none; }
+.rec-lento { flex: 0 0 auto; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 999px; background: transparent; color: var(--texto); font-size: 14px; cursor: pointer; }
+.rec-lento[aria-pressed="true"] { background: var(--acento-suave); border-color: var(--acento); }
+.rec-fase { margin: 8px 0; font-size: 15px; font-weight: 600; }
+/* Dos o tres cámaras (la de todos y la de cada carro que se mueve), a lo ancho en partes iguales. */
+.rec-camaras { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.rec-camaras .boton { width: 100%; margin: 0; padding: 8px 6px; font-size: 15px; }
+.rec-camaras .boton[aria-pressed="true"] { background: var(--acento-suave); }

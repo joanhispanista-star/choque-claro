@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { planoLocal, distancia } from '../js/geo.js';
 import { analizarVia } from '../js/via.js';
-import { camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, colorDeCarro, COLORES } from '../js/zona-3d.js';
+import { camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, colorDeCarro, COLORES, croquisDeEjemplo } from '../js/zona-3d.js';
 import { armarCaso, cambiarCarro, croquisParaGuardar, viaDesdeElAnalisis } from '../js/croquis.js';
 import { ALTURAS, CAMPO_DE_VISION, RANGO_MINIMO, acercarALosCarros, alturaTerrarium, camaraDeGoogle, camaraDesdeArriba, conTransparencia, elementosDeGoogle, metrosPorPixelMapLibre, motivoDeGoogle, orientacionDelCarro, pixelDelSuelo, svgDeLetrero, svgDePin } from '../js/zona-google.js';
 
@@ -160,9 +160,12 @@ test('con carros, la cámara de Google se acerca hasta verlos, sin pasar de la m
   const dims = { anchoPx: 356, altoPx: 523 };
   // Sin carros, la misma.
   assert.equal(acercarALosCarros(camara, [], dims), camara);
-  // Los carros inventados del ejemplo: a unos 22 m del centro el más lejano.
-  const carros = carrosDeLaZona({ ejemplo: true, analisis: ejemplo() });
+  // Los rectángulos del ejemplo viejo (croquisDeEjemplo), a unos 22 m del centro el más lejano: lo
+  // bastante lejos para ver que se aleja lo justo. Los del ejemplo de hoy quedan a 7 m y la cámara
+  // se queda en RANGO_MINIMO, como los pegados de abajo.
+  const carros = croquisDeEjemplo(ejemplo());
   assert.equal(carros.length, 2);
+  assert.equal(acercarALosCarros(camara, carrosDeLaZona({ ejemplo: true, analisis: ejemplo() }), dims).range, RANGO_MINIMO);
   const cerca = acercarALosCarros(camara, carros, dims);
   assert.deepEqual({ ...cerca, range: 0 }, { ...camara, range: 0 }, 'solo cambia la distancia');
   assert.ok(cerca.range >= RANGO_MINIMO && cerca.range < 200, `${cerca.range} m`);

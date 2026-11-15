@@ -147,8 +147,12 @@ function yCapo(d, s) {
   return desde + ((s - d.capoDel) * (d.cintura - desde)) / (d.capoTras - d.capoDel);
 }
 
+// Con nombre: la maqueta de la zona (maqueta-carros.js) la busca para dejarla menos metálica, que
+// a cielo abierto y de lejos el reflejo le lavaba el color.
 export function materialPintura(color) {
-  return new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.3 });
+  const pintura = new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.3 });
+  pintura.name = 'pintura';
+  return pintura;
 }
 
 // Las piezas de interior: el mismo color pero más claro y mate. Dentro de
