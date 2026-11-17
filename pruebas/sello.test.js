@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { INICIO_DE_LA_CADENA, sha256Hex, textoCanonico } from '../js/evidencia.js';
-import { PARTES, contenidoDelSello, estadoDelSello, lugarParaElReporte, numeroDelReporte, sellarReporte, textoDelCambio } from '../js/sello.js';
+import { PARTES, completaElLugar, contenidoDelSello, estadoDelSello, lugarParaElReporte, numeroDelReporte, sellarReporte, textoDelCambio } from '../js/sello.js';
 import { fechaCompacta, fechaLarga, fechaYHora, horaDeColombia } from '../js/fechas.js';
 import { CLIMA, HORA_DEL_CHOQUE, analisisDelEjemplo, reporteDePrueba } from './reporte-de-prueba.js';
 
@@ -107,4 +107,20 @@ test('lo que cambió, en una frase que concuerda', () => {
   assert.match(textoDelCambio(['carros', 'danos', 'croquis']), /cambiaron los carros, los daños y el croquis\./);
   assert.match(textoDelCambio(['lugar']), /cambiaron los datos del lugar\./);
   assert.match(textoDelCambio([]), /cambió el reporte\./);
+});
+
+test('lo que llega solo completa el lugar guardado, nunca lo reemplaza', () => {
+  const { punto, analisis } = analisisDelEjemplo();
+  const base = { punto, origen: 'gps', precision: 9, fecha: new Date(HORA_DEL_CHOQUE) };
+  const completo = lugarParaElReporte({ ...base, via: analisis, clima: CLIMA });
+  const sinVia = lugarParaElReporte({ ...base, via: { estado: 'error' }, clima: CLIMA });
+  const sinClima = lugarParaElReporte({ ...base, via: analisis, clima: { error: 'Sin internet' } });
+  // En el lugar del choque no había internet: la vía o el clima que llegan después sí van.
+  assert.equal(completaElLugar(completo, sinVia), true);
+  assert.equal(completaElLugar(completo, sinClima), true, 'la fila «No se pudo consultar» no es clima');
+  assert.equal(completaElLugar(completo, null), true);
+  // Ya estaban: lo que diga hoy el mapa no reemplaza lo de ese día.
+  assert.equal(completaElLugar(completo, completo), false);
+  assert.equal(completaElLugar(sinVia, completo), false);
+  assert.equal(completaElLugar(null, sinVia), false);
 });

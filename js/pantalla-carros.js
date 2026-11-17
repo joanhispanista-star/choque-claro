@@ -67,15 +67,21 @@ export function iniciarPantallaCarros(raiz, { reporte }) {
   // Los cambios a los carros van en fila: la placa se lee por detrás y puede
   // terminar mientras la persona escribe la línea. Cada cambio sale de lo
   // último guardado, no de una copia vieja.
-  function cambiarCarros(cambio) {
+  //
+  // `deReporte`: para lo que corre por detrás (la lectura de la placa), el reporte de la foto. Si
+  // cuando le toca el turno la persona ya cambió de reporte, no se guarda: en el otro, la placa de
+  // este carro le cambiaría los carros (y el sello, si estaba sellado) sin que nadie lo tocara.
+  function cambiarCarros(cambio, { deReporte = null } = {}) {
     const hecho = estado.cola.then(async () => {
+      if (deReporte && reporte.reporte()?.id !== deReporte) return false;
       const nuevos = cambio(carros());
       await reporte.guardarDatos({ carros: nuevos });
+      return true;
     });
     estado.cola = hecho.catch(() => {});
     return hecho;
   }
-  const cambiarEste = (letra, cambio) => cambiarCarros((lista) => cambiarCarro(lista, letra, cambio));
+  const cambiarEste = (letra, cambio, opciones) => cambiarCarros((lista) => cambiarCarro(lista, letra, cambio), opciones);
 
   const vuelta = crearVueltaEnPantalla({
     raiz,
@@ -267,7 +273,8 @@ export function iniciarPantallaCarros(raiz, { reporte }) {
     }
     estado.leyendo.delete(letra);
     try {
-      await cambiarEste(letra, (carro) => conLecturaDePlaca(carro, { registro, resultado, error, cuando: new Date() }));
+      // La foto dice de qué reporte es: si se cambió a otro y se volvió, la lectura sí es de este.
+      await cambiarEste(letra, (carro) => conLecturaDePlaca(carro, { registro, resultado, error, cuando: new Date() }), { deReporte: registro.reporte });
     } catch (e) {
       console.warn('No se pudo guardar la lectura de la placa:', e);
     }
@@ -481,5 +488,19 @@ export function iniciarPantallaCarros(raiz, { reporte }) {
     if (estado.vista === 'camara') estado.vista = 'carro';
   }
 
-  return { entrar, salir, vuelta: () => vuelta, estado: () => estado };
+  // Al cambiar de reporte: se vuelve a la lista (el carro abierto era del otro) y la foto que se
+  // iba a repetir, también. La placa que se está leyendo era de un carro del otro: el carro A de
+  // este no sale «leyendo». La lectura termina igual y se descarta (cambiarCarros, deReporte).
+  function olvidar() {
+    vuelta.olvidar();
+    estado.vista = 'lista';
+    estado.letra = null;
+    estado.leyendo.clear();
+  }
+
+  // Lo que está en fila para guardarse: app.js lo espera antes de cambiar de reporte. La lectura
+  // de la placa no: tarda segundos y, si termina después del cambio, se descarta.
+  const pendiente = () => estado.cola;
+
+  return { entrar, salir, olvidar, pendiente, vuelta: () => vuelta, estado: () => estado };
 }

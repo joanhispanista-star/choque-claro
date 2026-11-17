@@ -20,9 +20,41 @@ export const HORAS_DE_UN_REPORTE = 6;
 
 export const CADENA_CAMBIO = 'La cadena de fotos cambió mientras se guardaba esta. Vuelve a tomarla.';
 
+// Lo último que pasó con el reporte: que se tocó o que se volvió a abrir desde «Tus reportes». Las
+// dos son ISO del mismo reloj y se comparan como texto.
+export const ultimaVez = (reporte) => [reporte?.actualizado, reporte?.abierto].filter(Boolean).sort().pop() ?? null;
+
 export function reporteVigente(reporte, ahora = new Date(), horas = HORAS_DE_UN_REPORTE) {
-  if (!reporte || !reporte.actualizado) return false;
-  const edad = ahora.getTime() - new Date(reporte.actualizado).getTime();
+  const ultima = ultimaVez(reporte);
+  if (!ultima) return false;
+  const edad = ahora.getTime() - new Date(ultima).getTime();
+  return edad >= 0 && edad < horas * 3600 * 1000;
+}
+
+// El turno: crece cada vez que un reporte se crea o se vuelve a abrir. El reporte en curso es el
+// del turno más alto, no el último que se tocó: abrir uno viejo tiene que ganarle al de hoy aunque
+// una escritura que iba en camino (la lectura de una placa, un guardado en fila) toque el de hoy un
+// minuto después. Los reportes de antes del 17-nov-2026 no tienen turno: al crear o abrir uno, su
+// `orden` (el de creación) cuenta como turno, para que el nuevo quede encima.
+export const turnoDe = (reporte) => reporte?.turno ?? reporte?.orden ?? 0;
+
+// Cuál está en curso. Mientras ningún reporte tenga turno (un teléfono con reportes de antes del
+// 17-nov-2026 que todavía no ha creado ni abierto uno), sigue la regla de antes: el último que se
+// tocó, y entre dos tocados a la vez, el último que se creó. Si no, la persona que actualiza la app
+// a mitad de un reporte aparecería en otro.
+const masReciente = (a, b) => (a.actualizado === b.actualizado ? (b.orden ?? 0) - (a.orden ?? 0) : a.actualizado < b.actualizado ? 1 : -1);
+export function enCurso(todos) {
+  if (!todos.some((r) => r.turno != null)) return [...todos].sort(masReciente)[0] ?? null;
+  return todos.reduce((mejor, r) => (!mejor || turnoDe(r) > turnoDe(mejor) ? r : mejor), null);
+}
+
+// El camino del inicio («¿Hay alguien herido?» y después el paso 3) es para un choque de ahora: sigue
+// el reporte en curso solo si se empezó hace menos de seis horas, no está sellado y no es el
+// ejemplo. Si no, se empieza otro. Un choque nuevo no puede caer en uno sellado (le cambiaría el
+// número), ni en uno de otro día que se volvió a abrir desde «Tus reportes», ni en el ejemplo.
+export function sirveParaUnChoqueNuevo(reporte, ahora = new Date(), horas = HORAS_DE_UN_REPORTE) {
+  if (!reporte || reporte.sello || reporte.lugar?.origen === 'ejemplo' || reporte.croquis?.ejemplo) return false;
+  const edad = ahora.getTime() - new Date(reporte.creado).getTime();
   return edad >= 0 && edad < horas * 3600 * 1000;
 }
 
@@ -68,29 +100,90 @@ export function abrirBaseDelReporte({ indexedDB: fabrica = globalThis.indexedDB,
     const conexion = conexionViva(bd, abrir, { tope: 30000 });
     const almacen = (nombreAlmacen, modo = 'readonly') => conexion.actual.transaction(nombreAlmacen, modo).objectStore(nombreAlmacen);
 
-    // `orden` desempata dos reportes tocados en el mismo instante (el que se
-    // acaba de crear con "Empezar un reporte nuevo" y el anterior): gana el
-    // último creado. Los id son al azar y no sirven para eso.
+    // `orden` es el de creación («Tus reportes» desempata con él) y `turno`, el que decide cuál
+    // está en curso (turnoDe). Los id son al azar y no sirven para eso.
     async function crearReporte() {
       const todos = await pedir(almacen('reportes').getAll());
       const ahora = reloj().toISOString();
-      const reporte = { id: nuevoId(), orden: todos.reduce((mayor, r) => Math.max(mayor, r.orden ?? 0), 0) + 1, creado: ahora, actualizado: ahora };
+      const reporte = {
+        id: nuevoId(),
+        orden: todos.reduce((mayor, r) => Math.max(mayor, r.orden ?? 0), 0) + 1,
+        turno: todos.reduce((mayor, r) => Math.max(mayor, turnoDe(r)), 0) + 1,
+        creado: ahora,
+        actualizado: ahora,
+      };
       await pedir(almacen('reportes', 'readwrite').add(reporte));
       return reporte;
     }
 
-    const masReciente = (a, b) => (a.actualizado === b.actualizado ? (b.orden ?? 0) - (a.orden ?? 0) : a.actualizado < b.actualizado ? 1 : -1);
-
     return {
-      // El reporte en curso: el último que se tocó, si sigue vigente; si no, uno nuevo.
+      // El reporte en curso (enCurso), si sigue vigente; si no, uno nuevo.
       reporteEnCurso: conexion.protegida(async () => {
-        const todos = await pedir(almacen('reportes').getAll());
-        const ultimo = todos.sort(masReciente)[0];
+        const ultimo = enCurso(await pedir(almacen('reportes').getAll()));
         return reporteVigente(ultimo, reloj()) ? ultimo : crearReporte();
       }),
 
       // Empezar otro aunque el de ahora siga vigente. El anterior queda guardado.
       nuevoReporte: conexion.protegida(crearReporte),
+
+      // Todos los reportes del teléfono, del más nuevo al más viejo (por cuándo se empezaron),
+      // con cuántas fotos tiene cada uno y si es el que está en curso. Sin las fotos.
+      reportes: conexion.protegida(async () => {
+        const todos = await pedir(almacen('reportes').getAll());
+        const actual = enCurso(todos);
+        const indice = almacen('fotos').index('reporte');
+        const conFotos = [];
+        for (const r of todos) conFotos.push({ ...r, fotos: await pedir(indice.count(r.id)), enCurso: r === actual && reporteVigente(r, reloj()) });
+        return conFotos.sort((a, b) => (a.creado === b.creado ? (b.orden ?? 0) - (a.orden ?? 0) : a.creado < b.creado ? 1 : -1));
+      }),
+
+      // Volver a uno guardado: queda en curso (le gana al de hoy) y vale otras seis horas desde
+      // ahora. `abierto` y `turno` no entran al sello (sello.js toma solo lo declarado): abrir un
+      // reporte sellado no le cambia el número.
+      abrirReporte: conexion.protegida(
+        (reporteId) =>
+          new Promise((resolver, rechazar) => {
+            const tx = conexion.actual.transaction('reportes', 'readwrite');
+            const reportes = tx.objectStore('reportes');
+            let abierto = null;
+            let error = null;
+            reportes.getAll().onsuccess = (e) => {
+              const todos = e.target.result;
+              const reporte = todos.find((r) => r.id === reporteId);
+              if (!reporte) {
+                error = new Error('Ese reporte ya no está en este teléfono');
+                tx.abort();
+                return;
+              }
+              abierto = { ...reporte, turno: todos.reduce((mayor, r) => Math.max(mayor, turnoDe(r)), 0) + 1, abierto: reloj().toISOString() };
+              reportes.put(abierto);
+            };
+            tx.oncomplete = () => resolver(abierto);
+            tx.onabort = () => rechazar(error || tx.error || new Error('No se pudo abrir el reporte'));
+          }),
+      ),
+
+      // Solo los registros de las fotos de un reporte, en el orden de la cadena: lo que «Tus
+      // reportes» necesita para decir qué falta y si el sello sigue valiendo. Con un cursor y no
+      // con getAll, que subiría a la memoria todas las fotos grandes de una vez (en un iPhone,
+      // varios reportes de 30 fotos pueden hacer que Safari cierre la página).
+      registros: conexion.protegida(
+        (reporteId) =>
+          new Promise((resolver, rechazar) => {
+            const registros = [];
+            const cursor = almacen('fotos').index('reporte').openCursor(reporteId);
+            cursor.onsuccess = () => {
+              const c = cursor.result;
+              if (!c) {
+                resolver(registros.sort((a, b) => a.indice - b.indice));
+                return;
+              }
+              registros.push(c.value.registro);
+              c.continue();
+            };
+            cursor.onerror = () => rechazar(cursor.error || new Error('No se pudieron leer las fotos del reporte'));
+          }),
+      ),
 
       // Las fotos de un reporte en el orden de la cadena: { id, registro,
       // miniatura (Blob) }, sin la foto grande, que se pide aparte.
@@ -160,7 +253,7 @@ export function abrirBaseDelReporte({ indexedDB: fabrica = globalThis.indexedDB,
       guardarDatos: conexion.protegida(
         (reporteId, cambios) =>
           new Promise((resolver, rechazar) => {
-            const { id, orden, creado, ...permitidos } = cambios || {};
+            const { id, orden, turno, creado, abierto, ...permitidos } = cambios || {};
             const tx = conexion.actual.transaction('reportes', 'readwrite');
             const reportes = tx.objectStore('reportes');
             let guardado = null;

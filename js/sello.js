@@ -60,6 +60,18 @@ export function lugarParaElReporte({ punto, origen = null, precision = null, fec
   };
 }
 
+// Si `nuevo` trae algo que el lugar guardado no tiene: la vía (el análisis no había llegado, o falló
+// sin internet) o el clima (sus filas van en filasDeLaLuz, después de las del sol; si falló, queda
+// una fila «No se pudo consultar» que no cuenta). Con lo que ya estaba guardado, nada: app.js no
+// reemplaza lo de ese día por lo que diga hoy el mapa.
+const CLAVES_DEL_CLIMA = new Set(['lluvia', 'cielo', 'visibilidad']);
+const conClima = (lugar) => (lugar?.filasDeLaLuz ?? []).some((f) => CLAVES_DEL_CLIMA.has(f.clave));
+export function completaElLugar(nuevo, guardado) {
+  if (!nuevo) return false;
+  if (!guardado) return true;
+  return (!guardado.via && !!nuevo.via) || (!conClima(guardado) && conClima(nuevo));
+}
+
 // --- El sello --------------------------------------------------------------------------------
 
 // Lo que se sella: todo lo que el reporte declara, tal como está guardado, y la punta de la

@@ -31,6 +31,23 @@ export function fechaYHora(iso, opciones) {
   return fecha ? `${fecha}, ${horaDeColombia(iso, opciones)}` : '';
 }
 
+const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+// El día de un reporte en «Tus reportes», contado en Colombia: «hoy», «ayer», «sáb 14 nov», y con el
+// año si no es el de `ahora` («mar 9 dic 2025»). En minúscula: quien lo usa decide la mayúscula.
+export function diaRelativo(iso, ahora = new Date()) {
+  const f = enColombia(iso);
+  const hoy = enColombia(ahora.toISOString());
+  if (!f || !hoy) return '';
+  const dia = (d) => Math.floor(d.getTime() / 86400000);
+  const atras = dia(hoy) - dia(f);
+  if (atras === 0) return 'hoy';
+  if (atras === 1) return 'ayer';
+  const corto = `${DIAS_CORTOS[f.getUTCDay()]} ${f.getUTCDate()} ${MESES_CORTOS[f.getUTCMonth()]}`;
+  return f.getUTCFullYear() === hoy.getUTCFullYear() ? corto : `${corto} ${f.getUTCFullYear()}`;
+}
+
 // «251113» (año, mes y día de Colombia), para el número del reporte.
 export function fechaCompacta(iso) {
   const f = enColombia(iso);

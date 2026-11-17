@@ -131,6 +131,14 @@ export function viaDesdeElAnalisis(analisis, punto) {
   return viaDelCroquis({ centro: a.enLaVia, tramo: a.tramo, nombre: a.via.nombre || (a.via.ruta ? `Ruta ${a.via.ruta}` : null) });
 }
 
+// La vía del lugar del choque (app.js, lugarDelChoque). Con el análisis del paso 3, la forma real;
+// con el lugar que el reporte guardó (el paso 3 no está en la memoria: se siguió el reporte desde
+// «Tus reportes», o iOS recargó la página), una recta con el nombre y el rumbo que se guardaron.
+export function viaDesdeElLugar(lugar) {
+  if (lugar.via) return viaDesdeElAnalisis(lugar.via, lugar.punto);
+  return viaDelCroquis({ centro: lugar.punto, rumbo: lugar.viaGuardada?.rumbo ?? null, nombre: lugar.viaGuardada?.nombre ?? null });
+}
+
 // La vía de un croquis guardado: el croquis lleva la suya, para no depender de que el paso 3 siga
 // en la memoria del teléfono (iOS recarga la página cuando quiere).
 export function viaDesdeGuardado(guardado) {

@@ -15,6 +15,10 @@ import { CADENA_CAMBIO, abrirBaseDelReporte } from './reporte-bd.js';
 // 200 se veían borrosas.
 const MINIATURA = 480;
 
+// Una foto que se estaba guardando cuando la persona cambió de reporte («Tus reportes»): era del
+// otro, y la cámara ya se apagó al salir. No se guarda en ninguno.
+export const OTRO_REPORTE = 'Cambiaste de reporte mientras se guardaba la foto: no se guardó.';
+
 export const detalle = (error) => `${error?.name || 'Error'}: ${String(error?.message || '').slice(0, 120)}`;
 
 export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir = reducirFoto, urls = globalThis.URL } = {}) {
@@ -22,6 +26,8 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
   let reporte = null;
   // { id, registro, miniatura (Blob), url }, en el orden de la cadena.
   let fotos = [];
+  // Los registros de otros reportes que «Tus reportes» ya leyó (registrosDe).
+  const leidos = new Map();
 
   function ponerFotos(nuevas) {
     for (const f of fotos) urls.revokeObjectURL(f.url);
@@ -52,8 +58,11 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
     // entra y la cadena queda como estaba: la persona la vuelve a tomar.
     // `datos`: paso, sector, carro, pieza, dano y reemplaza (evidencia.js).
     async agregarFoto({ blob, hora, gps, orientacion, medida, revision }, { paso, sector = null, carro = null, pieza = null, dano = null, reemplaza = null }) {
+      const deEste = reporte.id;
       const reducida = await reducir(blob, { ladoMiniatura: MINIATURA });
       const bytes = await reducida.foto.arrayBuffer();
+      const huella = await sha256Hex(bytes);
+      if (reporte.id !== deEste) throw new Error(OTRO_REPORTE);
       const anterior = fotos[fotos.length - 1];
       const registro = registroDeFoto({
         reporte: reporte.id,
@@ -67,10 +76,11 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
         gps,
         orientacion,
         calidad: { ...medida, problemas: revision.problemas },
-        foto: { tipo: reducida.foto.type || 'image/jpeg', ancho: reducida.ancho, alto: reducida.alto, bytes: bytes.byteLength, sha256: await sha256Hex(bytes) },
+        foto: { tipo: reducida.foto.type || 'image/jpeg', ancho: reducida.ancho, alto: reducida.alto, bytes: bytes.byteLength, sha256: huella },
         reemplaza,
       });
       const sellado = await sellarRegistro(registro, anterior ? anterior.registro.huella : INICIO_DE_LA_CADENA);
+      if (reporte.id !== deEste) throw new Error(OTRO_REPORTE);
       let id;
       try {
         id = await base.agregarFoto(sellado, { foto: reducida.foto, miniatura: reducida.miniatura });
@@ -81,6 +91,9 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
         }
         throw new Error(`No se pudo guardar la foto en el teléfono (${detalle(error)}). Vuelve a tomarla.`);
       }
+      // Si se cambió de reporte mientras la base la guardaba, ya quedó en el suyo (su registro lo
+      // dice): no entra a la lista del de ahora.
+      if (reporte.id !== deEste) return { id, registro: sellado, miniatura: reducida.miniatura, url: null };
       const foto = { id, registro: sellado, miniatura: reducida.miniatura, url: urls.createObjectURL(reducida.miniatura) };
       fotos.push(foto);
       return foto;
@@ -101,14 +114,48 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
 
     // Lo que no es foto: los carros y los daños (reporte-bd.js, guardarDatos).
     async guardarDatos(cambios) {
-      reporte = await base.guardarDatos(reporte.id, cambios);
-      return reporte;
+      const id = reporte.id;
+      const guardado = await base.guardarDatos(id, cambios);
+      // Igual que con las fotos: si mientras tanto se cambió de reporte, el de ahora no se pisa.
+      if (reporte.id === id) reporte = guardado;
+      return guardado;
     },
 
     async nuevoReporte() {
+      if (!base) base = await abrirBase();
       reporte = await base.nuevoReporte();
       ponerFotos([]);
       return reporte;
+    },
+
+    // Volver a un reporte guardado («Tus reportes»): queda en curso, con sus fotos. Las fotos se
+    // leen ANTES de cambiarlo en la base: si la lectura falla, todo sigue en el de antes, en la
+    // base y aquí, y el error que ve la persona dice la verdad.
+    async abrir(reporteId) {
+      if (!base) base = await abrirBase();
+      const suyas = await base.fotos(reporteId);
+      reporte = await base.abrirReporte(reporteId);
+      ponerFotos(suyas);
+      return reporte;
+    },
+
+    // «Tus reportes»: todos los del teléfono con su cuenta de fotos (reporte-bd.js, reportes) y,
+    // aparte, los registros de las fotos de uno, sin las fotos.
+    async reportes() {
+      if (!base) base = await abrirBase();
+      return base.reportes();
+    },
+    // Leerlos recorre las fotos grandes (van en el mismo registro de la base), así que se guardan
+    // mientras la página siga abierta: a un reporte solo se le agregan fotos, nunca se le quitan, y
+    // si la cuenta es la misma, los registros también. Los del reporte en curso ya están aquí.
+    async registrosDe(reporteId, cuantas = null) {
+      if (reporte?.id === reporteId && (cuantas === null || fotos.length === cuantas)) return fotos.map((f) => f.registro);
+      const ya = leidos.get(reporteId);
+      if (ya && ya.length === cuantas) return ya;
+      if (!base) base = await abrirBase();
+      const suyos = await base.registros(reporteId);
+      leidos.set(reporteId, suyos);
+      return suyos;
     },
 
     // Sin await: si el navegador dice que no, todo sigue igual.

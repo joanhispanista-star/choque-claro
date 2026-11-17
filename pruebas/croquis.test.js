@@ -34,6 +34,7 @@ import {
   simplificarTrazo,
   viaDelCroquis,
   viaDesdeElAnalisis,
+  viaDesdeElLugar,
   viaDesdeGuardado,
 } from '../js/croquis.js';
 
@@ -321,4 +322,21 @@ test('para el mapa: metros por píxel y la caja de todo lo dibujado', () => {
   const [[s, o], [n, e]] = limitesDelCroquis(c, flechas);
   for (const p of [...c.carros, c.golpe, ...flechas.flatMap((f) => f.puntos)]) assert.ok(p.lat >= s && p.lat <= n && p.lon >= o && p.lon <= e);
   assert.equal(limitesDelCroquis({ carros: [], golpe: null }), null);
+});
+
+test('sin el paso 3 en la memoria, el croquis sale del lugar guardado: una recta con su nombre y su rumbo', () => {
+  const g = JSON.parse(fs.readFileSync(new URL('./datos/curva-verjones-patios.json', import.meta.url), 'utf8'));
+  const analisis = analizarVia(g.respuesta, g.punto);
+  // Con el análisis, la forma de verdad.
+  assert.equal(viaDesdeElLugar({ punto: g.punto, via: analisis }).real, true);
+  // Con lo que guardó el reporte (sello.js, lugarParaElReporte): sin forma, pero en su sentido.
+  const recta = viaDesdeElLugar({ punto: g.punto, via: null, viaGuardada: { nombre: 'Carrera 20', rumbo: 13.5 } });
+  assert.equal(recta.real, false);
+  assert.equal(recta.nombre, 'Carrera 20');
+  assert.equal(recta.rumbo, 13.5);
+  // Sin nada guardado de la vía: la recta de siempre, centrada en el punto.
+  const sola = viaDesdeElLugar({ punto: g.punto, via: null, viaGuardada: null });
+  assert.equal(sola.real, false);
+  assert.deepEqual(sola.centro, { lat: g.punto.lat, lon: g.punto.lon });
+  assert.equal(sola.rumbo, 0);
 });

@@ -32,7 +32,7 @@ import {
   relatoDelCroquis,
   simplificarTrazo,
   tituloDelCaso,
-  viaDesdeElAnalisis,
+  viaDesdeElLugar,
   viaDesdeGuardado,
 } from './croquis.js';
 import { carrosDelReporte } from './carros.js';
@@ -93,7 +93,8 @@ const mayuscula = (texto) => texto[0].toUpperCase() + texto.slice(1);
 
 // --------------------------------------------------------------------------- la pantalla
 
-// `lugar()`: lo del paso 3 que sigue en la memoria ({ punto, origen, via, precision, fecha }) o null.
+// `lugar()`: el lugar del choque (app.js, lugarDelChoque): { punto, origen, via, precision, fecha } del
+// paso 3 si está en la memoria; si no, el que guardó el reporte, sin la forma de la vía; o null.
 export function iniciarPantallaCroquis(raiz, { reporte, lugar }) {
   const $ = (selector) => raiz.querySelector(selector);
   const estado = {
@@ -134,7 +135,7 @@ export function iniciarPantallaCroquis(raiz, { reporte, lugar }) {
   // --- De dónde sale el croquis -------------------------------------------------------------
 
   function tomarLugar(l) {
-    estado.via = viaDesdeElAnalisis(l.via, l.punto);
+    estado.via = viaDesdeElLugar(l);
     estado.punto = l.punto;
     estado.ejemplo = l.origen === 'ejemplo';
     estado.hora = l.fecha instanceof Date && !Number.isNaN(l.fecha.getTime()) ? l.fecha.toISOString() : null;
@@ -195,6 +196,14 @@ export function iniciarPantallaCroquis(raiz, { reporte, lugar }) {
   function salir() {
     if (trazo) trazo = null;
     if (reloj) guardarYa();
+  }
+
+  // app.js: llegó el análisis del paso 3 (que se le puso por detrás al seguir este reporte). Si la
+  // persona todavía no eligió el caso, el croquis se arma sobre la vía de verdad y no sobre la recta.
+  function alLlegarElLugar() {
+    if (estado.vista !== 'casos' || estado.croquis) return;
+    const l = lugar();
+    if (l?.punto) tomarLugar(l);
   }
 
   // --- Las vistas -----------------------------------------------------------------------------
@@ -614,7 +623,9 @@ export function iniciarPantallaCroquis(raiz, { reporte, lugar }) {
   function pintarTextos() {
     const c = estado.croquis;
     if (!c) return;
-    const sinVia = estado.via.real ? '' : ' El mapa no trajo la vía: los carros salen en una recta, gíralos como iban.';
+    // No siempre es que el mapa no la trajo: el croquis pudo armarse con el lugar guardado, que
+    // tiene el nombre y el rumbo de la vía pero no su forma.
+    const sinVia = estado.via.real ? '' : ' Sin la forma de la vía, los carros salen en una recta: gíralos como iban.';
     let guia;
     if (estado.vista === 'listo') guia = 'Así quedó. Léelo antes de seguir: es lo que vas a declarar.';
     else if (c.modo === 'libre') guia = `Dibujado a mano. Pon cada carro donde iba justo antes del golpe y, con «Flecha», dibuja por dónde venía.${sinVia}`;
@@ -732,5 +743,9 @@ export function iniciarPantallaCroquis(raiz, { reporte, lugar }) {
     programarGuardado();
   });
 
-  return { entrar, salir, estado: () => estado, mapa: () => mapa, guardarYa };
+  // Lo que está en fila para guardarse (guardarYa): app.js lo espera antes de cambiar de reporte,
+  // para que el croquis de uno no caiga en el otro.
+  const pendiente = () => guardando;
+
+  return { entrar, salir, pendiente, alLlegarElLugar, estado: () => estado, mapa: () => mapa, guardarYa };
 }

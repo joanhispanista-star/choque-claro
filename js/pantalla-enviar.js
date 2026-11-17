@@ -9,19 +9,24 @@
 // Lo que viene del reporte (placas, nombres de vías del mapa) se pinta con textContent, nunca con
 // innerHTML.
 import { enlaceDeWhatsApp, impideSellar, nombreDelArchivo, revisionDelReporte, textoParaWhatsApp } from './enviar.js';
-import { estadoDelSello, lugarParaElReporte, sellarReporte, textoDelCambio } from './sello.js';
+import { estadoDelSello, sellarReporte, textoDelCambio } from './sello.js';
 import { adjuntoDeLaCadena, adjuntoDelContenido, armarExpediente } from './expediente.js';
 import { pdfDelExpediente } from './expediente-pdf.js';
-import { sha256Hex, textoCanonico, verificarCadena } from './evidencia.js';
+import { sha256Hex, verificarCadena } from './evidencia.js';
 import { fechaYHora } from './fechas.js';
 import { numero } from './geo.js';
 import { detalle } from './reporte-en-curso.js';
 
-// `lugar()`: lo del paso 3 que sigue en la memoria (app.js, lugarDelChoque) o null.
-export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
+// `guardarLugar()`: guarda en el reporte lo del paso 3 que siga en la memoria (app.js, guardarElLugar).
+// `antesDeSellar()`: lo que hay que esperar para sellar (el guardado del lugar que va en camino: si
+// cae después de calcular el sello, el número no corresponde a lo guardado).
+// `empezarOtro`: app.js (pantalla-escena.js cuenta por qué pasa por ahí).
+export function iniciarPantallaEnviar(raiz, { reporte, guardarLugar = async () => false, antesDeSellar = async () => {}, empezarOtro = () => reporte.nuevoReporte() }) {
   const $ = (selector) => raiz.querySelector(selector);
   const estado = { sello: 'sin-sellar', pdf: null, turno: 0, turnoPdf: 0, sellando: false };
   let url = null;
+  // El sellado en curso: app.js lo espera antes de cambiar de reporte (el sello va al que se selló).
+  let sellado = Promise.resolve();
 
   function avisarError(texto) {
     $('#enviar-error').textContent = texto;
@@ -31,25 +36,19 @@ export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
   async function entrar() {
     avisarError('');
     const mio = ++estado.turno;
-    let rep;
     try {
-      rep = await reporte.cargar();
+      await reporte.cargar();
     } catch (error) {
       avisarError(`No se pudo abrir el reporte en este teléfono (${detalle(error)}). Recarga la página.`);
       return;
     }
-    // Lo del paso 3 que sigue en la memoria se guarda en el reporte: es lo que el expediente dice
-    // de la vía, la luz y el clima. Solo si cambió, para no mover la hora del reporte por nada.
-    const l = lugar();
-    if (l) {
-      const nuevo = lugarParaElReporte(l);
-      if (nuevo && textoCanonico(nuevo) !== textoCanonico(rep.lugar ?? null)) {
-        try {
-          rep = await reporte.guardarDatos({ lugar: nuevo });
-        } catch {
-          // Sin guardarlo, el expediente usa lo que ya tenía el reporte.
-        }
-      }
+    // Lo del paso 3 que sigue en la memoria va al reporte: es lo que el expediente dice de la vía,
+    // la luz y el clima. app.js decide si hay algo que guardar (y nunca le cambia el lugar a un
+    // reporte sellado sin que la persona lo haya cambiado).
+    try {
+      await guardarLugar();
+    } catch {
+      // Sin guardarlo, el expediente usa lo que ya tenía el reporte.
     }
     if (mio === estado.turno) await pintar();
   }
@@ -137,7 +136,12 @@ export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
     $('#enviar-whatsapp').href = enlaceDeWhatsApp(textoParaWhatsApp({ reporte: rep, sello, totalDeFotos: total }));
   }
 
-  async function sellar(boton) {
+  function sellar(boton) {
+    sellado = sellarYa(boton);
+    return sellado;
+  }
+
+  async function sellarYa(boton) {
     if (estado.sellando) return;
     estado.sellando = true;
     avisarError('');
@@ -145,6 +149,7 @@ export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
     boton.disabled = true;
     boton.textContent = 'Revisando las fotos…';
     try {
+      await antesDeSellar();
       // Antes de sellar, la cadena entera con los bytes de cada foto: no se sella una cadena rota.
       const revision = await reporte.revisarCadena();
       const impide = impideSellar({ registros: reporte.registros() }, revision);
@@ -239,6 +244,35 @@ export function iniciarPantallaEnviar(raiz, { reporte, lugar = () => null }) {
   $('#enviar-sellar').addEventListener('click', (e) => sellar(e.currentTarget));
   $('#enviar-resellar').addEventListener('click', (e) => sellar(e.currentTarget));
   $('#enviar-compartir').addEventListener('click', compartir);
+  $('#enviar-nuevo').addEventListener('click', async (e) => {
+    const boton = e.currentTarget;
+    boton.disabled = true;
+    avisarError('');
+    try {
+      await empezarOtro();
+      location.hash = 'inicio';
+    } catch (error) {
+      avisarError(`No se pudo empezar otro reporte (${detalle(error)}).`);
+      window.scrollTo(0, 0);
+    } finally {
+      boton.disabled = false;
+    }
+  });
 
-  return { entrar, salir, estado: () => estado, pdf: () => estado.pdf };
+  // Al cambiar de reporte: el PDF que se estaba armando era del otro. Si siguiera, al no encontrar
+  // sus fotos en el reporte nuevo armaría un expediente sin ellas y lo guardaría como el bueno.
+  function olvidar() {
+    estado.turnoPdf++;
+    estado.pdf = null;
+  }
+
+  const pendiente = () => sellado;
+
+  // app.js: la vía o el clima del paso 3 llegaron y se guardaron mientras la persona está aquí. La
+  // lista de lo que va en el reporte se vuelve a pintar; el sello no se toca mientras se sella.
+  function refrescar() {
+    if (!estado.sellando) return pintar();
+  }
+
+  return { entrar, salir, olvidar, pendiente, refrescar, estado: () => estado, pdf: () => estado.pdf };
 }

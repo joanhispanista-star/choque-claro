@@ -27,6 +27,24 @@
     <button class="boton boton-peligro" type="button" data-ir="heridos">Sí, hay heridos</button>
     <button class="boton" type="button" data-ir="a-salvo">No, solo daños en los carros</button>
     <p class="nota">Si no estás seguro, toca «Sí».</p>
+
+    <!-- Debajo de la pregunta de los heridos, nunca encima: el último reporte si quedó a medias, y
+         el enlace a todos (pantalla-reportes.js). Oculto mientras no haya ninguno guardado. -->
+    <div id="inicio-reportes" hidden>
+      <p class="estado-ubicacion error" id="inicio-reportes-error" role="alert" hidden></p>
+      <div class="renglon" id="inicio-seguir" hidden></div>
+      <a class="enlace" id="inicio-todos" href="#reportes" data-ir="reportes" hidden></a>
+    </div>
+  </section>
+
+  <section class="pantalla" id="p-reportes" hidden>
+    <a class="volver" href="#inicio" data-ir="inicio">‹ Volver al inicio</a>
+    <h1>Tus reportes</h1>
+    <p class="estado-ubicacion error" id="reportes-error" role="alert" hidden></p>
+    <p class="nota" id="reportes-estado" aria-live="polite"></p>
+    <ul class="reportes" id="reportes-lista" aria-label="Tus reportes"></ul>
+    <p class="nota">Están guardados solo en este teléfono. Si borras los datos del navegador, se borran con ellos. En un iPhone, Safari también los puede borrar solo: si pasan siete días en que usas Safari sin abrir esta página. Agregada a la pantalla de inicio, eso no pasa. Para tener una copia que no dependa del teléfono, comparte el expediente en PDF.</p>
+    <p class="nota">«Seguir» te lleva a lo que falta. «Abrir» te deja ver el número, compartir el expediente o corregirlo: si cambias algo, hay que sellarlo otra vez y el número cambia.</p>
   </section>
 
   <section class="pantalla" id="p-heridos" hidden>
@@ -433,6 +451,10 @@
 
     <p class="nota">Todo está guardado solo en este teléfono, y sale cuando tú compartes el PDF o el número. Guardarlo en la nube, con un enlace para la aseguradora, llega con el piloto.</p>
     <button class="boton boton-suave" type="button" data-ir="croquis">Volver al croquis</button>
+
+    <h2>¿Otro choque?</h2>
+    <button class="boton boton-claro" type="button" id="enviar-nuevo">Empezar un reporte nuevo</button>
+    <p class="nota">Este queda guardado en el teléfono: lo encuentras en el inicio, en «Tus reportes».</p>
   </section>
 </main>
 

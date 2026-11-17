@@ -18,7 +18,9 @@ import { textoDeLaCadena } from './evidencia.js';
 import { detalle } from './reporte-en-curso.js';
 import { crearVueltaEnPantalla } from './vuelta-en-pantalla.js';
 
-export function iniciarPantallaEscena(raiz, { reporte, puntoDelChoque = () => null }) {
+// `empezarOtro`: app.js, que antes de cambiar de reporte termina de guardar lo pendiente y le hace
+// olvidar a cada paso lo del anterior (el lugar del paso 3, sobre todo).
+export function iniciarPantallaEscena(raiz, { reporte, puntoDelChoque = () => null, empezarOtro = () => reporte.nuevoReporte() }) {
   const $ = (selector) => raiz.querySelector(selector);
   const estado = { activa: false, turnoCadena: 0 };
 
@@ -139,7 +141,7 @@ export function iniciarPantallaEscena(raiz, { reporte, puntoDelChoque = () => nu
   });
   $('#escena-nuevo').addEventListener('click', async () => {
     try {
-      await reporte.nuevoReporte();
+      await empezarOtro();
     } catch (error) {
       avisarError(`No se pudo empezar otro reporte (${detalle(error)}).`);
       return;
@@ -172,5 +174,8 @@ export function iniciarPantallaEscena(raiz, { reporte, puntoDelChoque = () => nu
     vuelta.apagar();
   }
 
-  return { entrar, salir, vuelta: () => vuelta };
+  // Al cambiar de reporte: la foto que se iba a repetir era del otro.
+  const olvidar = () => vuelta.olvidar();
+
+  return { entrar, salir, olvidar, vuelta: () => vuelta };
 }

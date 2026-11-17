@@ -33,7 +33,7 @@ repositorio**, que es público: ver `.gitignore`.
   y el del botón «Ver un ejemplo» (ver `pruebas/datos/LEEME.md`);
   `npm run ejemplos-via -- ejemplo` baja solo el del botón.
 
-## Lo que hay (14-nov-2026)
+## Lo que hay (17-nov-2026)
 
 Los 8 pasos:
 
@@ -55,8 +55,10 @@ Los 8 pasos:
      se dice que es menos probable que encandilara).
    - **El clima** en la hora del choque: lluvia, cielo y visibilidad.
    - **Ver un ejemplo**: desde el 17-nov, una esquina real de Teusaquillo
-     (Bogotá), la Carrera 20 con Calle 44, con un choque inventado ayer a las
-     5:15 p. m. La pantalla lo dice. Del 12 al 17-nov fue la curva de Los
+     (Bogotá), la Carrera 20 con Calle 44, con un choque inventado (el botón le
+     pone la hora de ayer a las 5:15 p. m.). La pantalla lo dice, sin decir
+     «ayer»: un ejemplo de otro día, vuelto a abrir desde «Tus reportes», trae
+     su propia hora. Del 12 al 17-nov fue la curva de Los
      Verjones–Patios; se movió porque el 3D de Google allá salía borroso y
      porque las fotos de muestra de la vuelta son de un choque de ciudad.
      `js/ejemplo.js` dice el punto y por qué esa esquina: sin semáforo, con
@@ -239,6 +241,7 @@ Los 8 pasos:
      la vuelta, la cámara se apaga y la lista revisa la cadena entera.
    - «Saltar: no es seguro» lleva al paso 5. «Empezar un reporte nuevo» deja
      el anterior guardado; un reporte sin tocar en 6 horas también empieza otro.
+     Ninguno se pierde: quedan en «Tus reportes» (abajo).
 5. **Los carros** (13-nov, prometido para el mié 18). Una tarjeta por carro: A
    (el tuyo) y B (el otro) de entrada; «Agregar otro carro» hasta la F (uno
    agregado sin fotos se puede quitar). Por cada carro:
@@ -331,6 +334,72 @@ Los 8 pasos:
    - **Enviar el número por WhatsApp**: el número y la huella entera. Quien
      lo recibe queda con la huella en su chat, con la fecha de WhatsApp: si
      el reporte cambia después, ya no cuadra.
+   - **Empezar un reporte nuevo** (17-nov), al pie: lleva al inicio con otro
+     reporte; este queda en «Tus reportes».
+
+**Tus reportes** (17-nov, la opción B de los bocetos, que eligió Joan). Hasta
+ese día un reporte se perdía a las 6 horas: la base lo guardaba, pero abrir la
+app empezaba otro y no había cómo volver.
+- **En el inicio**, debajo de «¿Hay alguien herido?» y nunca encima: el último
+  reporte, solo si quedó a medias, con lo primero que le falta y «Seguir»; y
+  «Ver tus N reportes». Sin reportes guardados, el inicio queda como antes.
+- **La pantalla `#reportes`**: todos, del más nuevo al más viejo, con el día y
+  la hora en Colombia, la calle, si es el ejemplo, si está sellado (con su
+  número), sin sellar o «cambió después de sellar» (sin el número viejo, que
+  ya no vale). «Seguir» lleva a lo primero que falta (la revisión del paso 8);
+  «Abrir», al número y al PDF. No se listan los reportes vacíos que la base
+  crea sola al pasar las 6 horas.
+- **Cuál está en curso**: el de `turno` más alto (crece al crear o al abrir
+  uno), no el último que se tocó: una escritura que iba en camino (la lectura
+  de una placa) le daría la vuelta. Mientras ningún reporte tenga turno (un
+  teléfono con reportes de antes del 17-nov), sigue la regla de antes: el
+  último que se tocó. Las 6 horas cuentan desde que se tocó o se abrió.
+  `turno` y `abierto` no entran al sello: abrir uno sellado no le cambia el
+  número.
+- **Un choque nuevo no cae en un reporte viejo**: el camino del inicio
+  («¿Hay alguien herido?» y después el paso 3) sigue el reporte en curso solo
+  si se empezó hace menos de 6 horas, no está sellado y no es el ejemplo
+  (`sirveParaUnChoqueNuevo`). Si no, empieza otro. Sin esto, abrir un reporte
+  sellado para reenviar el PDF lo dejaba en curso, y el choque siguiente le
+  escribía encima su lugar (y le cambiaba el número).
+- **Cambiar de reporte pasa por `app.js`** (`cambiarDeReporte`): espera lo que
+  cada paso tiene en fila para guardar (`pendiente()`: el croquis, los carros,
+  los daños, el sello), guarda el lugar del paso 3, cambia y le hace olvidar a
+  cada paso lo del anterior (`olvidar()`; el PDF que se armaba, por ejemplo).
+  Una foto que se estaba reduciendo al cambiar no entra a ninguno. La lectura
+  de una placa que termina después del cambio se descarta (se puede volver a
+  leer): en el otro reporte le cambiaría los carros y el sello. Abrir uno lee
+  sus fotos ANTES de cambiarlo en la base: si la lectura falla, todo sigue en
+  el de antes y el error dice la verdad. Si mientras se abría la persona se fue
+  a otra pantalla («Sí, hay heridos»), se queda ahí.
+- **El paso 3 ya no vive solo en la memoria**: se guarda en el reporte al
+  salir de él (y si la vía o el clima llegan después, también), es de UN
+  reporte, y al volver a uno se vuelve a poner su lugar. Mientras la persona
+  no cambie nada (`lugar.guardada` en `app.js`), lo que llega solo **completa**
+  lo que le falte al reporte (la vía o el clima que no hubo sin internet) pero
+  no reemplaza lo guardado (el mapa de hoy puede decir otra cosa que el de ese
+  día), y **nunca toca un reporte sellado**, ni mientras se sella: le cambiaría
+  el número a uno que la persona tiene en pantalla. El paso 8 espera el
+  guardado del lugar que va en camino antes de sellar, y se vuelve a pintar si
+  la vía llega estando ahí. Un punto restaurado que salió del GPS dice «Punto
+  guardado en el reporte: lo dio el GPS», no «Tu ubicación».
+- **El croquis y la vuelta de la escena usan el lugar guardado** cuando el
+  paso 3 no está en la memoria (se siguió el reporte desde aquí, o iOS recargó
+  la página): antes el croquis decía «márcalo primero en el mapa» a un
+  reporte que ya lo tenía, y la escena dejaba de avisar «estás a X km». El
+  lugar guardado no trae la forma de la vía, solo su nombre y su rumbo: el
+  croquis arranca con una recta en ese sentido y, como al entrar se le pone el
+  lugar al paso 3 por detrás, toma la vía de verdad cuando llega su análisis
+  (si todavía no se eligió el caso).
+- **Leer los reportes cuesta**: el registro de cada foto va en la misma fila
+  de la base que la foto grande, así que la primera vez que se listan se leen
+  todas. Las filas salen a medida que se leen, y lo leído se guarda mientras la
+  página siga abierta (a un reporte solo se le agregan fotos). Con muchos
+  reportes, lo de fondo es guardar los registros aparte (una versión 2 de la
+  base); no se hizo antes del demo.
+- No se pueden borrar (son evidencia); quedan solo en el teléfono y la pantalla
+  lo dice, también que Safari en un iPhone los puede borrar solo (siete días de
+  usar Safari sin abrir la página, si no está en la pantalla de inicio).
 
 Las fotos de la escena, de los carros y de los daños van en **una sola cadena
 de huellas** por reporte (`reporte-en-curso.js`): la lista de la escena revisa
@@ -405,6 +474,21 @@ hoja de compartir con el archivo, WhatsApp con el número y la huella
 entera, cambiar la placa de B después de sellar (lo nota y tacha el número)
 y sellar otra vez (otro número, otro PDF). Sin errores en la página ni en la
 consola.
+
+**Verificado («Tus reportes», 17-nov)** en el Edge sin ventana a 390×844, con
+un perfil nuevo: el inicio sin reportes, el ejemplo guardado al salir del
+paso 3, el renglón «Seguir», «Empezar un reporte nuevo» del paso 8, el paso 3
+del reporte nuevo limpio, un toque en el mapa que va al reporte nuevo y no al
+ejemplo, la lista con los dos, «Seguir» que vuelve a poner el lugar del
+ejemplo sin reescribirlo, la página recargada en el croquis (arranca con el
+lugar guardado y toma la vía de verdad cuando llega), sellar y ver «Sellado»
+con su número, «Abrir» que lleva al número, y el camino del inicio que
+empieza otro reporte en vez de caer en el sellado. Aparte, la vía que llega
+después de salir del paso 3 (la consulta del mapa retenida a propósito) queda
+en el reporte. Sin errores en la página ni en la consola. Antes del commit,
+tres revisores independientes leyeron el cambio. Sus hallazgos están
+arreglados salvo dos, anotados: lo que cuesta leer los reportes (arriba) y un
+caso de milisegundos, sellar justo cuando se cumplen las 6 horas.
 
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
@@ -624,7 +708,9 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. Recibe qué fotos cuentan (`filtro`) y qué decir (`textos`): sirve a la escena y a cada carro. |
 | `js/sesion-de-camara.js` | La cámara en vivo con la brújula y el GPS, las pastillas, la revisión («Repetir» / «Usarla así») y el guardado. La comparten la escena, los carros y los daños. Se apaga sola en segundo plano. |
 | `js/vuelta-en-pantalla.js` | La vuelta de 8 en pantalla: el anillo, la guía, la tira y la silueta. La usan la escena y los carros. |
-| `js/reporte-en-curso.js` | El reporte que comparten las tres pantallas de fotos: una sola copia de la cadena, `agregarFoto` (reduce, sella y guarda), `revisarCadena` y `guardarDatos` (carros y daños). |
+| `js/reporte-en-curso.js` | El reporte que comparten las tres pantallas de fotos: una sola copia de la cadena, `agregarFoto` (reduce, sella y guarda), `revisarCadena`, `guardarDatos` (carros y daños), `abrir` uno guardado y la lista para «Tus reportes». Lo que se estaba guardando al cambiar de reporte no pisa al nuevo. |
+| `js/reportes.js` | **Puro.** «Tus reportes»: qué dice cada fila (el día, la calle, el sello, lo primero que falta, a qué paso lleva), cuáles no se listan y cuál va en el renglón del inicio. |
+| `js/pantalla-reportes.js` | El renglón del inicio y la pantalla con todos los reportes. |
 | `js/pantalla-carros.js` | "Los carros": la lista, un carro (sus fotos, la placa y la línea) y la cámara con la silueta. Lee la placa por detrás después de la foto. |
 | `js/carros.js` | **Puro.** Los carros del reporte, los nombres de las 8 tomas, los textos de la vuelta al carro, la placa (formato, propuesta, escrita, sin placa) y la tarjeta de cada carro. |
 | `js/lector-de-placa.js` | La placa de una foto del video: el lector del taller y, si no está seguro, una segunda pasada con más margen alrededor de la placa (ver «Trampas»). |
@@ -640,7 +726,7 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/calidad.js` | **Puro.** Borrosa (varianza del laplaciano por ejes), oscura y torcida; los umbrales, sin calibrar. |
 | `js/orientacion.js` | **Puro.** El rumbo de la cámara (W3C o `webkitCompassHeading`), la elevación y el giro del horizonte. |
 | `js/evidencia.js` | **Puro.** El registro de cada foto, el texto canónico, la huella SHA-256 encadenada y su revisión. |
-| `js/reporte-bd.js` | La base del reporte en IndexedDB: el reporte en curso y sus fotos; revisa la cadena dentro de la transacción. |
+| `js/reporte-bd.js` | La base del reporte en IndexedDB: el reporte en curso (`enCurso`: el de turno más alto) y sus fotos; revisa la cadena dentro de la transacción; lista los reportes, lee solo los registros de las fotos (con un cursor) y vuelve a abrir uno. `sirveParaUnChoqueNuevo`: si el camino del inicio sigue el reporte en curso. |
 | `js/brujula.js`, `js/camara.js` | Los sensores del navegador: el permiso del iPhone, los eventos de orientación, `getUserMedia` y sacar el cuadro. |
 | `js/fotos.js`, `js/conexion-bd.js` | **Copiados del Taller** (commit 2c44f30) sin más cambio que el encabezado. Lo que se arregle en uno se pasa al otro a mano. |
 | `js/vendor/leaflet/` | Leaflet 1.9.4 (BSD-2), copiado: sin CDN. |
@@ -816,6 +902,17 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
   pantallazo salía en blanco.
 - **«5:44 p. m.» ya termina en punto**: armar frases con `+ '.'` daba
   «p. m..». `frase()` en `enviar.js`.
+- **El reporte nuevo se quedaba con el lugar del anterior** (hasta el
+  17-nov): «Empezar un reporte nuevo» (paso 4) cambiaba de reporte, pero el
+  paso 3 seguía en la memoria de la página con el punto del choque anterior,
+  y el paso 8 se lo guardaba al nuevo. Ahora la memoria del paso 3 es de un
+  reporte (`lugar.de` en `app.js`) y cambiar de reporte la limpia.
+- **Lo que llega tarde es de otro reporte** (17-nov): con varios reportes,
+  todo lo que corre por detrás puede terminar después de cambiar: la lectura
+  de la placa (segundos), el GPS (decenas de segundos), el ejemplo, la vía y
+  el clima. Cada uno revisa de qué reporte era antes de escribir
+  (`deReporte` en los carros, `reinicios` en el paso 3, `lugar.de` en
+  `app.js`). Ninguna prueba lo veía: se encontró leyendo el código.
 
 ## Licencias de terceros
 

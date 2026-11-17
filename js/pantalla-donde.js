@@ -25,7 +25,9 @@ export { EJEMPLO };
 const TEXTOS_DEL_ORIGEN = {
   mapa: 'Punto marcado en el mapa. Si no es exacto, arrastra el pin.',
   'gps-ajustado': 'Punto corregido a mano. El círculo muestra dónde lo puso el GPS.',
-  ejemplo: `Ejemplo: ${LUGAR_DEL_EJEMPLO}, con un choque inventado ayer a las 5:15 p. m.`,
+  // Sin «ayer a las 5:15»: un reporte de ejemplo de otro día, vuelto a abrir desde «Tus reportes»,
+  // trae su propia hora (la que dice el campo de abajo).
+  ejemplo: `Ejemplo: ${LUGAR_DEL_EJEMPLO}, con un choque y una hora inventados.`,
 };
 // El pin del ejemplo se puede arrastrar y sigue siendo el ejemplo; lejos de su esquina ya no se la
 // nombra (la zona en 3D dice lo mismo para ese punto).
@@ -45,7 +47,9 @@ export function fechaDeValor(valor) {
   return Number.isNaN(fecha.getTime()) ? null : fecha;
 }
 
-export function iniciarPantallaDonde(raiz) {
+// `alActualizar`: llega el análisis de la vía o el clima. app.js lo guarda en el reporte si la persona
+// ya salió de aquí (al salir se guardó lo que había, quizá sin la vía todavía).
+export function iniciarPantallaDonde(raiz, { alActualizar = () => {} } = {}) {
   const $ = (selector) => raiz.querySelector(selector);
   const estado = { punto: null, origen: null, via: null, clima: null, climaCargando: false, buscandoGps: false };
   const cacheVia = new Map();
@@ -55,6 +59,14 @@ export function iniciarPantallaDonde(raiz) {
   const claveDe = (p) => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
   let turnoVia = 0;
   let turnoClima = 0;
+  // Sube con cada cosa que la persona cambia aquí (un toque, el pin, el GPS, el ejemplo, la hora) y
+  // no cuando se vuelve a poner el lugar guardado de un reporte (restaurar): app.js no le vuelve a
+  // guardar a un reporte un lugar que nadie cambió.
+  let version = 0;
+  // Sube cada vez que la pantalla pasa a otro reporte (reiniciar). Lo que la persona pidió antes
+  // (el GPS, que puede tardar decenas de segundos; el ejemplo) y responde después era del otro.
+  let reinicios = 0;
+  const TEXTO_INICIAL = $('#estado-ubicacion').textContent;
 
   const ahora = new Date();
   $('#hora-choque').value = valorDeFecha(ahora);
@@ -63,11 +75,17 @@ export function iniciarPantallaDonde(raiz) {
   let mapa;
   try {
     mapa = crearMapa($('#mapa'), {
-      alTocar: (p) => fijarPunto(p, { origen: 'mapa', acercar: false }),
-      alSoltarPin: (p) => fijarPunto(p, { origen: estado.origen === 'gps' || estado.origen === 'gps-ajustado' ? 'gps-ajustado' : estado.origen === 'ejemplo' ? 'ejemplo' : 'mapa', moverPin: false }),
+      alTocar: (p) => {
+        version++;
+        fijarPunto(p, { origen: 'mapa', acercar: false });
+      },
+      alSoltarPin: (p) => {
+        version++;
+        fijarPunto(p, { origen: estado.origen === 'gps' || estado.origen === 'gps-ajustado' ? 'gps-ajustado' : estado.origen === 'ejemplo' ? 'ejemplo' : 'mapa', moverPin: false });
+      },
     });
   } catch (error) {
-    mapa = { ponerPin() {}, dibujarVia() {}, ajustar() {} };
+    mapa = { ponerPin() {}, quitarPin() {}, dibujarVia() {}, ajustar() {} };
     avisarUbicacion(error.message, true);
   }
 
@@ -142,6 +160,7 @@ export function iniciarPantallaDonde(raiz) {
     pintarFilas('#filas-via', filasDeLaVia(resultado));
     pintarLuz(); // el sol de frente depende del rumbo de la vía
     actualizarEnlaces(); // Street View mirando a lo largo de la vía
+    alActualizar();
   }
 
   function actualizarEnlaces() {
@@ -205,16 +224,20 @@ export function iniciarPantallaDonde(raiz) {
     estado.climaCargando = false;
     estado.clima = clima;
     pintarLuz();
+    alActualizar();
   }
 
-  function fijarPunto(punto, { origen, precision = null, acercar = true, moverPin = true }) {
+  // `guardado`: el punto es el que el reporte ya tenía (restaurar). Dicho como «tu ubicación por
+  // GPS» parecería la de ahora, y es la del choque.
+  function fijarPunto(punto, { origen, precision = null, acercar = true, moverPin = true, guardado = false }) {
     estado.punto = punto;
     estado.origen = origen;
     // Al arrastrar el pin, el círculo del GPS se queda donde estaba: la
     // precisión sigue siendo la del GPS.
     if (moverPin) estado.precision = precision;
     if (moverPin) mapa.ponerPin(punto, { precision, acercar });
-    avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)}\u00a0m). Si no es el punto exacto, arrastra el pin.` : textoDelOrigen(origen, punto));
+    if (origen === 'gps') avisarUbicacion(`${guardado ? 'Punto guardado en el reporte: lo dio el GPS' : 'Tu ubicación por GPS'} (±${Math.round(precision)}\u00a0m). Si no es el punto exacto, arrastra el pin.`);
+    else avisarUbicacion(textoDelOrigen(origen, punto));
     estado.via = null;
     actualizarEnlaces();
     $('#analisis').hidden = false;
@@ -225,19 +248,23 @@ export function iniciarPantallaDonde(raiz) {
   $('#usar-ubicacion').addEventListener('click', async () => {
     if (estado.buscandoGps) return;
     estado.buscandoGps = true;
+    const mio = reinicios;
     const boton = $('#usar-ubicacion');
     boton.textContent = 'Buscando…';
     avisarUbicacion('Buscando tu ubicación…');
     try {
       const lectura = await buscarUbicacion({
         alMejorar: (l) => {
+          if (mio !== reinicios) return;
           mapa.ponerPin(l, { precision: l.precision });
           avisarUbicacion(`Buscando tu ubicación… ±${Math.round(l.precision)}\u00a0m`);
         },
       });
+      if (mio !== reinicios) return;
+      version++;
       fijarPunto(lectura, { origen: 'gps', precision: lectura.precision });
     } catch (error) {
-      avisarUbicacion(error.message, true);
+      if (mio === reinicios) avisarUbicacion(error.message, true);
     } finally {
       estado.buscandoGps = false;
       boton.textContent = 'Usar mi ubicación';
@@ -245,11 +272,14 @@ export function iniciarPantallaDonde(raiz) {
   });
 
   $('#ver-ejemplo').addEventListener('click', async () => {
+    const mio = reinicios;
     const ayer = new Date();
     ayer.setDate(ayer.getDate() - 1);
     ayer.setHours(17, 15, 0, 0);
     $('#hora-choque').value = valorDeFecha(ayer);
+    version++;
     await precargarEjemplo();
+    if (mio !== reinicios) return;
     fijarPunto(EJEMPLO, { origen: 'ejemplo' });
   });
 
@@ -263,15 +293,55 @@ export function iniciarPantallaDonde(raiz) {
   });
 
   $('#hora-choque').addEventListener('change', () => {
+    version++;
     if (!estado.punto) return;
     actualizarClima();
     actualizarEnlaces(); // la zona en 3D pone el sol de esa hora
   });
+
+  // --- Otro reporte («Tus reportes») ---------------------------------------------------------
+
+  // Sin punto, como al abrir la app: el reporte que se abrió no tiene lugar marcado.
+  function reiniciar() {
+    turnoVia++;
+    turnoClima++;
+    reinicios++;
+    Object.assign(estado, { punto: null, origen: null, precision: null, via: null, clima: null, climaCargando: false });
+    mapa.quitarPin();
+    avisarUbicacion(TEXTO_INICIAL);
+    for (const id of ['#analisis', '#enlaces-google', '#nota-google', '#ver-zona-3d']) $(id).hidden = true;
+    const ahora = new Date();
+    $('#hora-choque').value = valorDeFecha(ahora);
+    $('#hora-choque').max = valorDeFecha(ahora);
+  }
+
+  // El lugar que un reporte ya tiene guardado (al abrirlo desde «Tus reportes» o al recargar la
+  // página): el punto, de dónde salió y la hora. La vía y el clima se vuelven a consultar para
+  // pintarlos, pero lo guardado no se toca mientras la persona no cambie nada (`version`): el mapa
+  // y el clima de hoy pueden decir otra cosa que los de ese día, y eso le cambiaría el sello.
+  async function restaurar(lugar) {
+    reiniciar();
+    const p = lugar?.punto;
+    if (!p || !Number.isFinite(p.lat) || !Number.isFinite(p.lon)) return;
+    const mio = reinicios;
+    const antes = version;
+    const hora = lugar.hora ? new Date(lugar.hora) : null;
+    if (hora && !Number.isNaN(hora.getTime())) $('#hora-choque').value = valorDeFecha(hora);
+    if (lugar.origen === 'ejemplo') await precargarEjemplo();
+    // Si mientras tanto la persona tocó el mapa, manda lo de ella.
+    if (mio !== reinicios || antes !== version) return;
+    const precision = Number.isFinite(lugar.precision) ? lugar.precision : null;
+    const conocido = lugar.origen in TEXTOS_DEL_ORIGEN || (lugar.origen === 'gps' && precision);
+    fijarPunto({ lat: p.lat, lon: p.lon }, { origen: conocido ? lugar.origen : 'mapa', precision, guardado: true });
+  }
 
   return {
     ajustar: () => mapa.ajustar(),
     estado: () => estado,
     // La hora del choque: el croquis la guarda para la zona en 3D (el sol de esa hora).
     fecha: fechaDelChoque,
+    version: () => version,
+    reiniciar,
+    restaurar,
   };
 }

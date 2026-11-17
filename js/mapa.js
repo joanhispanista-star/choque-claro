@@ -47,6 +47,14 @@ export function crearMapa(contenedor, { alTocar = () => {}, alSoltarPin = () => 
       if (precision) circulo = L.circle(ll, { radius: precision, className: 'circulo-precision', interactive: false }).addTo(mapa);
       if (acercar) mapa.setView(ll, Math.max(mapa.getZoom(), 17));
     },
+    // Sin pin: el reporte que se abrió no tiene lugar marcado («Tus reportes»).
+    quitarPin() {
+      if (pin) pin.remove();
+      if (circulo) circulo.remove();
+      pin = null;
+      circulo = null;
+      capaVia.clearLayers();
+    },
     dibujarVia(analisis) {
       capaVia.clearLayers();
       if (!analisis || analisis.estado !== 'ok') return;

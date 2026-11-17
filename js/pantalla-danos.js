@@ -390,5 +390,16 @@ export function iniciarPantallaDanos(raiz, { reporte }) {
     estado.vista = 'carro';
   }
 
-  return { entrar, salir, estado: () => estado, sesion: () => sesion };
+  // Al cambiar de reporte: la pieza abierta era del otro.
+  function olvidar() {
+    estado.letra = 'A';
+    estado.elegida = null;
+    estado.eligiendoTipo = false;
+    estado.tomando = null;
+  }
+
+  // Lo que está en fila para guardarse: app.js lo espera antes de cambiar de reporte.
+  const pendiente = () => estado.cola;
+
+  return { entrar, salir, olvidar, pendiente, estado: () => estado, sesion: () => sesion };
 }
