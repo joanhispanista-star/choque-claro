@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 326 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 336 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
@@ -80,10 +80,29 @@ Los 8 pasos:
      - **Cómo se ve desde el 14-nov** (Joan: «se ve muy pobre»): el tramo
        analizado va como asfalto del ancho que da el mapa (3,3 m por carril, 7 m
        si no lo dice) con sus bordes en verde, en vez de una raya verde; hay
-       cielo y neblina en el horizonte; y los carros son el carro 3D del paso 6
-       sobre el relieve, inclinados con la pendiente, en vez de dos cajas
-       oscuras. Sin líneas pintadas en la vía, a propósito: el mapa no sabe si
-       la del día era doble o punteada.
+       cielo y neblina en el horizonte; y los carros van sobre el relieve,
+       inclinados con la pendiente, en vez de dos cajas oscuras. Sin líneas
+       pintadas en la vía, a propósito: el mapa no sabe si la del día era doble
+       o punteada.
+     - **El carro, desde el 16-nov** (Joan: «que los gráficos incluso de los
+       carros se vean mejor»; vio tres opciones en pantallazos y eligió «C,
+       carro nuevo»): es el carro nuevo del Taller de Pintura (`js/generico/`),
+       con rines, faros, espejos y juntas finas, del color de su letra y
+       calibrado para que en pantalla salga ese color. Los rines, las llantas
+       y los cromos reflejan el cielo de la maqueta; la lata, el vidrio y los
+       faros, el estudio de fotos del Taller, que no cambia con la hora. Son
+       unos 66.000 triángulos por carro, 12 veces los del paso 6: si en el
+       iPhone la película va a tirones, la vuelta al carro del paso 6 es
+       devolver `js/maqueta-carros.js` a como quedó en e4e0eb1 y quitar
+       `pruebas/maqueta-carros.test.js` (solo cambiar la llamada no basta: ver
+       el encabezado del archivo). Los carros se arman cuando la cámara de la
+       zona se queda quieta, y sus sombreadores se compilan de una vez, para
+       que ni la entrada al 3D ni el golpe se frenen. **Sin sombra del sol**, aunque se construyó:
+       la zona no sabe si ese día hubo sol (las nubes del reporte no le
+       llegan), el relieve no proyecta sombra, y salía o no según cuánto
+       tardara en llegar el relieve. Una sombra dura sobre la vía afirmaría un
+       sol que, nublado, nadie vio. La mancha suave de debajo de cada carro sí
+       va. El 3D de Google sigue con el carro del paso 6 (`carro-glb.js`).
    - **La recreación** (14-nov; Joan pidió «recrear con videos interactivos
      cómo fue el accidente»). En la misma página, sobre la maqueta abierta: el
      croquis del paso 7 en movimiento. Un botón **«Ver cómo fue»** encima del
@@ -117,7 +136,9 @@ Los 8 pasos:
        lo puso el croquis, no porque estuviera quieto», o que su flecha no
        muestra de dónde venía. Si nadie se mueve, no hay botón de reproducir.
      - **En el golpe se encienden las piezas dañadas** del paso 6, cada una con
-       el color de su daño (en el ejemplo, unas inventadas).
+       el color de su daño (en el ejemplo, unas inventadas). Si ese color se
+       parece al del carro (la abolladura azul sobre el azul de C, «suelto»
+       sobre el morado de D), va más claro, y la nota de abajo lo dice.
      - **La advertencia va en el mapa mismo**, para que ningún pantallazo salga
        sin ella, y dice de quién es: «Recreación de lo declarado», «de un
        croquis sin terminar» (sin «Listo» en el paso 7) o «de un ejemplo
@@ -441,7 +462,11 @@ La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
     del mapa (necesita WebGL 2). Si no puede, quedan las cajas de siempre y no
     aparece el botón «Ver cómo fue»: anotar cuál de las dos pasó.
 18. **¿Corre pareja?** Con «Los carros» y con «Seguir a A»: si va a tirones en
-    el iPhone, anotarlo (el mapa se redibuja entero en cada cuadro).
+    el iPhone, anotarlo (el mapa se redibuja entero en cada cuadro). Desde el
+    16-nov los carros son el carro nuevo del Taller, 12 veces más pesado: si
+    traba, se vuelve al carro del paso 6 (ver «El carro, desde el 16-nov»).
+    Y mirar cuánto tarda en aparecer el botón «Ver cómo fue» después de abrir
+    la zona: ahí se arman los carros (en este PC, unos 300 ms; antes, 50).
 19. Arrastrar el mapa con la película andando: la película sigue y la cámara
     queda en el dedo. «Desde arriba» y después «Ver cómo fue»: se queda arriba.
 20. Irse a WhatsApp con la película andando y volver: debe estar en pausa,
@@ -557,7 +582,9 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), el croquis inventado del ejemplo y sus daños, el ancho de la vía, la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
 | `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis, la línea y los daños de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado, cielo, el asfalto del tramo y las capas; y con croquis, monta la recreación. |
 | `js/recreacion.js` | **Puro.** La recreación: las flechas suavizadas que pasan por la pose del croquis, todos a la misma rapidez (o cada uno a su ritmo si así no se alcanzan), el primer toque de los contornos (el golpe), el fotograma de cualquier momento y el del croquis, las dos cámaras (la que sigue a un carro, promediada, y el encuadre de todos), el sello del mapa y lo que se dice en palabras. |
-| `js/maqueta-carros.js` | Los carros 3D del paso 6 dentro del mapa de MapLibre (una capa propia con Three.js, en su mismo WebGL): sobre el relieve, inclinados con la pendiente, con su sombra y las piezas dañadas encendidas en el golpe. |
+| `js/maqueta-carros.js` | Los carros de la recreación dentro del mapa de MapLibre (una capa propia con Three.js, en su mismo WebGL): el carro nuevo del Taller (`js/generico/`) sobre el relieve, inclinado con la pendiente, con la mancha de contacto debajo y las piezas dañadas encendidas en el golpe, del color de su daño (más claro si se parece al del carro). |
+| `js/generico/` | **Copiados del Taller** (commit 502b836, el 16-nov) sin más cambio que el encabezado: el carro nuevo (jaula subdividida, rines, faros, espejos, juntas) y su laca calibrada. Lo usa solo la recreación; los cambios que necesita la maqueta van en `maqueta-carros.js`. |
+| `js/diferencia-de-color.js` | **Puro.** Qué tan distintos se ven dos colores (CIEDE2000): decide cuándo el color de un daño se parece demasiado al del carro. |
 | `js/pantalla-recreacion.js` | Los controles de la recreación: reproducir (también encima del mapa), la línea de tiempo, lento, las cámaras con su entrada suave, las letras de los carros y quién manda en la cámara (la película, los botones de la zona o el dedo). |
 | `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |
 | `js/pantalla-zona-google.js` | Carga Maps JavaScript con la clave, pide la altura del suelo, monta el `gmp-map-3d` con carros, flechas y marcas, y avisa si Google falla. |
@@ -587,7 +614,7 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/pantalla-danos.js` | "Los daños": el carro 3D, la hoja de la pieza, la lista de lo marcado, la lista de piezas y la cámara de la foto de cerca. |
 | `js/danos.js` | **Puro.** Los 4 tipos con su color, las piezas que se marcan (las 17 de afuera), marcar y quitar, la foto vigente de cada pieza, las filas de la lista y la revisión de la foto de cerca. |
 | `js/visor-danos.js` | El carro en 3D mínimo: Three.js, giro con un dedo, el toque (toque.js), la tinta de cada daño y las vistas. Se dibuja solo cuando algo cambia. |
-| `js/carro.js`, `js/piezas.js`, `js/carrocerias.js`, `js/toque.js`, `js/encuadre.js` | **Copiados del Taller** (commit 4502d41) sin más cambio que el encabezado (y, en `carro.js`, el nombre `pintura` del material de la pintura, que busca la maqueta de la zona): el carro por piezas en cuatro carrocerías, los nombres del gremio, el toque y el encuadre. `visor.js` NO se copió (arrastra los escaneos y los modelos del catálogo). |
+| `js/carro.js`, `js/piezas.js`, `js/carrocerias.js`, `js/toque.js`, `js/encuadre.js` | **Copiados del Taller** (commit 4502d41) sin más cambio que el encabezado (y, en `carro.js`, el nombre `pintura` del material de la pintura: la maqueta de la zona lo buscó del 14 al 16-nov, y lo necesita la vuelta al carro del paso 6): el carro por piezas en cuatro carrocerías, los nombres del gremio, el toque y el encuadre. `visor.js` NO se copió (arrastra los escaneos y los modelos del catálogo). |
 | `js/placa-foto.js`, `js/placa-ocr.js` | **Copiados del Taller** (4502d41): encontrar la placa amarilla, enderezarla y leerla con fast-plate-ocr. `placa-ocr.js` solo cambia la carpeta del motor. |
 | `js/catalogo.js`, `js/catalogo-carros.js` | **Copiados del Taller** (4502d41): el buscador y las 1.137 líneas de Colombia (se baja solo al buscar). |
 | `js/vendor/three/` | Three.js 0.169.0 con OrbitControls y RoomEnvironment (MIT), copiado del Taller; `index.html` lo conecta con un import map. |
@@ -635,8 +662,37 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
     letreros se rehace en otro hilo. Ahora son marcadores (HTML), que se
     mueven en el mismo cuadro.
   - *La pintura salía lavada*: la del paso 6 es metálica y refleja su cuarto;
-    a cielo abierto el naranja de B quedaba rosado. En la maqueta va casi mate
-    (`maqueta-carros.js` la busca por el nombre `pintura` del material).
+    a cielo abierto el naranja de B quedaba rosado. Del 14 al 16-nov la
+    maqueta la dejaba casi mate; desde el 16-nov el carro es el nuevo del
+    Taller, cuya laca no pasa por las luces de la escena ni por su cuarto.
+  - *La laca del carro nuevo necesita el tono de cine del Taller* (ACES con
+    exposición 1,05): calcula al revés qué luz mandar para que en pantalla
+    salga el color pedido. Con otro tono, el verde de A y el naranja de B
+    dejan de ser los de sus flechas.
+  - *La laca calcula su luz como si el carro estuviera en el origen mirando al
+    norte* (así está en el Taller). En la vía, sin pasarle `uLocal` (del mundo
+    al carro, cada cuadro), la nariz del carro que iba al norte apagaba los
+    reflejos del carro entero. `pinturaEnSuSitio` cambia cinco textos del
+    sombreador del Taller; si el Taller cambia su pintura y uno deja de
+    calzar, lo dicen la consola y `pruebas/maqueta-carros.test.js`.
+  - *El daño salía lavado en la laca*: el Taller mezcla un 22 % del color del
+    carro en la pieza marcada, y la abolladura azul (30,111,217) sobre el
+    naranja de B salía 105,143,220, hacia el lila (revisión del 15-nov). Aquí
+    la marcada es una lata del color del daño: calibrado, sin el brillo
+    encima y con el cielo que refleja teñido de ese color (en el Taller va
+    blanco, y le subía azul al amarillo del rayón en un capó). Medido en el
+    Edge oculto el 16-nov, el guardafango de B sale 61,120,217 de lejos y
+    32,102,207 de cerca. En Node lo cuenta `pruebas/laca-a-mano.js` (la laca
+    hecha a mano, con la huella del sombreador para que no se quede vieja)
+    desde las cámaras de la película: a menos de 8 (ΔE00) del pedido.
+  - *Sin el brillo encima, el daño no se distinguía* cuando su color se
+    parece al del carro: la abolladura sobre el azul de C quedaba a 3,4
+    (ΔE00) de la lata, menos que el techo contra la puerta del mismo carro
+    (revisión del 16-nov). Ahora, si el daño está a menos de 10 del carro, se
+    mezcla con blanco hasta 16 (`colorDeLaSenal`): queda a más de 10 de su
+    lata desde cualquier cámara. Solo pasa con la abolladura en C y «suelto»
+    en D; el rojo de «roto» sobre el naranja de B (10,9) no se toca, así que
+    el ejemplo sale como en el paso 6.
   - *La cámara que sigue, en curva*: mirando al frente no salía nunca el otro
     carro, y detrás de la cola mirando al golpe se salía el propio. Va en la
     línea golpe–carro, y cerca del golpe vuelve detrás de la cola.

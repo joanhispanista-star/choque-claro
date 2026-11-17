@@ -40,6 +40,15 @@ const giro = (a, b) => ((((b - a) % 360) + 540) % 360) - 180;
 const TEXTOS = { listo: 'Ver cómo fue', jugando: 'Pausar', pausa: 'Continuar', fin: 'Verlo otra vez' };
 const PARA_LECTORES = { listo: 'Ver la recreación', jugando: 'Pausar la recreación', pausa: 'Continuar la recreación', fin: 'Ver la recreación otra vez' };
 
+// El final de la frase de las piezas que se encienden. Si el color de un daño se parece al del carro,
+// la maqueta lo pinta más claro (colorDeLaSenal, en maqueta-carros.js), y entonces la frase no puede
+// decir a secas «con el color de su daño». Exportada para las pruebas.
+export function aclaradoEn(letras = []) {
+  if (!letras.length) return '.';
+  const lista = letras.length === 1 ? letras[0] : `${letras.slice(0, -1).join(', ')} y ${letras.at(-1)}`;
+  return letras.length === 1 ? `; en el carro ${lista} ese color va más claro, porque se parecía al del carro.` : `; en los carros ${lista} ese color va más claro, porque se parecía al de cada carro.`;
+}
+
 // Con «Reducir movimiento» encendido (Ajustes › Accesibilidad › Movimiento en el iPhone), la cámara
 // no vuela ni se va cerrando sola: MapLibre lo respeta en sus animaciones, pero la película mueve la
 // cámara con jumpTo en cada cuadro, y eso no pasa por su filtro.
@@ -77,6 +86,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
   let capa;
   try {
     const { capaDeLosCarros } = await import('./maqueta-carros.js');
+    // Armar los dos carros nuevos y compilar sus sombreadores frena la página unos 300 ms en este PC
+    // (con el carro del paso 6 eran 50). Con el mapa entrando al 3D, la entrada se congelaba y
+    // saltaba: se espera a que la cámara se quede quieta, con un tope por si nunca para (la vuelta).
+    if (mapa.isMoving()) await new Promise((listo) => { mapa.once('moveend', listo); setTimeout(listo, 2500); });
     capa = capaDeLosCarros({
       maplibregl: globalThis.maplibregl,
       origen: croquis.golpe,
@@ -142,7 +155,7 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
   nota.textContent = [
     ejemplo ? 'Ejemplo inventado: los carros, sus flechas y sus daños no son de nadie.' : rec.nadaSeMueve ? 'Es el croquis del paso 7 en 3D, quieto.' : 'Es el croquis del paso 7 en movimiento: cada carro por su flecha.',
     ...avisosDeLaRecreacion(rec),
-    danos.length && conGolpe ? (ejemplo ? 'En el golpe se encienden las piezas dañadas del ejemplo, cada una con el color de su daño.' : 'En el golpe se encienden las piezas que se marcaron como dañadas en el paso 6, cada una con el color de su daño.') : '',
+    danos.length && conGolpe ? (ejemplo ? 'En el golpe se encienden las piezas dañadas del ejemplo, cada una con el color de su daño' : 'En el golpe se encienden las piezas que se marcaron como dañadas en el paso 6, cada una con el color de su daño') + aclaradoEn(capa.aclarados) : '',
     'La maqueta no tiene árboles, barrancos ni carros parqueados: no dice qué alcanzaba a ver cada conductor.',
   ]
     .filter(Boolean)

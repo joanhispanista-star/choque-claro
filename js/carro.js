@@ -1,5 +1,5 @@
 // COPIADO del Taller de Pintura (js/carro.js, commit 4502d41) el 13-nov-2026, sin cambiar nada más
-// que este encabezado. Allá es el carro que se pinta; aquí, el carro donde se marcan los daños
+// que este encabezado y el nombre del material de la pintura (ver materialPintura). Allá es el carro que se pinta; aquí, el carro donde se marcan los daños
 // (paso 6). Si se arregla algo aquí, hay que pasarlo allá a mano, y al revés: son dos repositorios
 // y cada uno evoluciona por su lado.
 //
@@ -147,8 +147,11 @@ function yCapo(d, s) {
   return desde + ((s - d.capoDel) * (d.cintura - desde)) / (d.capoTras - d.capoDel);
 }
 
-// Con nombre: la maqueta de la zona (maqueta-carros.js) la busca para dejarla menos metálica, que
-// a cielo abierto y de lejos el reflejo le lavaba el color.
+// Con nombre, a diferencia del Taller: del 14 al 16-nov-2026 la maqueta de la zona
+// (maqueta-carros.js) la buscaba para dejarla menos metálica, que a cielo abierto y de lejos el
+// reflejo le lavaba el color. Desde el 16-nov la maqueta usa el carro nuevo del Taller (generico/)
+// y ya no la busca, pero el nombre se queda: la vuelta al carro del paso 6, si el carro nuevo traba
+// en un iPhone, es devolver maqueta-carros.js a e4e0eb1, y ese archivo lo busca.
 export function materialPintura(color) {
   const pintura = new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.3 });
   pintura.name = 'pintura';
