@@ -1,0 +1,700 @@
+{
+ "punto": {
+  "lat": 4.6326328,
+  "lon": -74.0728039
+ },
+ "fecha": "2026-11-17T11:37:17.447Z",
+ "fuente": "© colaboradores de OpenStreetMap (ODbL), vía Overpass",
+ "nota": "Respuesta REAL de Overpass para el botón Ver un ejemplo: así el ejemplo no depende de los servidores públicos del mapa.",
+ "consulta": "[out:json][timeout:20];\nway(around:80,4.632633,-74.072804)[\"highway\"~\"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|track|busway)(_link)?$\"];\nout body geom;\n(\n  node(around:80,4.632633,-74.072804)[\"highway\"~\"^(traffic_signals|stop|give_way|crossing|speed_camera|mini_roundabout)$\"];\n  node(around:80,4.632633,-74.072804)[\"railway\"=\"level_crossing\"];\n);\nout body;",
+ "respuesta": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.7 375dc00a",
+  "osm3s": {
+   "timestamp_osm_base": "2026-11-17T11:35:28Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "way",
+    "id": 24350372,
+    "bounds": {
+     "minlat": 4.6326473,
+     "minlon": -74.0734103,
+     "maxlat": 4.632762,
+     "maxlon": -74.072801
+    },
+    "nodes": [
+     264153785,
+     8811857696,
+     264154309
+    ],
+    "geometry": [
+     {
+      "lat": 4.632762,
+      "lon": -74.0734103
+     },
+     {
+      "lat": 4.6326665,
+      "lon": -74.0729031
+     },
+     {
+      "lat": 4.6326473,
+      "lon": -74.072801
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed:forward": "30",
+     "name": "Calle 44",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 24350377,
+    "bounds": {
+     "minlat": 4.6330084,
+     "minlon": -74.0740005,
+     "maxlat": 4.6332461,
+     "maxlon": -74.0727284
+    },
+    "nodes": [
+     264153799,
+     264154322,
+     8811857686,
+     264153800
+    ],
+    "geometry": [
+     {
+      "lat": 4.6332461,
+      "lon": -74.0740005
+     },
+     {
+      "lat": 4.6331196,
+      "lon": -74.0733433
+     },
+     {
+      "lat": 4.6330246,
+      "lon": -74.0728179
+     },
+     {
+      "lat": 4.6330084,
+      "lon": -74.0727284
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Calle 44A",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 24350473,
+    "bounds": {
+     "minlat": 4.6326473,
+     "minlon": -74.072801,
+     "maxlat": 4.6333823,
+     "maxlon": -74.0726542
+    },
+    "nodes": [
+     264154309,
+     264153800,
+     1972619434,
+     9675872919,
+     13517134610
+    ],
+    "geometry": [
+     {
+      "lat": 4.6326473,
+      "lon": -74.072801
+     },
+     {
+      "lat": 4.6330084,
+      "lon": -74.0727284
+     },
+     {
+      "lat": 4.6333187,
+      "lon": -74.0726668
+     },
+     {
+      "lat": 4.6333464,
+      "lon": -74.0726613
+     },
+     {
+      "lat": 4.6333823,
+      "lon": -74.0726542
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed": "30",
+     "name": "Carrera 20",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 24350476,
+    "bounds": {
+     "minlat": 4.6324141,
+     "minlon": -74.0734798,
+     "maxlat": 4.632762,
+     "maxlon": -74.0734103
+    },
+    "nodes": [
+     264153785,
+     8811857695,
+     9939912468,
+     264154321
+    ],
+    "geometry": [
+     {
+      "lat": 4.632762,
+      "lon": -74.0734103
+     },
+     {
+      "lat": 4.6325359,
+      "lon": -74.0734555
+     },
+     {
+      "lat": 4.6324663,
+      "lon": -74.0734694
+     },
+     {
+      "lat": 4.6324141,
+      "lon": -74.0734798
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "name": "Carrera 21",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 89748769,
+    "bounds": {
+     "minlat": 4.632762,
+     "minlon": -74.0734103,
+     "maxlat": 4.6331196,
+     "maxlon": -74.0733433
+    },
+    "nodes": [
+     264153785,
+     8811857697,
+     264154322
+    ],
+    "geometry": [
+     {
+      "lat": 4.632762,
+      "lon": -74.0734103
+     },
+     {
+      "lat": 4.6330708,
+      "lon": -74.0733524
+     },
+     {
+      "lat": 4.6331196,
+      "lon": -74.0733433
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Carrera 21",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 89748775,
+    "bounds": {
+     "minlat": 4.6317233,
+     "minlon": -74.0722443,
+     "maxlat": 4.6326824,
+     "maxlon": -74.0720763
+    },
+    "nodes": [
+     264153787,
+     12060253119,
+     2863283621,
+     3907618357,
+     263777024
+    ],
+    "geometry": [
+     {
+      "lat": 4.6326824,
+      "lon": -74.0720763
+     },
+     {
+      "lat": 4.6325839,
+      "lon": -74.0720936
+     },
+     {
+      "lat": 4.6325164,
+      "lon": -74.0721054
+     },
+     {
+      "lat": 4.6321218,
+      "lon": -74.0721745
+     },
+     {
+      "lat": 4.6317233,
+      "lon": -74.0722443
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Mariscal Sucre",
+     "cycleway:right": "lane",
+     "hgv": "no",
+     "highway": "secondary",
+     "lanes": "1",
+     "maxspeed": "30",
+     "name": "Avenida Carrera 19",
+     "oneway": "yes",
+     "oneway:bicycle": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 201517243,
+    "bounds": {
+     "minlat": 4.6317983,
+     "minlon": -74.0726364,
+     "maxlat": 4.6325874,
+     "maxlon": -74.0724824
+    },
+    "nodes": [
+     2115146036,
+     8811857687,
+     8811857688,
+     9939912462,
+     2115146075
+    ],
+    "geometry": [
+     {
+      "lat": 4.6325874,
+      "lon": -74.0724824
+     },
+     {
+      "lat": 4.6325299,
+      "lon": -74.0724935
+     },
+     {
+      "lat": 4.6318426,
+      "lon": -74.0726277
+     },
+     {
+      "lat": 4.6318313,
+      "lon": -74.0726299
+     },
+     {
+      "lat": 4.6317983,
+      "lon": -74.0726364
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed": "30",
+     "name": "Carrera 19 Bis",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 282419499,
+    "bounds": {
+     "minlat": 4.6325164,
+     "minlon": -74.0724824,
+     "maxlat": 4.6325874,
+     "maxlon": -74.0721054
+    },
+    "nodes": [
+     2115146036,
+     8811857693,
+     9929705524,
+     2863283621
+    ],
+    "geometry": [
+     {
+      "lat": 4.6325874,
+      "lon": -74.0724824
+     },
+     {
+      "lat": 4.6325285,
+      "lon": -74.0721695
+     },
+     {
+      "lat": 4.6325244,
+      "lon": -74.0721478
+     },
+     {
+      "lat": 4.6325164,
+      "lon": -74.0721054
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "1",
+     "maxspeed": "30",
+     "name": "Calle 44",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 342122723,
+    "bounds": {
+     "minlat": 4.6325874,
+     "minlon": -74.0724824,
+     "maxlat": 4.6326824,
+     "maxlon": -74.0720763
+    },
+    "nodes": [
+     264153787,
+     9929705523,
+     2115146036
+    ],
+    "geometry": [
+     {
+      "lat": 4.6326824,
+      "lon": -74.0720763
+     },
+     {
+      "lat": 4.6326718,
+      "lon": -74.0721217
+     },
+     {
+      "lat": 4.6325874,
+      "lon": -74.0724824
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "1",
+     "name": "Calle 44",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1063723683,
+    "bounds": {
+     "minlat": 4.63183,
+     "minlon": -74.0729273,
+     "maxlat": 4.6319445,
+     "maxlon": -74.0728024
+    },
+    "nodes": [
+     263776770,
+     264154310
+    ],
+    "geometry": [
+     {
+      "lat": 4.63183,
+      "lon": -74.0728024
+     },
+     {
+      "lat": 4.6319445,
+      "lon": -74.0729273
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Mariscal Sucre",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "tertiary",
+     "lanes": "2",
+     "maxspeed": "30",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Diagonal 42A",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1063723686,
+    "bounds": {
+     "minlat": 4.6319445,
+     "minlon": -74.0734798,
+     "maxlat": 4.6324141,
+     "maxlon": -74.0729273
+    },
+    "nodes": [
+     264154310,
+     264154321
+    ],
+    "geometry": [
+     {
+      "lat": 4.6319445,
+      "lon": -74.0729273
+     },
+     {
+      "lat": 4.6324141,
+      "lon": -74.0734798
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Mariscal Sucre",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "tertiary",
+     "lanes": "2",
+     "maxspeed": "30",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Diagonal 42A",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1063723687,
+    "bounds": {
+     "minlat": 4.6319445,
+     "minlon": -74.0729273,
+     "maxlat": 4.6326473,
+     "maxlon": -74.072801
+    },
+    "nodes": [
+     264154310,
+     9939912469,
+     264154309
+    ],
+    "geometry": [
+     {
+      "lat": 4.6319445,
+      "lon": -74.0729273
+     },
+     {
+      "lat": 4.6319877,
+      "lon": -74.0729195
+     },
+     {
+      "lat": 4.6326473,
+      "lon": -74.072801
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed": "30",
+     "name": "Carrera 20",
+     "oneway": "yes",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1063723688,
+    "bounds": {
+     "minlat": 4.6324141,
+     "minlon": -74.074066,
+     "maxlat": 4.6329025,
+     "maxlon": -74.0734798
+    },
+    "nodes": [
+     264154321,
+     9939912460,
+     263776881
+    ],
+    "geometry": [
+     {
+      "lat": 4.6324141,
+      "lon": -74.0734798
+     },
+     {
+      "lat": 4.6328721,
+      "lon": -74.0740295
+     },
+     {
+      "lat": 4.6329025,
+      "lon": -74.074066
+     }
+    ],
+    "tags": {
+     "alt_name": "Avenida Mariscal Sucre",
+     "bicycle:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "foot:conditional": "yes @ (Su,PH 07:00-14:00)",
+     "highway": "tertiary",
+     "lanes": "2",
+     "maxspeed": "30",
+     "motor_vehicle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "name": "Diagonal 42A",
+     "oneway": "yes",
+     "oneway:bicycle:conditional": "no @ (Su,PH 07:00-14:00)",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1157219189,
+    "bounds": {
+     "minlat": 4.6325874,
+     "minlon": -74.072801,
+     "maxlat": 4.6326473,
+     "maxlon": -74.0724824
+    },
+    "nodes": [
+     264154309,
+     8811857694,
+     2115146036
+    ],
+    "geometry": [
+     {
+      "lat": 4.6326473,
+      "lon": -74.072801
+     },
+     {
+      "lat": 4.6326337,
+      "lon": -74.0727284
+     },
+     {
+      "lat": 4.6325874,
+      "lon": -74.0724824
+     }
+    ],
+    "tags": {
+     "highway": "residential",
+     "lanes": "2",
+     "maxspeed:forward": "30",
+     "name": "Calle 44",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "node",
+    "id": 1972619434,
+    "lat": 4.6333187,
+    "lon": -74.0726668,
+    "tags": {
+     "highway": "traffic_signals",
+     "traffic_signals": "signal",
+     "traffic_signals:direction": "forward"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857686,
+    "lat": 4.6330246,
+    "lon": -74.0728179,
+    "tags": {
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857687,
+    "lat": 4.6325299,
+    "lon": -74.0724935,
+    "tags": {
+     "direction": "backward",
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857693,
+    "lat": 4.6325285,
+    "lon": -74.0721695,
+    "tags": {
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857694,
+    "lat": 4.6326337,
+    "lon": -74.0727284,
+    "tags": {
+     "direction": "backward",
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857695,
+    "lat": 4.6325359,
+    "lon": -74.0734555,
+    "tags": {
+     "direction": "forward",
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857696,
+    "lat": 4.6326665,
+    "lon": -74.0729031,
+    "tags": {
+     "direction": "forward",
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8811857697,
+    "lat": 4.6330708,
+    "lon": -74.0733524,
+    "tags": {
+     "direction": "forward",
+     "highway": "stop"
+    }
+   },
+   {
+    "type": "node",
+    "id": 9929705523,
+    "lat": 4.6326718,
+    "lon": -74.0721217,
+    "tags": {
+     "crossing": "uncontrolled",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 9929705524,
+    "lat": 4.6325244,
+    "lon": -74.0721478,
+    "tags": {
+     "crossing": "uncontrolled",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 9939912468,
+    "lat": 4.6324663,
+    "lon": -74.0734694,
+    "tags": {
+     "crossing": "uncontrolled",
+     "highway": "crossing"
+    }
+   },
+   {
+    "type": "node",
+    "id": 9939912469,
+    "lat": 4.6319877,
+    "lon": -74.0729195,
+    "tags": {
+     "crossing": "uncontrolled",
+     "highway": "crossing"
+    }
+   }
+  ]
+ }
+}

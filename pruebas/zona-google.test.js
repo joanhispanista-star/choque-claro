@@ -12,7 +12,7 @@ import { ALTURAS, CAMPO_DE_VISION, RANGO_MINIMO, acercarALosCarros, alturaTerrar
 
 const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const ejemplo = () => {
-  const g = JSON.parse(fs.readFileSync(new URL('../datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
+  const g = JSON.parse(fs.readFileSync(new URL('./datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
   return analizarVia(g.respuesta, g.punto);
 };
 function croquisGuardado() {

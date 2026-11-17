@@ -30,11 +30,13 @@ test('la fecha de los datos guardados, en la hora de Colombia', () => {
   assert.equal(fechaCorta('no es fecha'), '');
 });
 
-test('el ejemplo guardado para la app es el de la curva real, y se analiza igual', () => {
-  const guardado = JSON.parse(fs.readFileSync(new URL('../datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
+test('el ejemplo guardado para la app es el de la esquina real, y se analiza igual', () => {
+  const guardado = JSON.parse(fs.readFileSync(new URL('../datos/ejemplo-teusaquillo.json', import.meta.url), 'utf8'));
   assert.deepEqual(guardado.punto, EJEMPLO);
   assert.match(guardado.fuente, /OpenStreetMap/);
   const a = analizarVia(guardado.respuesta, EJEMPLO);
-  assert.equal(a.via.nombre, 'Vía Los Verjones - Patios');
-  assert.equal(a.forma.tipo, 'curva cerrada');
+  assert.equal(a.via.nombre, 'Carrera 20');
+  assert.equal(a.forma.tipo, 'recta');
+  assert.equal(a.cruce?.con, 'Calle 44');
+  assert.ok(a.cruce.distancia < 3, 'el punto está a pasos del cruce');
 });

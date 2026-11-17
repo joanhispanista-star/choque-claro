@@ -52,6 +52,33 @@
 .panel-360 img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
 .mira-360 { position: absolute; left: 50%; top: 10px; bottom: 10px; border-left: 2px dashed rgba(255, 255, 255, 0.55); pointer-events: none; }
 .frente-360 { margin: 8px 0 0; font-size: 15px; }
+/* El lado de la vuelta sin foto (la muestra del ejemplo): se ve vacío a propósito, con la razón. */
+.panel-360.panel-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 16px;
+  background: #22272e;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  line-height: 1.35;
+  text-align: center;
+}
+.sello-360 {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.66);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.creditos-360 { margin: 8px 0 0; font-size: 13px; color: var(--texto-suave); }
 
 /* Los controles de MapLibre, del tamaño de un dedo. */
 .zona-3d .maplibregl-ctrl-group button { width: 40px; height: 40px; }

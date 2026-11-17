@@ -29,7 +29,7 @@ const INICIAR = {
 };
 
 // El punto que se marcó en el mapa, para decirle a la persona si está lejos de
-// él al hacer la vuelta. El ejemplo no cuenta: es una curva de otra parte.
+// él al hacer la vuelta. El ejemplo no cuenta: es un lugar de otra parte (js/ejemplo.js).
 function puntoDelChoque() {
   const e = donde ? donde.estado() : null;
   return e && e.punto && e.origen !== 'ejemplo' ? e.punto : null;

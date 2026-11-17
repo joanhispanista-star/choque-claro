@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 336 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 348 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
@@ -30,7 +30,8 @@ repositorio**, que es público: ver `.gitignore`.
   `git push origin master` NO actualiza el sitio. En otro PC, o si alguien
   cambia la fuente de Pages a `master`, esto deja de hacer falta.
 - `npm run ejemplos-via` vuelve a bajar los dos ejemplos reales de las pruebas
-  (ver `pruebas/datos/LEEME.md`).
+  y el del botón «Ver un ejemplo» (ver `pruebas/datos/LEEME.md`);
+  `npm run ejemplos-via -- ejemplo` baja solo el del botón.
 
 ## Lo que hay (14-nov-2026)
 
@@ -53,11 +54,18 @@ Los 8 pasos:
      frente para alguno de los dos sentidos de la vía (con el cielo cubierto
      se dice que es menos probable que encandilara).
    - **El clima** en la hora del choque: lluvia, cielo y visibilidad.
-   - **Ver un ejemplo**: la curva de radio 13 m de la vía Los Verjones–Patios,
-     con un choque inventado ayer a las 5:15 p. m. La pantalla lo dice. Desde
-     el 13-nov usa la respuesta real del mapa guardada el 12-nov
-     (`datos/ejemplo-verjones-patios.json`) y lo avisa: frente a un cliente no
-     puede depender de un servidor público que se cae. El clima sí es en vivo.
+   - **Ver un ejemplo**: desde el 17-nov, una esquina real de Teusaquillo
+     (Bogotá), la Carrera 20 con Calle 44, con un choque inventado ayer a las
+     5:15 p. m. La pantalla lo dice. Del 12 al 17-nov fue la curva de Los
+     Verjones–Patios; se movió porque el 3D de Google allá salía borroso y
+     porque las fotos de muestra de la vuelta son de un choque de ciudad.
+     `js/ejemplo.js` dice el punto y por qué esa esquina: sin semáforo, con
+     un Pare en cada entrada de la Calle 44, y las dos calles en el sentido
+     de los carros del caso «En un cruce». Usa la respuesta real del mapa
+     guardada (`datos/ejemplo-teusaquillo.json`) y lo avisa: frente a un
+     cliente no puede depender de un servidor público que se cae. Solo cerca
+     de ese punto: un enlace viejo del ejemplo o un pin arrastrado lejos se
+     consultan en vivo. El clima sí es en vivo.
    - **Ver en Google Maps / Ver en Street View** (13-nov): con las URL de Maps
      de Google, sin clave ni facturación; Street View mira a lo largo de la
      vía. La pantalla avisa que esas imágenes no son del día del choque.
@@ -191,8 +199,15 @@ Los 8 pasos:
      en un cilindro de CSS 3D sin librerías. Se gira con el dedo o con
      Izquierda, Norte y Derecha, y abajo dice qué foto está de frente (hora,
      rumbo, GPS y huella corta). No están cosidas, y la página lo dice; sin
-     brújula van una cada 45°. El ejemplo no muestra fotos: su choque es
-     inventado y las de un reporte de verdad no se le pegan.
+     brújula van una cada 45°. El choque del ejemplo es inventado y las fotos
+     de un reporte de verdad no se le pegan. Desde el 17-nov, el ejemplo
+     muestra en su lugar una MUESTRA: 5 fotos reales de otro choque
+     (Belgrano, Buenos Aires, 2006, de Ernesto en Flickr, CC BY-SA 2.0), con
+     placas, caras, avisos de cigarrillo y teléfonos difuminados. Se dice en
+     cuatro lugares (el párrafo, un sello sobre el visor, el texto de cada
+     foto y los créditos). Los tres lados de los que no hay foto publicada salen
+     vacíos, y no hay botón Norte porque no hay brújula
+     (`js/muestra-de-la-vuelta.js`, `datos/ejemplo-fotos/LEEME.md`).
 4. **La escena, en una vuelta** (13-nov). Antes de mover los carros, parada en
    el punto del golpe, la persona gira sobre sí misma y toma 8 fotos:
    - **El anillo de 8 tomas** gira con la brújula: lo que la cámara tiene al
@@ -577,7 +592,10 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/mapa.js` | Leaflet: pin arrastrable, círculo de precisión, tramo analizado y señales. |
 | `js/geo.js` | **Puro.** Plano local en metros, proyecciones, rumbos, puntos cardinales y números con coma. |
 | `js/enlaces-google.js` | **Puro.** Los enlaces a Google Maps y Street View (URL de Maps, sin clave) y la fecha corta en hora de Colombia. |
-| `datos/ejemplo-verjones-patios.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
+| `js/ejemplo.js` | El ejemplo, en un solo lugar: el punto, el archivo guardado, el caso del croquis, cómo se nombra y hasta dónde un punto «es» el del ejemplo. |
+| `datos/ejemplo-teusaquillo.json` | La respuesta real de Overpass del ejemplo (ODbL), para que "Ver un ejemplo" no falle nunca. |
+| `js/muestra-de-la-vuelta.js` | **Puro.** La muestra de la vuelta del ejemplo: las 5 fotos de otro choque, dónde va cada una en el círculo, lo que se dice de cada una y su crédito CC BY-SA 2.0. |
+| `datos/ejemplo-fotos/` | Las 5 fotos de la muestra, difuminadas y sin EXIF, con su `LEEME.md` (autor, enlaces, licencia y qué se les cambió). |
 | `zona-3d.html`, `css/zona-3d.css` | La página de la zona en 3D (aparte: carga MapLibre, 800 KB, solo si se pide). |
 | `js/zona-3d.js` | **Puro.** Los GeoJSON de lo que va encima (punto, precisión, tramo, señales, sol, conos, carros del croquis o del ejemplo, golpe), el croquis inventado del ejemplo y sus daños, el ancho de la vía, la cámara a lo largo de la vía o sobre el croquis, la luz del sol y la leyenda que dice lo que falta. |
 | `js/pantalla-zona-3d.js` | La página: lee el punto de la dirección, analiza la vía (el ejemplo, guardado) y lee las fotos de la escena, el croquis, la línea y los daños de cada carro. Arma el 3D de Google si hay clave. Si no hay clave, o si Google falla, arma la maqueta abierta con relieve, sombreado, cielo, el asfalto del tramo y las capas; y con croquis, monta la recreación. |
@@ -601,7 +619,7 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/fechas.js` | **Puro.** Fechas y horas en la hora de Colombia (UTC−5), sin depender de la zona del teléfono. |
 | `js/vendor/maplibre/` | MapLibre GL JS 4.7.1 (BSD-3), copiado: sin CDN. |
 | `js/escena-360.js` | **Puro.** Dónde va cada foto en el círculo, las medidas del cilindro (70° de visor, 50° por foto), la foto de frente y su texto. |
-| `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). |
+| `js/pantalla-escena-360.js` | El visor 360°: paneles de CSS 3D, arrastre con el dedo, botones, y esconde los paneles de atrás (Safari los pinta al revés). En el ejemplo, la muestra de otro choque con su sello, sus créditos y los lados sin foto vacíos. |
 | `js/pantalla-escena.js` | "La escena": el inicio, la lista con la revisión de la cadena y el aviso de que la persona está lejos del punto. La cámara y la vuelta son las comunes. |
 | `js/escena.js` | **Puro.** La vuelta: en qué toma cae cada rumbo, la guía, el dibujo del anillo y los textos de las pastillas. Recibe qué fotos cuentan (`filtro`) y qué decir (`textos`): sirve a la escena y a cada carro. |
 | `js/sesion-de-camara.js` | La cámara en vivo con la brújula y el GPS, las pastillas, la revisión («Repetir» / «Usarla así») y el guardado. La comparten la escena, los carros y los daños. Se apaga sola en segundo plano. |
@@ -627,11 +645,11 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/fotos.js`, `js/conexion-bd.js` | **Copiados del Taller** (commit 2c44f30) sin más cambio que el encabezado. Lo que se arregle en uno se pasa al otro a mano. |
 | `js/vendor/leaflet/` | Leaflet 1.9.4 (BSD-2), copiado: sin CDN. |
 | `herramientas/servidor.js` | El servidor del taller, sin COOP/COEP (COEP bloquearía las teselas). |
-| `herramientas/guardar-ejemplo-via.mjs` | Baja los ejemplos reales de las pruebas. |
+| `herramientas/guardar-ejemplo-via.mjs` | Baja los ejemplos reales de las pruebas y el del botón «Ver un ejemplo». |
 | `js/permisos.js` | **Puro.** Quién puede qué cuando haya cuentas (fase 2): seis roles, doce acciones y el motivo del no en español. No protege nada: la pantalla lo usa para mostrar solo los botones que la base va a aceptar. |
 | `supabase/migrations/20261114150000_fase2_roles.sql` | La base de las cuentas: tablas, RLS, las funciones que dejan rastro y el almacenamiento de las fotos. Idempotente. Al pie, la consulta para verificar que se aplicó (las seis en true). **Sin aplicar todavía.** |
 | `pruebas/roles-postgres.test.js`, `pruebas/supabase-de-mentira.sql` | La migración corrida en PGlite (Postgres dentro de Node, solo para pruebas) sobre un Supabase de mentira que imita sus roles, `auth.uid()`, el almacenamiento y sus permisos por defecto abiertos. |
-| `pruebas/` | `node --test`; `datos/` tiene dos respuestas reales de Overpass (ODbL). La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). `reporte-de-prueba.js` arma un reporte entero para el paso 8 (la curva del ejemplo, 26 fotos, una repetida, B a medias) y `jpeg-de-prueba.js`, JPEG mínimos válidos. |
+| `pruebas/` | `node --test`; `datos/` tiene tres respuestas reales de Overpass (ODbL), una de ellas la del ejemplo viejo de la curva. La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). `reporte-de-prueba.js` arma un reporte entero para el paso 8 (la curva del ejemplo, 26 fotos, una repetida, B a medias) y `jpeg-de-prueba.js`, JPEG mínimos válidos. |
 
 ## Trampas que ya mordieron
 

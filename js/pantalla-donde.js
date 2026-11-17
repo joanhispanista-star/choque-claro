@@ -12,20 +12,25 @@ import { filasDelSol, posicionDelSol } from './sol.js';
 import { climaALaHora, filasDelClima, urlDelClima } from './clima.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { buscarUbicacion } from './ubicacion.js';
+import { ARCHIVO_DEL_EJEMPLO, EJEMPLO, LUGAR_DEL_EJEMPLO, esElLugarDelEjemplo } from './ejemplo.js';
 import { crearMapa } from './mapa.js';
 import { enlacesDeGoogle, fechaCorta } from './enlaces-google.js';
 
-// El ejemplo: una curva REAL (la más cerrada de la medición del 12-nov-2026)
-// con un choque inventado ayer a las 5:15 p. m. La pantalla lo dice.
-export const EJEMPLO = { lat: 4.6484, lon: -74.0105 };
+// El ejemplo: un lugar REAL con un choque inventado ayer a las 5:15 p. m. (ejemplo.js dice dónde y
+// por qué). La pantalla lo dice. Se reexporta: las pruebas y otras pantallas lo buscaban aquí.
+export { EJEMPLO };
 
 // Arriba y no junto a fijarPunto: una constante declarada después de la
 // función que la usa dejó una pantalla muda en el taller (15-oct-2026).
 const TEXTOS_DEL_ORIGEN = {
   mapa: 'Punto marcado en el mapa. Si no es exacto, arrastra el pin.',
   'gps-ajustado': 'Punto corregido a mano. El círculo muestra dónde lo puso el GPS.',
-  ejemplo: 'Ejemplo: una curva real de la vía Los Verjones–Patios, con un choque inventado ayer a las 5:15 p. m.',
+  ejemplo: `Ejemplo: ${LUGAR_DEL_EJEMPLO}, con un choque inventado ayer a las 5:15 p. m.`,
 };
+// El pin del ejemplo se puede arrastrar y sigue siendo el ejemplo; lejos de su esquina ya no se la
+// nombra (la zona en 3D dice lo mismo para ese punto).
+const EJEMPLO_MOVIDO = 'Ejemplo fuera de su esquina: el lugar es el que marca el pin y el choque sigue siendo inventado.';
+const textoDelOrigen = (origen, punto) => (origen === 'ejemplo' && !esElLugarDelEjemplo(punto) ? EJEMPLO_MOVIDO : TEXTOS_DEL_ORIGEN[origen]);
 
 const dos =(n) => String(n).padStart(2, '0');
 
@@ -164,7 +169,7 @@ export function iniciarPantallaDonde(raiz) {
     const clave = claveDe(EJEMPLO);
     if (cacheVia.has(clave)) return;
     try {
-      const guardado = await consultarJson('datos/ejemplo-verjones-patios.json', { limiteMs: 8000 });
+      const guardado = await consultarJson(ARCHIVO_DEL_EJEMPLO, { limiteMs: 8000 });
       cacheVia.set(clave, guardado.respuesta);
       fechasGuardadas.set(clave, fechaCorta(guardado.fecha));
     } catch {
@@ -209,7 +214,7 @@ export function iniciarPantallaDonde(raiz) {
     // precisión sigue siendo la del GPS.
     if (moverPin) estado.precision = precision;
     if (moverPin) mapa.ponerPin(punto, { precision, acercar });
-    avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)}\u00a0m). Si no es el punto exacto, arrastra el pin.` : TEXTOS_DEL_ORIGEN[origen]);
+    avisarUbicacion(origen === 'gps' ? `Tu ubicación por GPS (±${Math.round(precision)}\u00a0m). Si no es el punto exacto, arrastra el pin.` : textoDelOrigen(origen, punto));
     estado.via = null;
     actualizarEnlaces();
     $('#analisis').hidden = false;

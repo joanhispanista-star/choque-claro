@@ -1,12 +1,15 @@
-// Guarda respuestas REALES de Overpass para las pruebas, en pruebas/datos/.
-// Se corre a mano (`npm run ejemplos-via`) cuando cambia la consulta de
-// js/via.js: las pruebas nunca tocan internet.
+// Guarda respuestas REALES de Overpass: las de las pruebas, en pruebas/datos/,
+// y la del botón «Ver un ejemplo», en datos/. Se corre a mano
+// (`npm run ejemplos-via`) cuando cambia la consulta de js/via.js: las pruebas
+// nunca tocan internet. `npm run ejemplos-via -- ejemplo` baja solo la del
+// ejemplo (cuando se mueve el ejemplo de lugar, sin tocar las de las pruebas).
 // Datos © colaboradores de OpenStreetMap, licencia ODbL (ver pruebas/datos/LEEME.md).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { consultaDeLaVia } from '../js/via.js';
 import { consultarOverpass } from '../js/servicios.js';
+import { EJEMPLO, ARCHIVO_DEL_EJEMPLO } from '../js/ejemplo.js';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DESTINO = path.join(RAIZ, 'pruebas', 'datos');
@@ -26,16 +29,24 @@ async function semaforoEnChapinero() {
   return { lat: n.lat, lon: n.lon };
 }
 
-async function guardar(nombre, punto) {
+async function guardar(archivo, punto, extra = {}) {
   const consulta = consultaDeLaVia(punto);
   const respuesta = await consultarOverpass(consulta, { buscar });
-  fs.mkdirSync(DESTINO, { recursive: true });
-  const archivo = path.join(DESTINO, nombre + '.json');
-  const contenido = { punto, fecha: new Date().toISOString(), fuente: '© colaboradores de OpenStreetMap (ODbL), vía Overpass', consulta, respuesta };
+  fs.mkdirSync(path.dirname(archivo), { recursive: true });
+  const contenido = { punto, fecha: new Date().toISOString(), fuente: '© colaboradores de OpenStreetMap (ODbL), vía Overpass', ...extra, consulta, respuesta };
   fs.writeFileSync(archivo, JSON.stringify(contenido, null, 1));
-  console.log(nombre, JSON.stringify(punto), respuesta.elements.length, 'elementos,', fs.statSync(archivo).size, 'bytes');
+  console.log(path.relative(RAIZ, archivo), JSON.stringify(punto), respuesta.elements.length, 'elementos,', fs.statSync(archivo).size, 'bytes');
 }
 
-await guardar('curva-verjones-patios', CURVA);
-await new Promise((r) => setTimeout(r, 1500));
-await guardar('semaforo-chapinero', await semaforoEnChapinero());
+const pausa = () => new Promise((r) => setTimeout(r, 1500));
+const soloElEjemplo = process.argv[2] === 'ejemplo';
+
+if (!soloElEjemplo) {
+  await guardar(path.join(DESTINO, 'curva-verjones-patios.json'), CURVA);
+  await pausa();
+  await guardar(path.join(DESTINO, 'semaforo-chapinero.json'), await semaforoEnChapinero());
+  await pausa();
+}
+await guardar(path.join(RAIZ, ARCHIVO_DEL_EJEMPLO), EJEMPLO, {
+  nota: 'Respuesta REAL de Overpass para el botón Ver un ejemplo: así el ejemplo no depende de los servidores públicos del mapa.',
+});

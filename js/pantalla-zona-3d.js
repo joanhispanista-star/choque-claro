@@ -7,12 +7,12 @@
 // La lógica pura está en zona-3d.js y zona-google.js.
 //
 // Se abre desde "¿Dónde fue?" con el punto en la dirección:
-//   zona-3d.html?lat=4.648400&lon=-74.010500&t=<ISO>&p=<precisión m>&ejemplo=1
+//   zona-3d.html?lat=4.632633&lon=-74.072804&t=<ISO>&p=<precisión m>&ejemplo=1
 // Fuentes de la maqueta abierta, todas sin clave ni tarjeta (la opción B, del 13-nov-2026):
 //  - Calles y edificios: el estilo "liberty" de OpenFreeMap (datos de
 //    OpenStreetMap), que ya trae los edificios levantados en 3D.
 //  - Relieve: los mosaicos "terrarium" de AWS (Terrain Tiles, de Mapzen).
-//  - La vía: el mismo análisis de "¿Dónde fue?" (via.js). El ejemplo usa la
+//  - La vía: el mismo análisis de "¿Dónde fue?" (via.js). El ejemplo, en su lugar, usa la
 //    respuesta guardada, para que no falle; un punto real se consulta en vivo.
 // Las fotos de la escena, el croquis (paso 7) y la línea de cada carro (paso 5) se leen de este
 // teléfono (reporte-bd.js): si el reporte se hizo en otro, aquí no aparecen, y la leyenda lo dice.
@@ -25,11 +25,12 @@ import { analizarVia, consultaDeLaVia } from './via.js';
 import { consultarJson, consultarOverpass } from './servicios.js';
 import { posicionDelSol } from './sol.js';
 import { abrirBaseDelReporte } from './reporte-bd.js';
-import { COLORES, DANOS_DEL_EJEMPLO, anchoDeLaVia, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, croquisDeEstaZona, croquisDeLaZona, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
+import { COLORES, anchoDeLaVia, camaraDeArranque, camaraDeLaZona, camaraDelCroquis, capasDeLaZona, carrosDeLaZona, croquisDeEstaZona, croquisDeLaZona, danosDelEjemplo, leyendaDeLaZona, luzDelSol } from './zona-3d.js';
 import { montarEscena360 } from './pantalla-escena-360.js';
 import { montarZonaGoogle } from './pantalla-zona-google.js';
 import { montarRecreacion } from './pantalla-recreacion.js';
 import { CLAVE_DE_GOOGLE } from './clave-de-google.js';
+import { ARCHIVO_DEL_EJEMPLO, LUGAR_DEL_EJEMPLO, esElLugarDelEjemplo } from './ejemplo.js';
 
 const ESTILO = 'https://tiles.openfreemap.org/styles/liberty';
 const RELIEVE = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
@@ -39,7 +40,7 @@ const FUENTE = ['Noto Sans Bold'];
 // zona-3d.html y vuelven si Google falla.
 const TEXTOS_DE_GOOGLE = {
   nota: 'El 3D es de Google: lo arma con fotos aéreas de otra fecha, que pueden tener años, y en ese tiempo se repinta una línea o se quita una señal. No es una foto del día del choque. Los carros, a su tamaño y del color de su letra, salen del croquis: son lo que se declaró, no una medición. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.',
-  fuente: 'Para dibujarla, este punto y la zona se piden a Google (el 3D), a los mosaicos de relieve de AWS (la altura del suelo, para apuntar la cámara) y, si no es el ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.',
+  fuente: 'Para dibujarla, este punto y la zona se piden a Google (el 3D), a los mosaicos de relieve de AWS (la altura del suelo, para apuntar la cámara) y, salvo en el punto del ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.',
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -71,10 +72,14 @@ function leerDireccion() {
   };
 }
 
+// Los datos guardados del ejemplo son de SU esquina: solo sirven si el punto es ese. Un enlace viejo
+// (el ejemplo vivió en una curva de Los Verjones hasta el 17-nov-2026) o un pin del ejemplo
+// arrastrado lejos se consultan en vivo; con los datos de la esquina, el carro saldría en una calle
+// que no es la del punto.
 async function analisisDeLaVia(centro, ejemplo) {
   try {
-    if (ejemplo) {
-      const guardado = await consultarJson('datos/ejemplo-verjones-patios.json', { limiteMs: 8000 });
+    if (ejemplo && esElLugarDelEjemplo(centro)) {
+      const guardado = await consultarJson(ARCHIVO_DEL_EJEMPLO, { limiteMs: 8000 });
       return analizarVia(guardado.respuesta, centro);
     }
     return analizarVia(await consultarOverpass(consultaDeLaVia(centro)), centro);
@@ -315,7 +320,11 @@ async function iniciar() {
   }
   const { centro, fecha, precision, ejemplo } = datos;
   const sol = posicionDelSol(fecha, centro.lat, centro.lon);
-  const bienvenida = ejemplo ? 'Ejemplo: una curva real de la vía Los Verjones–Patios, con un choque inventado.' : 'Armando la zona; el análisis de la vía llega en unos segundos.';
+  const bienvenida = !ejemplo
+    ? 'Armando la zona; el análisis de la vía llega en unos segundos.'
+    : esElLugarDelEjemplo(centro)
+      ? `Ejemplo: ${LUGAR_DEL_EJEMPLO}, con un choque inventado.`
+      : 'Ejemplo fuera de su esquina: el lugar es el del punto y el choque, inventado.';
   avisar(bienvenida);
   const promesaDelAnalisis = analisisDeLaVia(centro, ejemplo);
 
@@ -328,8 +337,9 @@ async function iniciar() {
   const croquis = croquisDeEstaZona(delTelefono.croquis, centro, ejemplo);
   const lineas = croquis ? delTelefono.lineas : {};
   // Las piezas que se encienden en el golpe de la recreación, cada una con el color de su daño: las
-  // del paso 6 de este reporte si el croquis es suyo; las inventadas si es el croquis del ejemplo.
-  const danos = croquis ? delTelefono.danos : ejemplo ? DANOS_DEL_EJEMPLO : [];
+  // del paso 6 de este reporte si el croquis es suyo; las inventadas si es el croquis del ejemplo, que
+  // van con su caso y por eso esperan al análisis (danosDe, al montar la recreación).
+  const danosDe = (deLaVia) => (croquis ? delTelefono.danos : ejemplo ? danosDelEjemplo(deLaVia) : []);
   const fotos = fotosDelChoque.map((f) => f.registro);
   let analisis = { estado: 'cargando' };
   pintarLeyenda(leyendaDeLaZona({ ejemplo, analisis, fotos, sol, croquis }));
@@ -360,7 +370,7 @@ async function iniciar() {
     if (!delCroquis) return;
     intentado = true;
     try {
-      recreacion = await montarRecreacion({ mapa: motor.mapa, croquis: delCroquis, sol, lineas, danos, ejemplo: !croquis && ejemplo, camaraGeneral: () => camaraDe(analisis), alTomarLaCamara: () => motor.tocar() });
+      recreacion = await montarRecreacion({ mapa: motor.mapa, croquis: delCroquis, sol, lineas, danos: danosDe(analisis), ejemplo: !croquis && ejemplo, camaraGeneral: () => camaraDe(analisis), alTomarLaCamara: () => motor.tocar() });
     } catch (error) {
       // Lo que no se esperaba no tumba la zona: quedan el mapa, las cajas y la escena en 360°.
       console.warn('Recreación:', error?.message ?? error);

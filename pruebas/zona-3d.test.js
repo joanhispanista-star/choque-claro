@@ -12,7 +12,7 @@ const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const plano = planoLocal(CENTRO);
 const enMetros = ([lon, lat]) => plano.aMetros({ lat, lon });
 const ejemplo = () => {
-  const g = JSON.parse(fs.readFileSync(new URL('../datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
+  const g = JSON.parse(fs.readFileSync(new URL('./datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
   return analizarVia(g.respuesta, g.punto);
 };
 
@@ -115,7 +115,7 @@ test('la leyenda dice lo que falta: croquis, fotos o el sol', () => {
   assert.match(real.tramo, /curva cerrada, radio 13\u00a0m/);
   const demo = Object.fromEntries(leyendaDeLaZona({ ejemplo: true, analisis: { estado: 'error' }, sol: { altura: 5 } }).map((f) => [f.clave, f.texto]));
   assert.match(demo.carros, /INVENTADO/);
-  assert.equal(demo.conos, 'El ejemplo no tiene fotos de la escena: el choque es inventado');
+  assert.equal(demo.conos, 'El choque del ejemplo es inventado: no tiene fotos de la escena en el mapa (abajo hay una muestra de otro choque)');
   // Mientras llega el análisis, la leyenda no dice que falló.
   const cargando = leyendaDeLaZona({ analisis: { estado: 'cargando' } }).find((f) => f.clave === 'tramo');
   assert.equal(cargando.texto, 'Analizando la vía en el mapa…');
@@ -156,7 +156,8 @@ test('con croquis, la maqueta dibuja sus carros con su tamaño, sus flechas y el
   const [a, b, c] = capas.carros.features[0].geometry.coordinates[0].map(enMetros);
   const lados = [distancia(a, b), distancia(b, c)].sort((x, y) => x - y);
   assert.ok(Math.abs(lados[1] - 3.6) < 0.01 && Math.abs(lados[0] - 1.6) < 0.01, JSON.stringify(lados));
-  // Sin croquis, el ejemplo trae el suyo, inventado y armado como el paso 7 (de frente): con su golpe.
+  // Sin croquis, el ejemplo trae el suyo, inventado y armado como el paso 7 (aquí, en la curva sin
+  // cruce a pasos, de frente): con su golpe.
   const delEjemplo = capasDeLaZona({ centro: CENTRO, analisis: ejemplo(), ejemplo: true });
   assert.equal(delEjemplo.golpe.features.length, 1);
   assert.equal(delEjemplo.trayectorias.features.length, 2);

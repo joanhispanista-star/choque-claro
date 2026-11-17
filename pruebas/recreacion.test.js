@@ -25,7 +25,7 @@ import {
 
 const CENTRO = { lat: 4.6484, lon: -74.0105 };
 const analisisDelEjemplo = () => {
-  const g = JSON.parse(fs.readFileSync(new URL('../datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
+  const g = JSON.parse(fs.readFileSync(new URL('./datos/ejemplo-verjones-patios.json', import.meta.url), 'utf8'));
   return analizarVia(g.respuesta, g.punto);
 };
 const VIAS = {
@@ -62,7 +62,7 @@ for (const via of ['recta', 'curva']) {
 }
 
 test('de frente en la curva del ejemplo: se tocan en el golpe y no antes, y vienen de lejos', () => {
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   assert.equal(rec.toque, true);
   assert.equal(rec.ritmo, 'parejo');
   const golpe = fotograma(rec, GOLPE_EN);
@@ -74,7 +74,7 @@ test('de frente en la curva del ejemplo: se tocan en el golpe y no antes, y vien
 });
 
 test('después del golpe la película se queda quieta: no inventa cómo quedaron', () => {
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   assert.deepEqual(fotograma(rec, 1).carros, fotograma(rec, GOLPE_EN).carros);
   assert.equal(fotograma(rec, GOLPE_EN - 0.001).golpe, false);
 });
@@ -112,7 +112,7 @@ test('la película pasa por el croquis tal cual: en tCroquis cada carro está do
 
 test('nadie declaró velocidades: a la misma rapidez siempre que se puede, y si no, se dice quién va más rápido', () => {
   // En la curva del ejemplo A va por el carril de afuera: antes se veía 16 % más rápido.
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   const paso = (letra, t0, t1) => Math.hypot(deLetra(fotograma(rec, t1), letra).x - deLetra(fotograma(rec, t0), letra).x, deLetra(fotograma(rec, t1), letra).y - deLetra(fotograma(rec, t0), letra).y);
   for (const [t0, t1] of [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]) {
     const a = paso('A', t0, t1);
@@ -205,7 +205,7 @@ test('un carro en marcha sin flecha no aparece «parqueado» sin aviso, y una fl
 });
 
 test('la cámara que sigue a un carro va detrás de él y mira hacia el golpe', () => {
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   for (const letra of ['A', 'B']) {
     for (const t of [0.1, 0.3]) {
       const camara = camaraQueSigue(rec, letra, t);
@@ -279,7 +279,7 @@ test('si el golpe quedó detrás del carro, la cámara mira al carro y no le da 
 });
 
 test('el encuadre de todos los carros se cierra solo a medida que se juntan', () => {
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   const radios = [0, 0.2, 0.4, 0.6, GOLPE_EN].map((t) => encuadreDeLosCarros(rec, t).radio);
   for (let i = 1; i < radios.length; i++) assert.ok(radios[i] < radios[i - 1], `el radio baja: ${radios.map((r) => r.toFixed(1)).join(' > ')}`);
   assert.ok(radios[0] > 12);
@@ -296,7 +296,7 @@ test('la advertencia del mapa no le dice «lo declarado» a lo que nadie declar�
 });
 
 test('el renglón de cada momento: el croquis antes de reproducir, el golpe, y cuando no se tocan', () => {
-  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo()));
+  const rec = recreacionDelCroquis(croquisGuardadoDeEjemplo(analisisDelEjemplo(), 'frente'));
   assert.match(textoDeLaFase(rec, null), /^Así quedaron en el croquis, justo antes del golpe/);
   assert.match(textoDeLaFase(rec, 0.3), /^Antes del golpe/);
   assert.match(textoDeLaFase(rec, GOLPE_EN), /^El golpe\. De aquí en adelante/);

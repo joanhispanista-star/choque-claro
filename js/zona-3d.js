@@ -15,6 +15,7 @@
 // inventados: la leyenda lo dice.
 import { distancia, planoLocal, rumbo as rumboEntre } from './geo.js';
 import { armarCaso, croquisParaGuardar, viaDesdeElAnalisis } from './croquis.js';
+import { CASO_DEL_EJEMPLO } from './ejemplo.js';
 
 const GRADO = Math.PI / 180;
 
@@ -148,26 +149,54 @@ export function croquisDeEjemplo(analisis) {
   ];
 }
 
-// El croquis del EJEMPLO tal como lo arma el paso 7: el caso «de frente» sobre la curva de verdad,
-// A subiendo por su carril, B bajando por el suyo y el golpe en el eje. Desde el sáb 14-nov-2026
+// El caso del croquis inventado, según el lugar. El del ejemplo («En un cruce», ejemplo.js) solo donde
+// el análisis encuentra un cruce a pasos del punto, como en la esquina de Teusaquillo. Lejos de ella
+// (un enlace viejo del ejemplo, de la curva de Los Verjones, o un pin del ejemplo arrastrado) B
+// saldría atravesado de una calle que no existe: ahí va «de frente», que cabe en cualquier vía
+// (revisión del 17-nov-2026).
+export const CRUCE_A_PASOS = 5;
+
+export function casoDelEjemplo(analisis) {
+  return analisis?.cruce && analisis.cruce.distancia <= CRUCE_A_PASOS ? CASO_DEL_EJEMPLO : 'frente';
+}
+
+// El croquis del EJEMPLO tal como lo arma el paso 7, sobre la vía de verdad. Desde el sáb 14-nov-2026
 // reemplaza en la zona a los rectángulos de croquisDeEjemplo, montados sobre el eje de la vía a 20 m
 // del golpe y sin golpe marcado: con la forma del croquis de un teléfono, la recreación y los
 // carros 3D lo tratan igual. Inventado, como dice la leyenda.
-export function croquisGuardadoDeEjemplo(analisis) {
+// El caso sale de casoDelEjemplo; las pruebas de la curva vieja lo piden a mano.
+export function croquisGuardadoDeEjemplo(analisis, caso = casoDelEjemplo(analisis)) {
   if (analisis?.estado !== 'ok' || !Array.isArray(analisis.tramo) || analisis.tramo.length < 2 || !analisis.enLaVia) return null;
   const via = viaDesdeElAnalisis(analisis, analisis.enLaVia);
-  return croquisParaGuardar(armarCaso('frente', via, [{ letra: 'A', quien: 'tuyo' }, { letra: 'B', quien: 'otro' }]), via, { ejemplo: true });
+  return croquisParaGuardar(armarCaso(caso, via, [{ letra: 'A', quien: 'tuyo' }, { letra: 'B', quien: 'otro' }]), via, { ejemplo: true });
 }
 
-// Los daños del ejemplo, inventados como su croquis: de frente y cerrándose los dos hacia el eje, el
-// golpe cae en la trompa y la esquina izquierda de cada uno. La recreación los pinta en el golpe.
+// Los daños del ejemplo, inventados como su croquis pero sacados de su recreación: en la esquina, A
+// sube por la Carrera 20 y B cruza por la Calle 44 desde la izquierda de A, a la misma rapidez, y lo
+// primero que se toca es la esquina delantera IZQUIERDA de A con la esquina delantera DERECHA de B
+// (medido el 17-nov-2026: las dos a 2,25 m del centro, en la punta del carro). La recreación los
+// pinta en el golpe; si no cuadraran con él, la película mostraría un golpe y otros daños.
 export const DANOS_DEL_EJEMPLO = [
+  { carro: 'A', pieza: 'bomper-del', tipo: 'roto' },
+  { carro: 'A', pieza: 'guardafango-del-izq', tipo: 'abolladura' },
+  { carro: 'B', pieza: 'bomper-del', tipo: 'roto' },
+  { carro: 'B', pieza: 'guardafango-del-der', tipo: 'abolladura' },
+];
+
+// Los de «de frente», fuera de la esquina: cerrándose los dos hacia el eje, el golpe cae en la trompa y
+// la esquina izquierda de cada uno (los del ejemplo de la curva, del 14 al 17-nov-2026).
+export const DANOS_DE_FRENTE_DEL_EJEMPLO = [
   { carro: 'A', pieza: 'bomper-del', tipo: 'roto' },
   { carro: 'A', pieza: 'capo', tipo: 'abolladura' },
   { carro: 'A', pieza: 'guardafango-del-izq', tipo: 'abolladura' },
   { carro: 'B', pieza: 'bomper-del', tipo: 'roto' },
   { carro: 'B', pieza: 'guardafango-del-izq', tipo: 'abolladura' },
 ];
+
+// Los daños van con el caso: unos de cruce sobre un choque de frente encenderían piezas que no tocan.
+export function danosDelEjemplo(analisis) {
+  return casoDelEjemplo(analisis) === CASO_DEL_EJEMPLO ? DANOS_DEL_EJEMPLO : DANOS_DE_FRENTE_DEL_EJEMPLO;
+}
 
 // El croquis que se dibuja en la zona: el del teléfono (ya filtrado por croquisDeEstaZona) o, en el
 // ejemplo sin croquis, el inventado, que necesita el análisis de la vía.
@@ -246,11 +275,21 @@ export function capasDeLaZona({ centro, precision = null, analisis = null, sol =
   };
 }
 
+// Los carros inventados del ejemplo se arman sobre la vía analizada: sin análisis no hay carros, y la
+// leyenda no los puede nombrar (lo decía igual, y con los servidores del mapa caídos no había nada).
+function carrosDelEjemplo(analisis) {
+  if (analisis?.estado === 'ok') return { clave: 'carros', color: COLORES.carroA, texto: 'Carros A y B: un croquis INVENTADO para el ejemplo' };
+  if (analisis?.estado === 'cargando') return { clave: 'carros', color: null, texto: 'Carros A y B: un croquis INVENTADO para el ejemplo, en cuanto llegue el análisis de la vía' };
+  return { clave: 'carros', color: null, texto: 'Sin carros: el croquis INVENTADO del ejemplo se arma sobre la vía, y el mapa no se pudo consultar' };
+}
+
 // La leyenda, en palabras: dice qué hay y, sobre todo, qué NO hay todavía.
 export function leyendaDeLaZona({ ejemplo = false, analisis = null, fotos = [], sol = null, croquis = null }) {
   const filas = [{ clave: 'punto', color: COLORES.punto, texto: ejemplo ? 'Punto del choque (ejemplo)' : 'Punto del choque' }];
   if (analisis?.estado === 'ok') {
-    const forma = analisis.forma.tipo ? analisis.forma.tipo + (analisis.forma.radio ? `, radio ${Math.round(analisis.forma.radio)}\u00a0m` : '') : 'forma sin dato';
+    // En una recta el radio es un número enorme que no le dice nada a nadie («recta, radio 1299 m»).
+    const conRadio = analisis.forma.radio && analisis.forma.tipo !== 'recta';
+    const forma = analisis.forma.tipo ? analisis.forma.tipo + (conRadio ? `, radio ${Math.round(analisis.forma.radio)}\u00a0m` : '') : 'forma sin dato';
     filas.push({ clave: 'tramo', color: COLORES.tramo, texto: `Tramo analizado: ${forma}` });
   } else if (analisis?.estado === 'cargando') {
     filas.push({ clave: 'tramo', color: null, texto: 'Analizando la vía en el mapa…' });
@@ -261,7 +300,7 @@ export function leyendaDeLaZona({ ejemplo = false, analisis = null, fotos = [], 
   const conCono = fotosConCono(fotos).length;
   filas.push(
     ejemplo
-      ? { clave: 'conos', color: null, texto: 'El ejemplo no tiene fotos de la escena: el choque es inventado' }
+      ? { clave: 'conos', color: null, texto: 'El choque del ejemplo es inventado: no tiene fotos de la escena en el mapa (abajo hay una muestra de otro choque)' }
       : conCono
         ? { clave: 'conos', color: COLORES.conos, texto: `Fotos de la escena: ${conCono}, cada una hacia donde apuntaba (con brújula, dirección aproximada)` }
         : { clave: 'conos', color: null, texto: 'Aún no hay fotos de la escena en este teléfono' },
@@ -282,7 +321,7 @@ export function leyendaDeLaZona({ ejemplo = false, analisis = null, fotos = [], 
     croquis
       ? { clave: 'carros', color: COLORES.carroA, texto: `${quienes}${queSeVe}: tu croquis del paso 7, ${deQuien}, no una medición` }
       : ejemplo
-        ? { clave: 'carros', color: COLORES.carroA, texto: 'Carros A y B: un croquis INVENTADO para el ejemplo' }
+        ? carrosDelEjemplo(analisis)
         : { clave: 'carros', color: null, texto: 'Los carros salen del croquis (paso 7), que todavía no está hecho en este teléfono' },
   );
   return filas;

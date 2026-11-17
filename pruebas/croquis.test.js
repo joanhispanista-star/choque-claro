@@ -57,7 +57,7 @@ function viaRecta({ nombre = 'Avenida Carrera 7', rumbo = 90 } = {}) {
 
 const leer = (archivo) => JSON.parse(fs.readFileSync(new URL(archivo, import.meta.url), 'utf8'));
 function viaDelEjemplo() {
-  const g = leer('../datos/ejemplo-verjones-patios.json');
+  const g = leer('./datos/ejemplo-verjones-patios.json');
   return viaDesdeElAnalisis(analizarVia(g.respuesta, g.punto), g.punto);
 }
 
