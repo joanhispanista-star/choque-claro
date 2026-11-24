@@ -29,6 +29,7 @@ import { COLORES, anchoDeLaVia, camaraDeArranque, camaraDeLaZona, camaraDelCroqu
 import { montarEscena360 } from './pantalla-escena-360.js';
 import { montarZonaGoogle } from './pantalla-zona-google.js';
 import { montarRecreacion } from './pantalla-recreacion.js';
+import { montarBotonDeLaVista } from './pantalla-vista-realista.js';
 import { CLAVE_DE_GOOGLE } from './clave-de-google.js';
 import { ARCHIVO_DEL_EJEMPLO, LUGAR_DEL_EJEMPLO, esElLugarDelEjemplo } from './ejemplo.js';
 
@@ -376,6 +377,21 @@ async function iniciar() {
       console.warn('Recreación:', error?.message ?? error);
     }
   };
+  // La vista realista (pantalla-vista-realista.js): un botón, solo en la maqueta abierta. Si algo de ella
+  // revienta, la zona sigue como siempre.
+  let vista = null;
+  const ponerLaVista = () => {
+    try {
+      vista ??= montarBotonDeLaVista({ mapa: motor.mapa, centro, ejemplo, sol, donde: () => recreacion?.donde() ?? [centro], sola: ejemplo && esElLugarDelEjemplo(centro) });
+    } catch (error) {
+      console.warn('Vista realista:', error?.message ?? error);
+    }
+  };
+  // El video del choque inventado es solo de ese choque: con un croquis propio sobre el ejemplo, o lejos
+  // de su esquina, mostraría otra cosa.
+  // (Con `?.`: recién publicado, un teléfono puede tener la página vieja guardada y este archivo nuevo.)
+  const hayVideo = ejemplo && esElLugarDelEjemplo(centro) && !croquis;
+  for (const id of ['#ir-al-video', '#video-ejemplo']) $(id)?.toggleAttribute('hidden', !hayVideo);
   // Los botones de la zona mueven la cámara: primero dejan de seguir a un carro de la recreación.
   $('#vista-3d').addEventListener('click', () => {
     recreacion?.soltar();
@@ -398,7 +414,17 @@ async function iniciar() {
   const yaLlegoElAnalisis = () => analisis.estado !== 'cargando';
   const abrirMaqueta = () => {
     ponerTextos(textosAbiertos);
-    motor = montarMaqueta({ centro, sol, croquis, camaraDe, capasCon, alCargar: () => intentarRecrear() });
+    motor = montarMaqueta({
+      centro,
+      sol,
+      croquis,
+      camaraDe,
+      capasCon,
+      alCargar: () => {
+        ponerLaVista();
+        intentarRecrear();
+      },
+    });
     if (motor && yaLlegoElAnalisis()) motor.conAnalisis(analisis);
   };
 
@@ -452,6 +478,9 @@ async function iniciar() {
     },
     get recreacion() {
       return recreacion;
+    },
+    get vista() {
+      return vista;
     },
     analisis: () => analisis,
     fotos,

@@ -23,6 +23,8 @@
 <main class="zona-3d">
   <h1>La zona en 3D</h1>
   <p class="nota" id="zona-estado" aria-live="polite">Armando la zona…</p>
+  <!-- Solo en el ejemplo: el video queda más abajo, y en un teléfono no se ve sin bajar. -->
+  <p class="nota ir-al-video" id="ir-al-video" hidden><a href="#video-ejemplo">Ver este choque en video</a></p>
   <div class="mapa-3d" id="mapa-3d" role="application" aria-label="La zona del choque en 3D: arrastra para mover, dos dedos para girar e inclinar">
     <!-- El sello y el botón van juntos, en columna: si el sello pasa a dos renglones (el del ejemplo
          es más largo), empuja el botón hacia abajo en vez de quedar debajo de él. -->
@@ -30,6 +32,8 @@
       <!-- En el mapa mismo: un pantallazo de la recreación no puede salir sin la advertencia. El texto
            lo pone pantalla-recreacion.js según de quién es el croquis. -->
       <p class="sello-recreacion" id="sello-recreacion" hidden>Recreación · no es una medición</p>
+      <!-- Con la vista realista encendida (pantalla-vista-realista.js): qué de lo que se ve es ilustración. -->
+      <p class="sello-recreacion" id="sello-realista" hidden></p>
       <!-- Reproducir, encima del mapa: en un teléfono los controles de abajo quedan fuera de la primera
            pantalla, y una recreación que no se encuentra no existe. Los iconos son dibujos y no letras:
            Safari en el iPhone suele pintar «▶» como emoji (no se ha medido en el de Joan). -->
@@ -46,6 +50,8 @@
     <button class="boton boton-suave boton-chico" type="button" id="vista-arriba">Desde arriba</button>
     <button class="boton boton-suave boton-chico" type="button" id="dar-vuelta">Dar la vuelta</button>
   </div>
+  <button class="boton boton-suave boton-chico vista-realista" type="button" id="vista-realista" aria-pressed="false" hidden>Encender la vista realista</button>
+  <p class="nota" id="vista-realista-aviso" aria-live="polite" hidden></p>
 
   <section class="recreacion" id="recreacion" hidden>
     <h2>Cómo fue, según el croquis</h2>
@@ -64,6 +70,13 @@
     <p class="rec-fase" id="rec-fase" aria-live="polite"></p>
     <div class="rec-camaras" id="rec-camaras" role="group" aria-label="Desde dónde se mira la recreación"></div>
     <p class="nota" id="rec-nota"></p>
+  </section>
+  <!-- Solo en el ejemplo, que es un choque inventado. En un reporte no hay video hecho con IA: inventaría
+       la velocidad, los daños y lo que pasó después del golpe. -->
+  <section class="video-ia" id="video-ejemplo" hidden>
+    <h2>El choque del ejemplo, en video</h2>
+    <video controls muted playsinline preload="none" poster="video/choque-ejemplo.jpg" width="1280" height="720" src="video/choque-ejemplo.mp4"></video>
+    <p class="nota">Ilustración hecha con inteligencia artificial a partir de la recreación del ejemplo. El choque, los carros, la calle, los daños y la velocidad son inventados: no es una medición ni una prueba. En un reporte de verdad, Choque Claro no hace videos con IA.</p>
   </section>
   <ul class="leyenda" id="leyenda"></ul>
 
@@ -94,7 +107,7 @@
   </section>
 
   <p class="nota" id="zona-nota">Es una maqueta hecha con el mapa abierto. El relieve viene de datos de satélite (más o menos un punto cada 30&nbsp;m) y los edificios son los que alguien dibujó en OpenStreetMap: puede faltar alguno o sobrar uno que ya no está. No es una foto ni es del día del choque. Lo que pasó lo cuentan las fotos de la escena y el croquis. La app no decide quién tuvo la culpa.</p>
-  <p class="fuente" id="zona-fuente">Para dibujarla, este punto y la zona se piden a OpenFreeMap (edificios y calles), a los mosaicos de relieve de AWS y, salvo en el punto del ejemplo, a Overpass (OpenStreetMap). Nada más sale del teléfono.</p>
+  <p class="fuente" id="zona-fuente">Para dibujarla, este punto y la zona se piden a OpenFreeMap (edificios y calles), a los mosaicos de relieve de AWS y, salvo en el punto del ejemplo, a Overpass (OpenStreetMap). Si enciendes la vista realista en Bogotá, también a Catastro de Bogotá, por la foto aérea (en el ejemplo, no). Nada más sale del teléfono.</p>
 </main>
 
 <script src="js/vendor/maplibre/maplibre-gl.js"></script>

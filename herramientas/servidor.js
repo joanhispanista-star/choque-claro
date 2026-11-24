@@ -32,6 +32,8 @@ const TIPOS = {
   '.webmanifest': 'application/manifest+json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.mp4': 'video/mp4',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   // El motor del lector de placas: sin este tipo, el navegador no lo compila
@@ -72,11 +74,22 @@ http
         respuesta.end('No existe: ' + ruta);
         return;
       }
-      respuesta.writeHead(200, {
+      const cabeceras = {
         'Content-Type': TIPOS[path.extname(archivo).toLowerCase()] || 'application/octet-stream',
         // Sin caché: cada recarga trae el archivo recién editado.
         'Cache-Control': 'no-store',
-      });
+        'Accept-Ranges': 'bytes',
+      };
+      // Safari no reproduce un video si el servidor no sabe mandar un pedazo (GitHub Pages sí sabe).
+      const rango = /^bytes=(\d+)-(\d*)$/.exec(peticion.headers.range ?? '');
+      const desde = Number(rango?.[1] ?? 0);
+      const hasta = Math.min(rango?.[2] ? Number(rango[2]) : Infinity, datos.length - 1);
+      if (rango && desde <= hasta) {
+        respuesta.writeHead(206, { ...cabeceras, 'Content-Range': `bytes ${desde}-${hasta}/${datos.length}` });
+        respuesta.end(datos.subarray(desde, hasta + 1));
+        return;
+      }
+      respuesta.writeHead(200, cabeceras);
       respuesta.end(datos);
     });
   })

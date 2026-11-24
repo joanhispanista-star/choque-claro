@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 348 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 422 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
@@ -33,7 +33,7 @@ repositorio**, que es público: ver `.gitignore`.
   y el del botón «Ver un ejemplo» (ver `pruebas/datos/LEEME.md`);
   `npm run ejemplos-via -- ejemplo` baja solo el del botón.
 
-## Lo que hay (17-nov-2026)
+## Lo que hay (24-nov-2026)
 
 Los 8 pasos:
 
@@ -113,6 +113,43 @@ Los 8 pasos:
        tardara en llegar el relieve. Una sombra dura sobre la vía afirmaría un
        sol que, nublado, nadie vio. La mancha suave de debajo de cada carro sí
        va. El 3D de Google sigue con el carro del paso 6 (`carro-glb.js`).
+     - **La vista realista** (24-nov; Joan: «que mejores los escenarios y el
+       mapa con imágenes IA para que se vea más realista»): el mismo lugar,
+       vestido. El piso y los techos llevan la **foto aérea de 2017** del
+       Catastro de Bogotá y la FAC (CC BY 4.0), y las casas, fachadas hechas
+       con IA; hay cielo y, solo en el ejemplo, árboles. Es un botón que se
+       puede apagar, y apagado el mapa queda exactamente como estaba.
+       - **Qué es de verdad**: dónde está cada casa, su planta y su altura
+         (OpenStreetMap, lo mismo de la maqueta) y, en Bogotá, el piso y los
+         techos. **Qué no**: las fachadas, el cielo y los árboles son imágenes
+         genéricas; ninguna ventana ni puerta es la del lugar. Lo dicen el
+         sello de encima del mapa (un pantallazo no sale sin él), la frase de
+         debajo del botón y la nota del final.
+       - **En un reporte arranca apagada, sin árboles y sin IA en el piso**: la
+         foto va con el color corregido y nada más. Un árbol inventado en la
+         esquina diría que tapaba la vista. En el **ejemplo**, que es
+         inventado, se enciende sola y el piso va aclarado con IA (lo dice).
+       - Fuera de Bogotá no hay foto abierta: el piso es el del mapa con otros
+         colores y los techos son tejas genéricas. Si la foto no llega, lo mismo,
+         y lo dice («no llegó»); al apagar y encender se pide otra vez.
+       - Las casas que quedan entre la cámara y los carros **se bajan solas**
+         hasta un zócalo, para poder ver: son sólidas, no transparentes.
+       - Sin líneas pintadas, sin gente y sin sombra del sol, por lo mismo de
+         siempre: la maqueta no sabe si las había.
+       - En una pantalla de computador (1000 px o más) la página de la zona se
+         abre: el mapa pasa de 528 a 1088 px de ancho y la recreación y el video
+         quedan lado a lado. En el teléfono, igual que antes.
+       - **Nada de esto entra al expediente, al sello ni a lo que se envía.**
+     - **El choque del ejemplo, en video** (24-nov; Joan: «el choque recréalo
+       con un video IA para que se vea más profesional»): 9 segundos, sin
+       sonido, hechos con IA a partir de la recreación del ejemplo. Los
+       letreros van quemados en el video («Ilustración con IA · choque
+       inventado · no es una medición»), para que no se pierdan si alguien lo
+       reenvía. Solo sale en el choque inventado del ejemplo (ni con un croquis
+       propio, ni en otro lugar). **En un reporte de verdad no hay video con
+       IA**: inventaría la velocidad, los daños y lo que pasó después del
+       golpe, y un abogado lo tumba. Para un caso real, lo que sigue es grabar
+       la recreación, que sale siempre igual del croquis.
    - **La recreación** (14-nov; Joan pidió «recrear con videos interactivos
      cómo fue el accidente»). En la misma página, sobre la maqueta abierta: el
      croquis del paso 7 en movimiento. Un botón **«Ver cómo fue»** encima del
@@ -572,6 +609,18 @@ La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
     donde iba. Y girar el teléfono con «Seguir a A» en pausa: la cámara no se
     acerca sola.
 
+La vista realista y el video (24-nov; solo se han visto en el Edge oculto):
+
+21. **¿Enciende en Safari?** En el ejemplo se enciende sola al entrar al 3D (en
+    este PC, 2 a 3 s después del mapa). Si no puede, queda la maqueta de
+    siempre: anotar qué dice debajo del botón.
+22. **¿Corre pareja?** Con «Ver cómo fue» y la vista encendida. Son unos 35.000
+    triángulos más y 2,5 MB de imágenes. Si traba, apagarla y anotarlo.
+23. **El video**: que se reproduzca dentro de la página (no a pantalla completa
+    solo), que se lean los letreros y que no suene nada.
+24. Un punto de verdad en Bogotá con el botón «Encender la vista realista»:
+    cuánto se demora «Vistiendo la zona…» con datos móviles.
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
@@ -601,6 +650,10 @@ La recreación (14-nov; solo se ha visto en el Edge oculto del PC):
   velocidades (todos a la misma rapidez, y si no se puede, se dice quién tiene
   que ir más rápido y que nadie lo declaró), sin frenadas, sin lo que pasó después del golpe y sin «qué
   alcanzaba a ver» cada conductor. Lo dicen el mapa y la nota de abajo.
+- **La vista realista es una ilustración**: no muestra cómo es el lugar, y la
+  foto aérea es de 2017, no del día del choque. Las fachadas, los árboles y el
+  cielo son genéricos. **El video del ejemplo es una ilustración de un choque
+  inventado.** Nada de eso sale de un reporte ni entra a él.
 - **El expediente no decide la culpa** ni la insinúa: ni velocidades, ni
   «responsable», ni colores de culpa (A y B llevan el color de su letra). Su
   primera hoja dice lo que NO afirma, y lo declarado va como declarado:
@@ -688,6 +741,16 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/generico/` | **Copiados del Taller** (commit 502b836, el 16-nov) sin más cambio que el encabezado: el carro nuevo (jaula subdividida, rines, faros, espejos, juntas) y su laca calibrada. Lo usa solo la recreación; los cambios que necesita la maqueta van en `maqueta-carros.js`. |
 | `js/diferencia-de-color.js` | **Puro.** Qué tan distintos se ven dos colores (CIEDE2000): decide cuándo el color de un daño se parece demasiado al del carro. |
 | `js/pantalla-recreacion.js` | Los controles de la recreación: reproducir (también encima del mapa), la línea de tiempo, lento, las cámaras con su entrada suave, las letras de los carros y quién manda en la cámara (la película, los botones de la zona o el dedo). |
+| `js/pantalla-vista-realista.js` | El botón de la vista realista, el sello encima del mapa y los textos; en el ejemplo la enciende sola (si el teléfono no pide ahorrar datos). |
+| `js/vista-realista.js` | Qué se enciende y qué se dice de ello: las casas del mapa, las capas que se apagan, los colores del dibujo, los textos por caso (`ejemplo`, `bogota`, `mapa`, `sin-foto`) y volver a dejar todo como estaba. |
+| `js/foto-aerea.js` | La foto aérea abierta de Bogotá (Catastro 2017): las teselas ya hechas, las dos fotos a la medida que entran cuando lleguen, los niveles del color por barrio y cuándo se da por perdida. Las cuentas son puras. |
+| `js/piso-realista.js` | El piso como teselas propias de MapLibre, armadas en el navegador, con la orilla de cada foto difuminada. |
+| `js/ciudad.js` | **Puro.** Las paredes, los techos y las sombras de contacto de cada casa, cuáles paredes van sin ventanas (pegadas a otra casa) y qué casas tapan los carros. |
+| `js/maqueta-ciudad.js` | La capa de MapLibre que dibuja esa ciudad con Three.js, los árboles y el cielo, y baja las casas que estorban. |
+| `img/realista/` | Las hojas de textura hechas con IA (fachadas, tejas, cielo, árboles) y, en `ejemplo/`, la foto aérea del ejemplo aclarada con IA (`-m`: la del teléfono). |
+| `datos/ejemplo-teusaquillo-ciudad.json` | Las casas (OpenStreetMap, ODbL; a las de la esquina se les ajustó la planta a la foto) y los árboles del ejemplo. |
+| `video/` | El video del choque del ejemplo (H.264, 720p, sin audio) y su afiche. |
+| `_fuentes-ia/` | Fuera de git: los originales de las imágenes y del video, los guiones que los arman y las pruebas con navegador. Su `LEEME.txt` dice qué es cada cosa y cuánto costó. |
 | `js/zona-google.js` | **Puro.** El 3D de Google: la cámara convertida desde la de la maqueta (el croquis queda del mismo tamaño), el píxel y la altura del mosaico terrarium, la lista de lo que va encima en lat/lng, y el motivo en palabras cuando Google no acepta la clave. |
 | `js/pantalla-zona-google.js` | Carga Maps JavaScript con la clave, pide la altura del suelo, monta el `gmp-map-3d` con carros, flechas y marcas, y avisa si Google falla. |
 | `js/carro-glb.js` | El carro del paso 6 como .glb, hecho con el exportador de Three.js, para el 3D de Google. |
@@ -750,6 +813,30 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
   entra al 3D en el primer `idle` después de encender el relieve. Para
   medirlo: `__zona3d.mapa.transform.elevation` tiene que dar la altura real,
   no 0.
+- **La vista realista** (24-nov; todo medido en MapLibre 4.7.1):
+  - *Una foto puesta como «image source» se corta sobre el relieve*: solo se
+    dibuja en la tesela donde cae su centro (la de 100 m se cortaba a 22 m del
+    golpe). Por eso el piso va con un protocolo propio (`addProtocol`), que arma
+    las teselas aquí mismo.
+  - *La neblina del piso no es la que uno cree*: MapLibre la calcula contando la
+    altura sobre el mar, así que en Bogotá no hay hasta unos 8 km. Con neblina
+    solo en las casas, las de atrás se veían como fantasmas: van sin ella.
+  - *Los nombres de las calles no se leían sobre la foto*: en el estilo son
+    grises y sin borde. Con la vista encendida van en blanco con borde.
+  - *Catastro se demora de 0,7 s a más de 15 s por foto a la medida.* Pero su
+    servicio tiene teselas ya hechas hasta el nivel 18 (64 en 1,9 s); el 19 sale
+    en la ficha y llega vacío. La vista se arma con ellas y las fotos nítidas
+    entran cuando llegan.
+  - *El piso llegaba 4 a 6 s tarde en un computador* aunque se arma aquí mismo:
+    MapLibre mete todas las imágenes en una sola fila (16 a la vez; 8 si el mapa
+    se mueve), y la ocupaba el relieve que viene de internet. `registrarPiso`
+    abre esa fila (`maplibregl.config`); ahora llega en 0,1 a 2 s.
+  - *Techos negros en Chapinero*: una casa que no cabía en ninguna foto tomaba el
+    color de su orilla, que es transparente. Ahora lleva cemento.
+  - *Con la misma curva de color para toda la ciudad, Chapinero salía de noche*:
+    el vuelo se hizo en varios días. Cada barrio lleva la suya (`gamaPara`).
+  - *Con caché viejo, una pieza nueva de la página puede faltar*: el video y su
+    enlace se buscan con `?.`, para que eso no tumbe la zona.
 - **Un carro de Three.js dentro del mapa de MapLibre** (14-nov, la
   recreación; todo medido en MapLibre 4.7.1):
   - *La altura.* La matriz que recibe una capa propia no resta la altura del
@@ -929,3 +1016,10 @@ fuente en cada línea. El exportador glTF de Three.js (MIT) está copiado sin
 cambios en `js/vendor/three/exporters`. El 3D fotorrealista es de Google Maps
 Platform y va con sus términos: su logo y sus créditos quedan a la vista, su
 contenido no se guarda ni se exporta, y no se pone junto a un mapa ajeno.
+
+La foto aérea de la vista realista es la ortofoto de 2017 del Catastro de Bogotá
+y la FAC ([servicio](https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/imagenes/Ortho2017/MapServer),
+CC BY 4.0), con el crédito en el mapa. Se le cambió el color y, en el ejemplo, se
+aclaró con IA: las dos cosas se dicen en la pantalla. Las hojas de textura y el
+video del ejemplo se hicieron con IA el 24-nov-2026 (GPT Image 2 y Seedance 2,
+por Higgsfield); no llevan marcas, placas ni personas.

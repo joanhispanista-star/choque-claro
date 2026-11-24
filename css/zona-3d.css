@@ -27,6 +27,19 @@
 .tres-botones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tres-botones .boton { width: 100%; margin: 8px 0; padding: 8px 6px; font-size: 15px; }
 .tres-botones .boton[aria-pressed="true"] { background: var(--acento-suave); }
+/* La vista realista: en su propio renglón, del ancho de la caja. `[hidden]` explícito, por si .boton
+   trae su propio display. */
+.zona-3d .vista-realista { width: 100%; margin: 0 0 4px; padding: 8px 6px; font-size: 15px; }
+.zona-3d .vista-realista[hidden] { display: none; }
+.zona-3d .vista-realista[aria-pressed="true"] { background: var(--acento-suave); }
+.zona-3d .vista-realista:disabled { opacity: 0.6; }
+#vista-realista-aviso { margin: 4px 0 0; }
+/* El video del ejemplo. El fondo oscuro es por si el afiche todavía no llega. */
+.video-ia { margin: 16px 0 8px; scroll-margin-top: 64px; }
+.ir-al-video { margin: -4px 0 10px; }
+.ir-al-video a { font-weight: 600; color: var(--acento); }
+.video-ia h2 { margin: 0 0 8px; font-size: 18px; }
+.video-ia video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 12px; background: #1b1f24; }
 
 .leyenda { list-style: none; margin: 8px 0 12px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; }
 .leyenda li { display: flex; gap: 10px; align-items: baseline; padding: 4px 0; font-size: 15px; }
@@ -186,3 +199,14 @@
 .rec-camaras .boton { width: 100%; margin: 0; padding: 8px 6px; font-size: 15px; }
 /* La cámara puesta, llena: con el verde pálido de antes no se distinguía de las otras al sol. */
 .rec-camaras .boton[aria-pressed="true"] { background: var(--acento); color: #ffffff; }
+
+/* En un computador, que es donde lo mira el abogado, la zona se abre: en la columna del teléfono (560 px) el
+   mapa quedaba chiquito con media pantalla vacía a los lados. El texto no se estira: se lee mal. */
+@media (min-width: 1000px) {
+  .zona-3d { max-width: 1120px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+  .zona-3d > * { grid-column: 1 / -1; }
+  .zona-3d > .recreacion, .zona-3d > .video-ia, .zona-3d > .leyenda { grid-column: auto; }
+  .zona-3d > .video-ia { margin-top: 16px; grid-row: span 2; }
+  .zona-3d > .nota, .zona-3d > .fuente, .zona-3d > .escena-360 { max-width: 760px; }
+  .zona-3d .mapa-3d { height: 68vh; max-height: 760px; }
+}

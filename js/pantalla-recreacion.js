@@ -55,7 +55,7 @@ export function aclaradoEn(letras = []) {
 const quiereMenosMovimiento = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
 // `camaraGeneral()`: la cámara de la zona en ese momento (la de la maqueta, con el análisis si llegó).
-// Devuelve { soltar(), irA(), camara() } para que los botones de la zona le quiten la cámara a la
+// Devuelve { soltar(), donde(), irA(), camara() } para que los botones de la zona le quiten la cámara a la
 // película, o null si no hay nada que recrear, si falta algo de la página o si este teléfono no pudo
 // dibujar los carros. En los tres casos no apagó nada: quedan las cajas de siempre.
 // `alTomarLaCamara()`: se llama cada vez que la película se queda con la cámara, para que la zona
@@ -156,13 +156,14 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     ejemplo ? 'Ejemplo inventado: los carros, sus flechas y sus daños no son de nadie.' : rec.nadaSeMueve ? 'Es el croquis del paso 7 en 3D, quieto.' : 'Es el croquis del paso 7 en movimiento: cada carro por su flecha.',
     ...avisosDeLaRecreacion(rec),
     danos.length && conGolpe ? (ejemplo ? 'En el golpe se encienden las piezas dañadas del ejemplo, cada una con el color de su daño' : 'En el golpe se encienden las piezas que se marcaron como dañadas en el paso 6, cada una con el color de su daño') + aclaradoEn(capa.aclarados) : '',
-    'La maqueta no tiene árboles, barrancos ni carros parqueados: no dice qué alcanzaba a ver cada conductor.',
+    'La maqueta no sabe dónde había árboles, barrancos ni carros parqueados: no dice qué alcanzaba a ver cada conductor.',
   ]
     .filter(Boolean)
     .join(' ');
 
   // `t` null: todavía no se ha reproducido, y se ve el croquis tal cual.
   let t = null;
+  let enPantalla = null; // el último cuadro que se pintó
   let jugando = false;
   let yaJugo = false;
   let ultimo = 0;
@@ -262,6 +263,7 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
 
   const pintar = (ahora) => {
     const f = t === null ? fotogramaDelCroquis(rec) : fotograma(rec, t);
+    enPantalla = f;
     apagarLosPuntos(modo === 'sigue');
     capa.poner(f);
     // Primero la cámara y después las letras: un marcador se acomoda con la cámara que encuentra.
@@ -402,6 +404,10 @@ export async function montarRecreacion({ mapa, croquis, sol, lineas = {}, danos 
     soltar() {
       eligioCamara = true;
       soltar();
+    },
+    // Dónde va cada carro en lo que se está viendo: la vista realista baja las casas que lo tapan.
+    donde() {
+      return enPantalla.carros.map((c) => rec.plano.aGrados(c));
     },
     // Para el arnés de pruebas: ir a un momento y a una cámara sin esperar la película. null: el croquis.
     irA(nuevoMomento) {
