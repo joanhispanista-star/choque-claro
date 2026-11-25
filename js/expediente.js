@@ -20,6 +20,8 @@ import { colorDeCarro, COLORES } from './zona-3d.js';
 import { enlacesDeGoogle } from './enlaces-google.js';
 import { fechaLarga, fechaYHora, horaDeColombia } from './fechas.js';
 import { distancia, numero, puntoCardinal } from './geo.js';
+import { NO_ES_PRUEBA_DE_EMBRIAGUEZ, respuestasDeAntes, resumenDeAntes } from './antes.js';
+import { queLeFalta } from './sello.js';
 
 const GRADO = Math.PI / 180;
 
@@ -255,9 +257,14 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
   const conFotos = (n) => (n === 1 ? '1 foto' : `${n} fotos`);
   const cuantas = (filtro) => registros.filter((r) => vigente(r) && filtro(r)).length;
 
+  const antes = resumenDeAntes(reporte.antes);
+  // Lo que no se alcanzó a consultar hasta que se selló (por ejemplo, porque no había internet).
+  const sinConsultar = queLeFalta(lugar, new Date(sello.hora));
+
   const resumen = [
     { etiqueta: 'El choque', valor: horaDelChoque ? fechaYHora(horaDelChoque) : 'Sin hora' },
     { etiqueta: 'Dónde', valor: [viaNombre, punto ? `${punto.lat.toFixed(6)}, ${punto.lon.toFixed(6)}` : 'Sin marcar'].filter(Boolean).join(' · ') },
+    ...(antes ? [{ etiqueta: 'Antes de mover', valor: antes.startsWith('La persona') ? antes : `${antes}, según la persona` }] : []),
     ...carrosDelReporte(reporte).map((c, i) => ({ etiqueta: `Carro ${c.letra}`, valor: [quienEs(c), carros[i].placa.texto === 'Sin leer' ? 'placa sin leer' : carros[i].placa.texto, textoDeLaLinea(c.linea) || null].filter(Boolean).join(' · ') })),
     { etiqueta: 'Fotos', valor: `${conFotos(registros.length)} en la cadena: ${cuantas(esDeLaEscena)} de la escena, ${carros.map((c) => `${cuantas(esDelCarro(c.letra))} del carro ${c.letra}`).join(', ')} y ${cuantas((r) => r.paso === 'danos')} de los daños${anexo.length ? ` (${anexo.length} en el anexo)` : ''}` },
     { etiqueta: 'Daños', valor: carros.map((c) => `${c.letra}: ${c.danos.filas.length ? c.danos.filas.length + (c.danos.filas.length === 1 ? ' pieza' : ' piezas') : 'ninguno marcado'}`).join(' · ') },
@@ -271,6 +278,7 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
     'La hora de las fotos es la del reloj del teléfono, y el GPS en la ciudad se equivoca de 5 a 30 metros.',
     'Mientras el reporte estuvo solo en el teléfono, alguien con el teléfono y conocimientos pudo rehacerlo entero. Vale desde que salió de él: este PDF, y el número y la huella que la persona envió.',
   ];
+  if (respuestasDeAntes(reporte.antes)?.embriaguez === 'si') noAfirma.splice(1, 0, NO_ES_PRUEBA_DE_EMBRIAGUEZ);
   if (ejemplo) noAfirma.unshift('ES UN EJEMPLO: el lugar es real, pero el choque es inventado.');
 
   return {
@@ -289,6 +297,8 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
           horaTexto: horaDelChoque ? fechaYHora(horaDelChoque) : '',
           via: viaNombre,
           resumenDeLaVia: lugar?.via?.resumen || '',
+          sinVias: !!lugar?.sinVias,
+          sinConsultar: sinConsultar.length ? `No se alcanzó a consultar ${sinConsultar.join(' ni ')}: por ejemplo, porque no había internet.` : '',
           enlaces: enlacesDeGoogle(punto, { rumbo: lugar?.via?.rumbo ?? null }),
           filasDeLaVia: lugar?.filasDeLaVia ?? [],
           filasDeLaLuz: lugar?.filasDeLaLuz ?? [],

@@ -284,7 +284,9 @@ export function pdfDelExpediente(modelo, { fotos = new Map(), adjuntos = [] } = 
       { etiqueta: 'Fecha y hora', valor: l.horaTexto || 'Sin hora', nota: 'la que la persona dijo en el paso 3 (por defecto, la del teléfono al abrir la app)' },
       { etiqueta: 'Punto', valor: `${l.punto.lat.toFixed(6)}, ${l.punto.lon.toFixed(6)}`, nota: [origen, l.precision ? `precisión del GPS: ±${l.precision}\u00a0m` : ''].filter(Boolean).join(' · ') },
       ...(l.via ? [{ etiqueta: 'Vía', valor: l.via, nota: l.resumenDeLaVia }] : []),
+      ...(!l.via && l.sinVias ? [{ etiqueta: 'Vía', valor: 'El mapa no trae una vía cerca de este punto' }] : []),
     ]);
+    if (l.sinConsultar) parrafo(l.sinConsultar, { tamano: 9.2 });
     // Los enlaces: el texto azul es el área que se toca.
     cabe(40);
     y += 14;

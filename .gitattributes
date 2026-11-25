@@ -1,0 +1,10 @@
+# Todo con LF, también en Windows: el service worker (sw.js) comprueba cada archivo con su SHA-256, y
+# lo que GitHub publica es lo que git guarda (LF). Con CRLF en el disco, el servidor de este PC serviría
+# otros bytes y la app no se instalaría al probarla aquí.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.mp4 binary
+*.wasm binary
+*.onnx binary

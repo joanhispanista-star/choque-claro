@@ -8,7 +8,8 @@
     "dev": "node herramientas/servidor.js 8320",
     "celular": "node herramientas/servidor.js 8320 --red",
     "test": "node --test pruebas/*.test.js",
-    "ejemplos-via": "node herramientas/guardar-ejemplo-via.mjs"
+    "ejemplos-via": "node herramientas/guardar-ejemplo-via.mjs",
+    "sellar": "node herramientas/sellar-sw.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.14",

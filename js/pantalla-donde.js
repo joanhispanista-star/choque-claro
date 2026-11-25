@@ -137,6 +137,8 @@ export function iniciarPantallaDonde(raiz, { alActualizar = () => {} } = {}) {
   async function analizar() {
     const mio = ++turnoVia;
     const p = estado.punto;
+    // Sin el resultado de antes: mientras se consulta, completar() no pide lo mismo otra vez.
+    estado.via = null;
     const clave = `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
     avisarAnalisis('Analizando la vía en el mapa… puede tardar unos segundos.');
     pintarFilas('#filas-via', []);
@@ -283,14 +285,29 @@ export function iniciarPantallaDonde(raiz, { alActualizar = () => {} } = {}) {
     fijarPunto(EJEMPLO, { origen: 'ejemplo' });
   });
 
-  $('#reintentar').addEventListener('click', () => {
+  // Lo que falló (sin señal, o el servicio no respondió), otra vez. Lo que ya llegó no se toca, y lo
+  // que se está consultando tampoco. La llama el botón «Reintentar» y, sola, app.js: al volver la
+  // señal y al llegar al paso 8. Si se cayó el internet también se cayó el clima: van juntos.
+  function completar() {
     if (!estado.punto) return;
-    cacheVia.delete(claveDe(estado.punto));
-    fechasGuardadas.delete(claveDe(estado.punto));
-    analizar();
-    // Si se cayó el internet, también se cayó el clima: se reintenta junto.
-    if (estado.clima?.error) actualizarClima();
-  });
+    if (estado.via?.estado === 'error') {
+      cacheVia.delete(claveDe(estado.punto));
+      fechasGuardadas.delete(claveDe(estado.punto));
+      analizar();
+    }
+    if (estado.clima?.error && !estado.climaCargando) actualizarClima();
+  }
+
+  $('#reintentar').addEventListener('click', completar);
+
+  // El mapa se arma con dibujos que se bajan: sin internet sale gris, y la persona creería que la
+  // app se dañó. El GPS y el punto funcionan igual.
+  function avisarSinInternet() {
+    $('#donde-sin-internet').hidden = globalThis.navigator?.onLine !== false;
+  }
+  globalThis.addEventListener?.('offline', avisarSinInternet);
+  globalThis.addEventListener?.('online', avisarSinInternet);
+  avisarSinInternet();
 
   $('#hora-choque').addEventListener('change', () => {
     version++;
@@ -343,5 +360,6 @@ export function iniciarPantallaDonde(raiz, { alActualizar = () => {} } = {}) {
     version: () => version,
     reiniciar,
     restaurar,
+    completar,
   };
 }

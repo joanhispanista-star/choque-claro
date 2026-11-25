@@ -48,6 +48,28 @@ test('el reporte de prueba: lo completo, y lo que falta dicho con el número', a
   assert.deepEqual([sinTerminar.croquis.detalle, sinTerminar.croquis.completo, sinTerminar.croquis.boton], [`${tituloDelCaso('frente')}, sin terminar.`, false, 'Terminar']);
 });
 
+test('lo dicho antes de mover va primero y siempre se puede cambiar; no responder no es que falte', async () => {
+  const { reporte, registros } = await reporteDePrueba();
+  assert.equal(porClave(revisionDelReporte({ reporte, registros })).antes, undefined);
+  const items = revisionDelReporte({ reporte: { ...reporte, antes: { embriaguez: 'no', andan: 'si', hora: '2026-11-13T22:20:00Z' } }, registros });
+  assert.deepEqual([items[0].clave, items[0].completo, items[0].cambiable, items[0].ir, items[0].boton], ['antes', true, true, 'antes', 'Cambiar']);
+  assert.equal(items[0].detalle, 'La persona no sospechaba embriaguez; los carros podían andar (5:20 p. m.)');
+});
+
+test('un lugar marcado sin señal: dice qué falta y que se completa solo, menos si ya se selló', async () => {
+  const { reporte, registros } = await reporteDePrueba();
+  const ahora = new Date('2026-11-14T15:00:00Z');
+  const delClima = new Set(['lluvia', 'cielo', 'visibilidad']);
+  const sinClima = { ...reporte.lugar, filasDeLaLuz: reporte.lugar.filasDeLaLuz.filter((f) => !delClima.has(f.clave)) };
+  const sinNada = { ...sinClima, via: null, filasDeLaVia: [] };
+  const item = (lugar, mas = {}) => porClave(revisionDelReporte({ reporte: { ...reporte, lugar, ...mas }, registros, ahora })).lugar;
+  assert.deepEqual([item(sinNada).completo, item(sinNada).boton, item(sinNada).ir], [false, 'Ver', 'donde']);
+  assert.equal(item(sinNada).detalle, `Todavía sin la vía ni el clima. Con internet se completan solos. ${fechaYHora(HORA_DEL_CHOQUE)}`);
+  assert.match(item(sinClima).detalle, /^Todavía sin el clima\. Con internet se completa solo\. /);
+  // Sellado ya no se completa: le cambiaría el número sin que nadie hiciera nada.
+  assert.match(item(sinNada, { sello: { numero: 'CC-1' } }).detalle, /^Se selló sin la vía ni el clima\. /);
+});
+
 test('si el punto de «¿Dónde fue?» y el del croquis no son el mismo lugar, se avisa', async () => {
   const { reporte, registros } = await reporteDePrueba();
   const aGrados = planoLocal(reporte.lugar.punto).aGrados;

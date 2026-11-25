@@ -2,7 +2,7 @@
 //
 // Las fotos se sellan una a una desde que se toman (evidencia.js: la cadena). Lo que la persona
 // declara y no es foto —los carros con su placa y su línea, los daños marcados, el croquis, el
-// lugar— se puede corregir hasta el final, a propósito: un error de dedo no debería quedar
+// lugar, lo que dijo antes de mover los carros— se puede corregir hasta el final, a propósito: un error de dedo no debería quedar
 // grabado. Sellar es decir «esto es lo que declaro»: la última huella de la cadena y todo lo
 // declarado van juntos en un texto canónico (textoCanonico, evidencia.js) y su SHA-256 es la
 // huella del reporte. Ese texto viaja DENTRO del PDF como archivo adjunto, tal cual: quien lo saque
@@ -24,8 +24,11 @@ import { filasDelClima } from './clima.js';
 export const VERSION_DEL_SELLO = 1;
 
 // Las partes del reporte, en el orden en que la pantalla dice qué cambió después de sellar.
-export const PARTES = ['fotos', 'lugar', 'carros', 'danos', 'croquis'];
-const NOMBRES_DE_LAS_PARTES = { fotos: 'las fotos', lugar: 'los datos del lugar', carros: 'los carros', danos: 'los daños', croquis: 'el croquis' };
+// «antes» (lo del paso 2, 25-nov-2026) es la única que puede no estar: contenidoDelSello cuenta por qué.
+export const PARTES = ['antes', 'fotos', 'lugar', 'carros', 'danos', 'croquis'];
+const NOMBRES_DE_LAS_PARTES = { antes: 'lo que dijiste antes de mover los carros', fotos: 'las fotos', lugar: 'los datos del lugar', carros: 'los carros', danos: 'los daños', croquis: 'el croquis' };
+// «cambió el croquis», pero «cambiaron los carros».
+const EN_SINGULAR = new Set(['antes', 'croquis']);
 
 const redondear = (valor, decimales) => (Number.isFinite(valor) ? Math.round(valor * 10 ** decimales) / 10 ** decimales : null);
 
@@ -55,6 +58,8 @@ export function lugarParaElReporte({ punto, origen = null, precision = null, fec
     precision: Number.isFinite(precision) ? Math.round(precision) : null,
     hora: hora.toISOString(),
     via: conVia ? { nombre: via.via?.nombre || (via.via?.ruta ? `Ruta ${via.via.ruta}` : null), rumbo: redondear(via.rumbo, 1), resumen: resumenDeLaVia(via) } : null,
+    // Se consultó y el mapa no trae una vía ahí (un parqueadero, una finca): no es que falte.
+    ...(via?.estado === 'sin-vias' ? { sinVias: true } : {}),
     filasDeLaVia: filasDeLaVia(via).map(fila),
     filasDeLaLuz: [...filasDelSol(sol, conVia ? via.rumbo : undefined, { nubes: deClima?.nubes ?? null }), ...filasDelClima(deClima)].map(fila),
   };
@@ -69,13 +74,30 @@ const conClima = (lugar) => (lugar?.filasDeLaLuz ?? []).some((f) => CLAVES_DEL_C
 export function completaElLugar(nuevo, guardado) {
   if (!nuevo) return false;
   if (!guardado) return true;
-  return (!guardado.via && !!nuevo.via) || (!conClima(guardado) && conClima(nuevo));
+  return (!guardado.via && (!!nuevo.via || (!guardado.sinVias && !!nuevo.sinVias))) || (!conClima(guardado) && conClima(nuevo));
 }
+
+// Lo que le falta al lugar guardado (se marcó sin señal, o el servicio no respondió) y todavía se
+// puede pedir: 'la vía', 'el clima'. El paso 8 lo dice y app.js lo completa al volver la señal. El
+// clima se consigue hasta unos tres meses atrás (clima.js).
+const DIAS_CON_CLIMA = 85;
+export function queLeFalta(lugar, ahora = new Date()) {
+  if (!lugar?.punto) return [];
+  const edad = (ahora.getTime() - Date.parse(lugar.hora)) / 86400000;
+  const falta = [];
+  if (!lugar.via && !lugar.sinVias) falta.push('la vía');
+  if (!conClima(lugar) && edad >= 0 && edad < DIAS_CON_CLIMA) falta.push('el clima');
+  return falta;
+}
+export const leFaltaAlgo = (lugar, ahora) => queLeFalta(lugar, ahora).length > 0;
 
 // --- El sello --------------------------------------------------------------------------------
 
 // Lo que se sella: todo lo que el reporte declara, tal como está guardado, y la punta de la
 // cadena de fotos (que amarra a todas las anteriores). `hora`: la del sello.
+//
+// `antes` va solo si la persona respondió: con un «antes: null» en el texto, a todos los reportes
+// sellados antes del 25-nov-2026 les cambiaría la huella sin que nadie los tocara.
 export function contenidoDelSello({ reporte, registros = [], hora }) {
   const ultima = registros.length ? registros[registros.length - 1].huella : INICIO_DE_LA_CADENA;
   return limpio({
@@ -84,6 +106,7 @@ export function contenidoDelSello({ reporte, registros = [], hora }) {
     reporte: reporte.id,
     creado: reporte.creado,
     sellado: new Date(hora).toISOString(),
+    ...(reporte.antes ? { antes: reporte.antes } : {}),
     fotos: { total: registros.length, ultimaHuella: ultima },
     lugar: reporte.lugar ?? null,
     carros: reporte.carros ?? [],
@@ -104,7 +127,7 @@ export function numeroDelReporte(huella, hora) {
 // la persona QUÉ cambió después de sellar.
 async function huellasDeLasPartes(contenido, sutil) {
   const partes = {};
-  for (const parte of PARTES) partes[parte] = await sha256Hex(textoCanonico(contenido[parte]), sutil);
+  for (const parte of PARTES) partes[parte] = await sha256Hex(textoCanonico(contenido[parte] ?? null), sutil);
   return partes;
 }
 
@@ -130,15 +153,18 @@ export async function estadoDelSello({ reporte, registros = [] }, sutil) {
   const texto = textoCanonico(contenido);
   if ((await sha256Hex(texto, sutil)) === sello.huella) return { estado: 'vigente', cambios: [], contenido, texto };
   const partes = await huellasDeLasPartes(contenido, sutil);
-  return { estado: 'cambio', cambios: PARTES.filter((p) => !sello.partes || partes[p] !== sello.partes[p]) };
+  // Un sello de antes del 25-nov-2026 no trae la huella de «antes»: vale lo que valía entonces, que
+  // no se había respondido nada.
+  const nada = await sha256Hex(textoCanonico(null), sutil);
+  return { estado: 'cambio', cambios: PARTES.filter((p) => !sello.partes || partes[p] !== (sello.partes[p] ?? (p === 'antes' ? nada : undefined))) };
 }
 
 const enLista = (cosas) => (cosas.length <= 1 ? cosas.join('') : cosas.slice(0, -1).join(', ') + ' y ' + cosas[cosas.length - 1]);
 
 export function textoDelCambio(cambios) {
   const partes = cambios.filter((c) => NOMBRES_DE_LAS_PARTES[c]);
-  // «cambió el croquis», pero «cambiaron los carros» y «cambiaron el croquis y los daños».
-  const verbo = partes.length === 1 && partes[0] === 'croquis' ? 'cambió' : 'cambiaron';
+  // Una sola en singular, «cambió»; si no, «cambiaron» («cambiaron el croquis y los daños»).
+  const verbo = partes.length === 1 && EN_SINGULAR.has(partes[0]) ? 'cambió' : 'cambiaron';
   const que = partes.length ? `${verbo} ${enLista(partes.map((c) => NOMBRES_DE_LAS_PARTES[c]))}` : 'cambió el reporte';
   return `Después de sellar ${que}. Séllalo otra vez antes de enviarlo: el número va a cambiar.`;
 }

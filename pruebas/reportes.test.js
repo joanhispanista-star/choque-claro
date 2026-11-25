@@ -2,7 +2,7 @@
 // no se listan. Con el reporte de prueba del paso 8, sellado y sin sellar.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { candidatosParaSeguir, cuandoDeLaFila, dondeFue, filaDelReporte, reporteVacio, reportesConAlgo, textoDelEnlace, tituloDelRenglon } from '../js/reportes.js';
+import { candidatosParaSeguir, cuandoDeLaFila, dondeFue, filaDelReporte, reporteVacio, reportesConAlgo, textoDeGuardados, tituloDelRenglon } from '../js/reportes.js';
 import { sellarReporte } from '../js/sello.js';
 import { carroNuevo } from '../js/carros.js';
 import { diaRelativo } from '../js/fechas.js';
@@ -24,6 +24,7 @@ test('no se listan los reportes que se crearon solos y nadie llenó', () => {
   assert.equal(reporteVacio({ id: 'r1', fotos: 0, carros: [carroNuevo('A', 'tuyo'), carroNuevo('B')], danos: [] }), true, 'los carros que el paso 5 pone de entrada no cuentan');
   assert.equal(reporteVacio({ id: 'r1', fotos: 1 }), false);
   assert.equal(reporteVacio({ id: 'r1', fotos: 0, lugar: { punto: { lat: 4.6, lon: -74.1 } } }), false);
+  assert.equal(reporteVacio({ id: 'r1', fotos: 0, antes: { embriaguez: 'si', hora: null } }), false, 'lo que dijo antes de mover es suyo');
   assert.equal(reporteVacio({ id: 'r1', fotos: 0, carros: [{ ...carroNuevo('A', 'tuyo'), placa: { texto: 'JRK245', fuente: 'escrita', lectura: null, intentos: [] } }] }), false);
   assert.equal(reporteVacio({ id: 'r1', fotos: 0, danos: [DANOS[0]] }), false);
   assert.deepEqual(reportesConAlgo([{ id: 'a', fotos: 0 }, { id: 'b', fotos: 3 }]).map((r) => r.id), ['b']);
@@ -106,6 +107,6 @@ test('los textos del renglón y del enlace', () => {
   assert.equal(tituloDelRenglon({ dia: 'ayer', hora: '8:15 a. m.' }), 'Reporte de ayer, 8:15 a. m.');
   assert.equal(tituloDelRenglon({ dia: 'sáb 14 nov', hora: '8:15 a. m.' }), 'Reporte del sáb 14 nov, 8:15 a. m.');
   assert.equal(cuandoDeLaFila({ dia: 'hoy', hora: '3:40 p. m.' }), 'Hoy, 3:40 p. m.');
-  assert.equal(textoDelEnlace(1), 'Ver tu reporte guardado');
-  assert.equal(textoDelEnlace(4), 'Ver tus 4 reportes');
+  assert.equal(textoDeGuardados(1), '1 guardado');
+  assert.equal(textoDeGuardados(4), '4 guardados');
 });

@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <title>Choque Claro</title>
+<!-- Agregarla a la pantalla de inicio y abrirla sin señal: manifest.webmanifest, js/sin-senal.js y
+     sw.js. El iPhone toma el ícono y el nombre de aquí. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icono-180.png">
+<meta name="apple-mobile-web-app-title" content="Choque Claro">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="js/vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="css/app.css">
 <!-- Three.js se pide por su nombre ("three") desde carro.js, toque.js y el
@@ -20,21 +27,98 @@
   <span class="barra-paso" id="paso"></span>
 </header>
 
+<!-- Los dibujos de la portada: un solo trazo, del color del texto que los rodea. -->
+<svg class="dibujos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M12 3.5 22 20.5H2z"/><path d="M12 10v4.5"/><path d="M12 17.6v.1"/></symbol>
+  <symbol id="i-tel" viewBox="0 0 24 24"><path d="M6.2 3.5h3l1.6 4.2-2 1.5a12 12 0 0 0 6 6l1.5-2 4.2 1.6v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.2 5.7a2 2 0 0 1 2-2.2z"/></symbol>
+  <symbol id="i-celular" viewBox="0 0 24 24"><rect x="6.500" y="2.500" width="11" height="19" rx="2.200"/><path d="M12 7v7.500"/><path d="m9 11.800 3 3 3-3"/><path d="M10.500 18.500h3"/></symbol>
+</svg>
+
 <main>
+  <!-- La portada (pantalla-inicio.js). El choque primero y enorme; el 123, a un toque. -->
   <section class="pantalla" id="p-inicio">
+    <h1 class="solo-lectores">Choque Claro</h1>
+    <button class="inicio-choque" type="button" data-ir="choque">
+      <svg class="trazo" aria-hidden="true"><use href="#i-alerta"/></svg>
+      <span><strong>Tuve un choque</strong><span>Te digo qué hacer y qué fotos tomar, antes de mover los carros.</span></span>
+    </button>
+    <!-- Sin data-ir: el toque tiene que abrir la llamada. La pantalla de los heridos queda detrás
+         (pantalla-inicio.js). -->
+    <a class="boton-123" id="inicio-123" href="tel:123"><svg class="trazo" aria-hidden="true"><use href="#i-tel"/></svg>Hay heridos: llamar al 123</a>
+
+    <!-- Debajo del choque y del 123, nunca encima: el último reporte si quedó a medias
+         (pantalla-reportes.js). Oculto mientras no haya ninguno. -->
+    <div id="inicio-reportes" hidden>
+      <p class="estado-ubicacion error" id="inicio-reportes-error" role="alert" hidden></p>
+      <div class="renglon" id="inicio-seguir" hidden></div>
+    </div>
+
+    <div class="renglon" id="inicio-nueva" hidden>
+      <strong>Hay una versión nueva</strong>
+      <span class="que">Ya está bajada: se cambia en un segundo.</span>
+      <button class="boton boton-chico" type="button" id="inicio-actualizar">Actualizar</button>
+    </div>
+
+    <div id="inicio-antes">
+      <h2 class="subtitulo">Antes de que te pase</h2>
+      <a class="baldosa ancha" href="#agregar" data-ir="agregar">
+        <svg class="trazo" aria-hidden="true"><use href="#i-celular"/></svg>
+        <span><strong>Tenerla en tu teléfono</strong><span id="inicio-agregar-detalle">Abre sin señal, en un toque</span></span>
+      </a>
+    </div>
+
+    <a class="renglon-liso" id="inicio-todos" href="#reportes" data-ir="reportes" hidden><span>Tus reportes</span><small id="inicio-cuantos"></small></a>
+  </section>
+
+  <section class="pantalla" id="p-choque" hidden>
+    <a class="volver" href="#inicio" data-ir="inicio">‹ Volver al inicio</a>
     <h1>¿Hay alguien herido?</h1>
     <p class="suave">Cualquier persona: tú, quien iba contigo, el otro conductor o un peatón.</p>
     <button class="boton boton-peligro" type="button" data-ir="heridos">Sí, hay heridos</button>
     <button class="boton" type="button" data-ir="a-salvo">No, solo daños en los carros</button>
     <p class="nota">Si no estás seguro, toca «Sí».</p>
+  </section>
 
-    <!-- Debajo de la pregunta de los heridos, nunca encima: el último reporte si quedó a medias, y
-         el enlace a todos (pantalla-reportes.js). Oculto mientras no haya ninguno guardado. -->
-    <div id="inicio-reportes" hidden>
-      <p class="estado-ubicacion error" id="inicio-reportes-error" role="alert" hidden></p>
-      <div class="renglon" id="inicio-seguir" hidden></div>
-      <a class="enlace" id="inicio-todos" href="#reportes" data-ir="reportes" hidden></a>
+  <section class="pantalla" id="p-agregar" hidden>
+    <a class="volver" href="#inicio" data-ir="inicio">‹ Volver al inicio</a>
+    <h1>Tenerla en tu teléfono</h1>
+    <p class="suave">Un choque puede ser donde no hay señal. Con su ícono en la pantalla de inicio abre en un toque, y sin internet.</p>
+    <p class="estado-app" id="agregar-estado" data-estado="neutro" aria-live="polite"></p>
+
+    <div id="agregar-ya" hidden>
+      <p>La abriste desde su ícono. Cuando arriba diga «Ya abre sin señal», queda lista.</p>
     </div>
+
+    <div id="agregar-iphone" hidden>
+      <h2>En el iPhone</h2>
+      <ol class="pasos">
+        <li>Toca <strong>Compartir</strong>, el cuadro con la flecha hacia arriba. Si no lo ves, está en los tres puntos.</li>
+        <li>Baja y toca <strong>Agregar a inicio</strong>; después, <strong>Agregar</strong>.</li>
+        <li>Ábrela una vez desde el ícono nuevo, <strong>con internet</strong>, y entra aquí hasta que diga «Ya abre sin señal».</li>
+      </ol>
+      <p class="alerta">Desde el ícono abre vacía: no ve lo que hiciste en Safari. Si ya tienes un reporte aquí, comparte antes su expediente en PDF.</p>
+      <p class="nota">Vale la pena hacerlo: en Safari, lo guardado se borra solo si pasan siete días de usarlo sin que abras esta página. Desde el ícono, no.</p>
+      <p class="nota">¿No te aparece «Agregar a inicio»? Abre esta página en Safari.</p>
+    </div>
+
+    <div id="agregar-boton" hidden>
+      <button class="boton" type="button" id="agregar-instalar">Agregar a la pantalla de inicio</button>
+      <p class="nota">Son las mismas cosas guardadas: lo que hagas desde el ícono y desde el navegador se ve en los dos.</p>
+    </div>
+
+    <div id="agregar-menu" hidden>
+      <p>En el celular, toca los tres puntos (⋮) del navegador y después <strong>Instalar app</strong> o <strong>Agregar a la pantalla principal</strong>.</p>
+    </div>
+    <p class="nota" id="agregar-hecho" role="status" hidden>Listo: busca el ícono en tu pantalla de inicio.</p>
+
+    <h2>Sin internet funciona</h2>
+    <p>Las fotos de la escena, los carros y los daños, el GPS, el croquis, sellar y armar el PDF. Se envía cuando vuelva la señal.</p>
+    <h2>Necesita internet</h2>
+    <ul class="pasos">
+      <li>El mapa de fondo y la zona en 3D.</li>
+      <li>El nombre de la vía y el clima. Si el reporte no está sellado, se completan solos al volver la señal.</li>
+      <li>El lector de placas, la primera vez que se usa (18&nbsp;MB). Sin él, la placa se escribe a mano.</li>
+    </ul>
   </section>
 
   <section class="pantalla" id="p-reportes" hidden>
@@ -43,11 +127,13 @@
     <p class="estado-ubicacion error" id="reportes-error" role="alert" hidden></p>
     <p class="nota" id="reportes-estado" aria-live="polite"></p>
     <ul class="reportes" id="reportes-lista" aria-label="Tus reportes"></ul>
-    <p class="nota">Están guardados solo en este teléfono. Si borras los datos del navegador, se borran con ellos. En un iPhone, Safari también los puede borrar solo: si pasan siete días en que usas Safari sin abrir esta página. Agregada a la pantalla de inicio, eso no pasa. Para tener una copia que no dependa del teléfono, comparte el expediente en PDF.</p>
+    <!-- Lo que puede borrarlos depende del teléfono: instalacion.js, notaDeLoGuardado. -->
+    <p class="nota" id="reportes-nota"></p>
     <p class="nota">«Seguir» te lleva a lo que falta. «Abrir» te deja ver el número, compartir el expediente o corregirlo: si cambias algo, hay que sellarlo otra vez y el número cambia.</p>
   </section>
 
   <section class="pantalla" id="p-heridos" hidden>
+    <a class="volver" href="#choque" data-ir="choque">‹ Volver</a>
     <h1>Llama al 123</h1>
     <p>Es la línea de emergencias de Colombia. Di dónde estás y cuántos heridos hay.</p>
     <a class="boton boton-peligro" href="tel:123">Llamar al 123</a>
@@ -61,18 +147,30 @@
   </section>
 
   <section class="pantalla" id="p-a-salvo" hidden>
+    <a class="volver" href="#choque" data-ir="choque">‹ Volver</a>
     <h1>Primero, ponte a salvo</h1>
     <ul class="pasos">
       <li>Enciende las luces de parqueo.</li>
       <li>Sal del carro por el lado contrario al tráfico. Si tienes chaleco reflectivo, póntelo.</li>
       <li>Pon las señales de carretera (triángulos o conos) detrás de los carros.</li>
-      <li>Antes de mover los carros, toma fotos de cómo quedaron. En un choque simple, después hay que retirarlos de la vía.</li>
     </ul>
-    <button class="boton" type="button" data-ir="donde">Ya estoy a salvo</button>
+    <button class="boton" type="button" data-ir="antes">Ya estoy a salvo</button>
+  </section>
+
+  <!-- Las preguntas y lo que dice la ley con cada respuesta: antes.js y pantalla-antes.js. -->
+  <section class="pantalla" id="p-antes" hidden>
+    <a class="volver" id="antes-volver" href="#a-salvo" data-ir="a-salvo">‹ Volver</a>
+    <h1>Antes de mover los carros</h1>
+    <p class="suave">En un choque de solo daños hay que retirarlos, pero primero van las fotos: la autoridad debe dar el tiempo para tomarlas.</p>
+    <p class="estado-ubicacion error" id="antes-error" role="alert" hidden></p>
+    <div id="antes-preguntas"></div>
+    <button class="boton" type="button" id="antes-seguir" data-ir="donde">Seguir: dónde fue</button>
+    <p class="nota">Puedes seguir sin responder. Lo que digas queda en el reporte como lo que tú dijiste, no como una prueba.</p>
   </section>
 
   <section class="pantalla" id="p-donde" hidden>
     <h1>¿Dónde fue el choque?</h1>
+    <p class="alerta alerta-arriba" id="donde-sin-internet" role="status" hidden>Sin internet el mapa no se ve, pero el GPS sí funciona: toca «Usar mi ubicación». La vía y el clima se completan solos al volver la señal.</p>
     <div class="mapa" id="mapa" role="application" aria-label="Mapa: toca el punto del choque"></div>
     <p class="estado-ubicacion" id="estado-ubicacion" aria-live="polite">Toca «Usar mi ubicación», o toca el mapa en el punto del choque.</p>
     <div class="dos-botones" id="enlaces-google" hidden>
@@ -442,6 +540,7 @@
         <p class="sello-huella" id="enviar-huella"></p>
       </div>
       <p class="nota">No es el número del siniestro: ese te lo da tu aseguradora cuando le avisas del choque. Este es el de tu expediente, y la huella deja ver si alguien lo cambia.</p>
+      <p class="alerta" id="enviar-borra" hidden></p>
       <button class="boton" type="button" id="enviar-compartir" disabled>Compartir el expediente (PDF)</button>
       <p class="nota" id="enviar-pdf-estado" aria-live="polite">Preparando el expediente…</p>
       <a class="boton boton-claro" id="enviar-ver" href="#" target="_blank" rel="noopener" hidden>Ver el expediente</a>

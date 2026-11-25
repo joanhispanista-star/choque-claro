@@ -2,11 +2,12 @@
 // «Seguir») y la pantalla con todos. Qué se dice de cada uno está en reportes.js; volver a uno
 // (guardar lo pendiente del de ahora y cambiar) lo hace app.js con `abrir(id, ir)`.
 //
-// El inicio pregunta primero si hay heridos: el renglón va debajo, nunca encima, y si la base del
+// En el inicio van primero el choque y el 123: el renglón va debajo, nunca encima, y si la base del
 // teléfono falla el inicio no muestra un error por esto (los pasos siguientes ya lo dicen).
 //
 // Lo que viene del reporte (nombres de vías del mapa) se pinta con textContent, nunca con innerHTML.
-import { candidatosParaSeguir, cuandoDeLaFila, filaDelReporte, reportesConAlgo, textoDelEnlace, tituloDelRenglon } from './reportes.js';
+import { candidatosParaSeguir, cuandoDeLaFila, filaDelReporte, reportesConAlgo, textoDeGuardados, tituloDelRenglon } from './reportes.js';
+import { abiertaDesdeInicio, esIOS, notaDeLoGuardado } from './instalacion.js';
 import { detalle } from './reporte-en-curso.js';
 
 const MARCAS = {
@@ -57,6 +58,8 @@ function alTocarCon(abrir, raiz, avisar) {
 
 // --- El renglón del inicio -------------------------------------------------------------------
 
+// `raiz`: la portada (pantalla-inicio.js). De ella solo toca el reporte a medias (#inicio-reportes)
+// y el renglón «Tus reportes» (#inicio-todos).
 export function iniciarRenglonDelInicio(raiz, { reporte, abrir, reloj = () => new Date() }) {
   const $ = (selector) => raiz.querySelector(selector);
   let turno = 0;
@@ -64,7 +67,7 @@ export function iniciarRenglonDelInicio(raiz, { reporte, abrir, reloj = () => ne
     $('#inicio-reportes-error').textContent = texto;
     $('#inicio-reportes-error').hidden = !texto;
   };
-  const alTocar = alTocarCon(abrir, raiz, avisar);
+  const alTocar = alTocarCon(abrir, $('#inicio-reportes'), avisar);
 
   async function entrar() {
     const mio = ++turno;
@@ -80,7 +83,7 @@ export function iniciarRenglonDelInicio(raiz, { reporte, abrir, reloj = () => ne
         }
       }
     } catch {
-      if (mio === turno) raiz.hidden = true;
+      if (mio === turno) for (const id of ['#inicio-reportes', '#inicio-todos']) $(id).hidden = true;
       return;
     }
     if (mio !== turno) return;
@@ -92,9 +95,9 @@ export function iniciarRenglonDelInicio(raiz, { reporte, abrir, reloj = () => ne
       if (fila.ejemplo) titulo.append(marca('Ejemplo', 'marca-ejemplo'));
       renglon.replaceChildren(titulo, elemento('span', 'que', fila.linea), botonDe(fila, alTocar));
     }
-    $('#inicio-todos').textContent = textoDelEnlace(conAlgo.length);
+    $('#inicio-reportes').hidden = !fila;
+    $('#inicio-cuantos').textContent = `${textoDeGuardados(conAlgo.length)} ›`;
     $('#inicio-todos').hidden = conAlgo.length === 0;
-    raiz.hidden = conAlgo.length === 0;
   }
 
   function salir() {
@@ -114,6 +117,7 @@ export function iniciarPantallaReportes(raiz, { reporte, abrir, reloj = () => ne
     $('#reportes-error').hidden = !texto;
   };
   const alTocar = alTocarCon(abrir, raiz, avisar);
+  $('#reportes-nota').textContent = notaDeLoGuardado({ ios: esIOS(), desdeInicio: abiertaDesdeInicio() });
 
   function filaEnPantalla(fila) {
     const li = elemento('li', 'reporte-fila');

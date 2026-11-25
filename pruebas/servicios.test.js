@@ -26,6 +26,15 @@ test('si todos fallan, lo dice en español y guarda el detalle', async () => {
   });
 });
 
+test('sin internet no se culpa a los servidores: se dice que se completa al volver la señal', async (t) => {
+  const antes = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { value: { onLine: false }, configurable: true });
+  t.after(() => (antes ? Object.defineProperty(globalThis, 'navigator', antes) : delete globalThis.navigator));
+  const buscar = () => Promise.reject(new TypeError('Failed to fetch'));
+  await assert.rejects(consultarOverpass('x', { buscar, servidores: ['https://uno.test/api'] }), /^Error: Sin internet no se puede consultar la vía\. Se completa sola al volver la señal\.$/);
+  await assert.rejects(consultarJson('https://clima.test', { buscar }), /^Error: Sin internet\. Se consulta solo al volver la señal\.$/);
+});
+
 test('un servidor que no responde se corta a tiempo y se pasa al siguiente', async () => {
   const buscar = (url, { signal }) =>
     url.includes('lento')

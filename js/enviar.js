@@ -11,17 +11,25 @@ import { estadoDeLaVuelta, esDeLaEscena, TOMAS } from './escena.js';
 import { croquisUtilizable, tituloDelCaso } from './croquis.js';
 import { fechaYHora } from './fechas.js';
 import { distancia, planoLocal } from './geo.js';
+import { resumenDeAntes } from './antes.js';
+import { queLeFalta } from './sello.js';
 
 const fotos = (n) => (n === 1 ? '1 foto' : `${n} fotos`);
 // La misma distancia con la que el croquis avisa que el punto del paso 3 se movió (pantalla-croquis.js).
 export const LEJOS_DEL_CROQUIS = 30;
 
 // La lista de lo que va en el reporte: [{ clave, titulo, detalle, completo, ir, boton }], con `ir`
-// el paso al que lleva el botón cuando algo falta.
-export function revisionDelReporte({ reporte, registros = [] }) {
+// el paso al que lleva el botón cuando algo falta. `cambiable`: lleva botón aunque esté completo,
+// porque desde aquí no hay otra forma de llegar a corregirlo.
+export function revisionDelReporte({ reporte, registros = [], ahora = new Date() }) {
   const items = [];
   const lugar = reporte.lugar ?? null;
+  const falta = queLeFalta(lugar, ahora);
   const croquis = croquisUtilizable(reporte.croquis) ? reporte.croquis : null;
+
+  // Lo del paso 2, si respondió. No responder no es que falte algo: con heridos ni se pregunta.
+  const antes = resumenDeAntes(reporte.antes);
+  if (antes) items.push({ clave: 'antes', titulo: 'Antes de mover los carros', detalle: antes, completo: true, cambiable: true, ir: 'antes', boton: 'Cambiar' });
 
   // Dónde y cuándo: del paso 3 si se guardó al llegar aquí; si no (la página se recargó y el paso 3
   // se perdió), lo poco que guarda el croquis. Si el punto del paso 3 y el del croquis no son el
@@ -30,6 +38,11 @@ export function revisionDelReporte({ reporte, registros = [] }) {
   const separacion = lugar && delCroquis ? Math.round(distancia({ x: 0, y: 0 }, planoLocal(lugar.punto).aMetros(delCroquis))) : 0;
   if (lugar && separacion > LEJOS_DEL_CROQUIS) {
     items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: `El punto de «¿Dónde fue?» está a ${separacion}\u00a0m del croquis. Revisa cuál es el del choque.`, completo: false, ir: 'croquis', boton: 'Ver el croquis' });
+  } else if (lugar && falta.length) {
+    // Sellado no se completa solo: cambiarle el lugar le cambiaría el número (app.js, guardarElLugarYa).
+    const que = falta.join(' ni ');
+    const como = reporte.sello ? `Se selló sin ${que}.` : `Todavía sin ${que}. Con internet se ${falta.length === 1 ? 'completa solo' : 'completan solos'}.`;
+    items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: `${como} ${[lugar.via?.nombre, fechaYHora(lugar.hora)].filter(Boolean).join(' · ')}`, completo: false, ir: 'donde', boton: 'Ver' });
   } else if (lugar) {
     items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: [lugar.via?.nombre, fechaYHora(lugar.hora)].filter(Boolean).join(' · '), completo: true, ir: 'donde', boton: 'Cambiar' });
   } else if (delCroquis) {

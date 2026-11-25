@@ -17,7 +17,7 @@ const sinPunto = (t) => String(t ?? '').replace(/\.$/, '');
 // el que nadie declaró nada: no se lista. `reporte.fotos` es la cuenta que da la base.
 export function reporteVacio(reporte) {
   if (!reporte) return true;
-  if (reporte.fotos || reporte.lugar || reporte.croquis || reporte.sello || reporte.danos?.length) return false;
+  if (reporte.fotos || reporte.antes || reporte.lugar || reporte.croquis || reporte.sello || reporte.danos?.length) return false;
   return !(reporte.carros ?? []).some((c) => c.linea || c.placa?.texto || c.placa?.fuente || c.placa?.lectura);
 }
 
@@ -46,7 +46,7 @@ function queFalta(item) {
 export async function filaDelReporte({ reporte, registros = [] }, { ahora = new Date(), sutil } = {}) {
   const { estado } = await estadoDelSello({ reporte, registros }, sutil);
   const vigente = estado === 'vigente';
-  const falta = vigente ? null : revisionDelReporte({ reporte, registros }).find((i) => !i.completo) ?? null;
+  const falta = vigente ? null : revisionDelReporte({ reporte, registros, ahora }).find((i) => !i.completo) ?? null;
   let linea;
   if (vigente) linea = null;
   else if (falta) linea = queFalta(falta);
@@ -79,11 +79,11 @@ export const reportesConAlgo = (reportes) => reportes.filter((r) => !reporteVaci
 // Los que pueden ir en el renglón del inicio, en orden: el que está en curso (puede ser uno viejo que
 // se volvió a abrir) y el último que se empezó. Va el primero que quedó a medias (filaDelReporte
 // dice si el sello vale). Si los dos están sellados, la persona terminó: el inicio no le insiste
-// con uno más viejo (para eso está «Ver tus reportes»).
+// con uno más viejo (para eso está el renglón «Tus reportes»).
 export function candidatosParaSeguir(conAlgo) {
   const enCurso = conAlgo.find((r) => r.enCurso) ?? null;
   return [enCurso, conAlgo[0] ?? null].filter((r, i, todos) => r && todos.indexOf(r) === i);
 }
 
-// «Ver tus 4 reportes», o «Ver tu reporte guardado» si hay uno solo.
-export const textoDelEnlace = (cuantos) => (cuantos === 1 ? 'Ver tu reporte guardado' : `Ver tus ${cuantos} reportes`);
+// Al lado de «Tus reportes» en el inicio: «1 guardado», «4 guardados».
+export const textoDeGuardados = (cuantos) => (cuantos === 1 ? '1 guardado' : `${cuantos} guardados`);

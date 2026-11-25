@@ -21,6 +21,11 @@ export const SERVIDORES_OVERPASS = [
 
 const fetchDelNavegador = (...args) => globalThis.fetch(...args);
 
+// Sin internet, culpar a los servidores manda a la persona a esperar algo que no va a pasar. Solo
+// se afirma cuando el teléfono lo dice: con «onLine» en true puede que tampoco haya.
+const sinInternet = () => globalThis.navigator?.onLine === false;
+export const SIN_INTERNET = 'Sin internet no se puede consultar la vía. Se completa sola al volver la señal.';
+
 async function conLimite(buscar, url, opciones, limiteMs) {
   const control = new AbortController();
   const reloj = setTimeout(() => control.abort(), limiteMs);
@@ -46,7 +51,7 @@ export async function consultarOverpass(consulta, { buscar = fetchDelNavegador, 
       fallas.push(`${new URL(servidor).host}: ${error.name === 'AbortError' ? 'no respondió a tiempo' : error.message}`);
     }
   }
-  const error = new Error('No se pudo consultar el mapa: los servidores públicos no respondieron. Prueba otra vez en un momento.');
+  const error = new Error(sinInternet() ? SIN_INTERNET : 'No se pudo consultar el mapa: los servidores públicos no respondieron. Prueba otra vez en un momento.');
   error.detalle = fallas.join(' · ');
   throw error;
 }
@@ -56,7 +61,7 @@ export async function consultarJson(url, { buscar = fetchDelNavegador, limiteMs 
   try {
     r = await conLimite(buscar, url, {}, limiteMs);
   } catch (error) {
-    throw new Error(error.name === 'AbortError' ? 'El servicio no respondió a tiempo.' : 'Sin conexión con el servicio.');
+    throw new Error(sinInternet() ? 'Sin internet. Se consulta solo al volver la señal.' : error.name === 'AbortError' ? 'El servicio no respondió a tiempo.' : 'Sin conexión con el servicio.');
   }
   if (!r.ok) throw new Error(`El servicio respondió con un error (${r.status}).`);
   return r.json();

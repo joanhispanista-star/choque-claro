@@ -5,35 +5,44 @@
 // comparten UN reporte en curso (reporte-en-curso.js): una sola cadena de
 // huellas, una sola copia. «Tus reportes» (desde el 17-nov-2026) deja volver a
 // uno guardado; cambiar de reporte pasa siempre por aquí (cambiarDeReporte).
+import { iniciarPantallaInicio } from './pantalla-inicio.js';
+import { iniciarPantallaAgregar, escucharInstalacion } from './pantalla-agregar.js';
+import { iniciarPantallaAntes } from './pantalla-antes.js';
 import { iniciarPantallaDonde } from './pantalla-donde.js';
 import { iniciarPantallaEscena } from './pantalla-escena.js';
 import { iniciarPantallaCarros } from './pantalla-carros.js';
 import { iniciarPantallaDanos } from './pantalla-danos.js';
 import { iniciarPantallaCroquis } from './pantalla-croquis.js';
 import { iniciarPantallaEnviar } from './pantalla-enviar.js';
-import { iniciarPantallaReportes, iniciarRenglonDelInicio } from './pantalla-reportes.js';
+import { iniciarPantallaReportes } from './pantalla-reportes.js';
 import { crearReporteEnCurso } from './reporte-en-curso.js';
 import { sirveParaUnChoqueNuevo } from './reporte-bd.js';
-import { completaElLugar, lugarParaElReporte } from './sello.js';
+import { completaElLugar, leFaltaAlgo, lugarParaElReporte } from './sello.js';
 import { textoCanonico } from './evidencia.js';
+import { crearSinSenal } from './sin-senal.js';
 
-// «Tus reportes» no es un paso: la barra dice el nombre de la pantalla.
-const PASOS = { inicio: 1, heridos: 1, 'a-salvo': 2, donde: 3, escena: 4, carros: 5, danos: 6, croquis: 7, enviar: 8, reportes: null };
+// Lo que no es un paso lleva null: la barra dice el nombre de la pantalla (la portada, nada).
+const PASOS = { inicio: null, choque: 1, heridos: 1, 'a-salvo': 2, antes: 2, donde: 3, escena: 4, carros: 5, danos: 6, croquis: 7, enviar: 8, reportes: null, agregar: null };
+const TITULOS = { inicio: '', reportes: 'Tus reportes', agregar: 'En tu teléfono' };
 const TOTAL_PASOS = 8;
+const sinSenal = crearSinSenal();
+const instalacion = escucharInstalacion();
 const reporte = crearReporteEnCurso();
 let donde = null;
 let actual = null;
-// Las pantallas con cámara, el croquis, el envío y «Tus reportes»: se crean la
-// primera vez que se entra y se apagan al salir.
+// Todas menos el paso 3 y las que son solo texto: se crean la primera vez que
+// se entra y se apagan al salir.
 const perezosas = {};
 const INICIAR = {
-  inicio: () => iniciarRenglonDelInicio(document.querySelector('#inicio-reportes'), { reporte, abrir: abrirReporte }),
+  inicio: () => iniciarPantallaInicio(document.querySelector('#p-inicio'), { reporte, abrir: abrirReporte, sinSenal }),
+  agregar: () => iniciarPantallaAgregar(document.querySelector('#p-agregar'), { sinSenal, instalacion }),
   reportes: () => iniciarPantallaReportes(document.querySelector('#p-reportes'), { reporte, abrir: abrirReporte }),
+  antes: () => iniciarPantallaAntes(document.querySelector('#p-antes'), { reporte, preparar: prepararElChoque }),
   escena: () => iniciarPantallaEscena(document.querySelector('#p-escena'), { reporte, puntoDelChoque, empezarOtro }),
   carros: () => iniciarPantallaCarros(document.querySelector('#p-carros'), { reporte }),
   danos: () => iniciarPantallaDanos(document.querySelector('#p-danos'), { reporte }),
   croquis: () => iniciarPantallaCroquis(document.querySelector('#p-croquis'), { reporte, lugar: lugarDelChoque }),
-  enviar: () => iniciarPantallaEnviar(document.querySelector('#p-enviar'), { reporte, guardarLugar: guardarElLugar, antesDeSellar: () => lugar.guardando, empezarOtro }),
+  enviar: () => iniciarPantallaEnviar(document.querySelector('#p-enviar'), { reporte, guardarLugar: guardarYCompletarElLugar, antesDeSellar: () => lugar.guardando, empezarOtro }),
 };
 
 // --- El lugar del paso 3 -----------------------------------------------------------------------
@@ -124,6 +133,29 @@ function crearDonde() {
   return donde;
 }
 
+// Lo que se marcó sin señal quedó sin la vía o sin el clima, y la app promete completarlo solo: se
+// pide otra vez al llegar al paso 8 y cuando vuelve la señal. Lo que llegue se guarda por
+// alActualizar, y en un reporte sellado, nunca (guardarElLugarYa). Sin esperar: son consultas de
+// varios segundos.
+function completarElLugar() {
+  if (globalThis.navigator?.onLine === false) return;
+  const rep = reporte.reporte();
+  // El paso 3 ya tiene el lugar de este reporte (o la base falló y el paso 3 va por su cuenta).
+  if (donde && (!rep || lugar.de === rep.id)) {
+    donde.completar();
+    return;
+  }
+  if (!rep || rep.sello || !leFaltaAlgo(rep.lugar)) return;
+  crearDonde();
+  alinearElLugar();
+}
+
+async function guardarYCompletarElLugar() {
+  const escribio = await guardarElLugar();
+  completarElLugar();
+  return escribio;
+}
+
 // Que el paso 3 tenga el lugar del reporte en curso. Si la memoria no es de nadie (la página recién
 // abierta, o se acaba de cambiar de reporte), toma el lugar que el reporte ya tiene; si es de otro
 // (pasaron las seis horas y la base empezó uno nuevo), se limpia primero.
@@ -134,6 +166,8 @@ function crearDonde() {
 async function alinearElLugar({ choqueNuevo = false } = {}) {
   let rep;
   try {
+    // «Antes de mover» pudo quedar preparando el reporte de este choque: primero eso.
+    await preparando;
     rep = await reporte.cargar();
     if (choqueNuevo && !sirveParaUnChoqueNuevo(rep)) rep = await empezarOtro();
   } catch {
@@ -153,6 +187,21 @@ async function alinearElLugar({ choqueNuevo = false } = {}) {
   lugar.de = rep.id;
   lugar.guardada = donde.version();
   await donde.restaurar(rep.lugar);
+}
+
+// «Antes de mover» (pantalla-antes.js): deja en curso el reporte de este choque y lo devuelve.
+// `choqueNuevo`, como en alinearElLugar: se viene de «Ya estoy a salvo». La promesa queda a mano
+// para que el paso 3, si la persona sigue antes de que termine, la espere: si no, las dos podrían
+// empezar un reporte cada una.
+let preparando = Promise.resolve();
+function prepararElChoque({ choqueNuevo = false } = {}) {
+  const hecho = preparando.then(async () => {
+    let rep = await reporte.cargar();
+    if (choqueNuevo && !sirveParaUnChoqueNuevo(rep)) rep = await empezarOtro();
+    return rep;
+  });
+  preparando = hecho.catch(() => {});
+  return hecho;
 }
 
 // --- Cambiar de reporte --------------------------------------------------------------------------
@@ -197,11 +246,12 @@ function mostrar(nombre) {
   // reporte, o la página se recarga, el lugar no se pierde. Si falla, lo intenta el paso 8.
   if (actual === 'donde' && nombre !== 'donde') guardarElLugar().catch(() => {});
   for (const pantalla of document.querySelectorAll('.pantalla')) pantalla.hidden = pantalla.id !== 'p-' + nombre;
-  document.querySelector('#paso').textContent = PASOS[nombre] ? `Paso ${PASOS[nombre]} de ${TOTAL_PASOS}` : 'Tus reportes';
+  document.querySelector('#paso').textContent = PASOS[nombre] ? `Paso ${PASOS[nombre]} de ${TOTAL_PASOS}` : TITULOS[nombre];
   if (nombre === 'donde') {
     crearDonde();
     // Leaflet mide el contenedor al crearse; si estaba oculto, mide cero.
     requestAnimationFrame(() => donde.ajustar());
+    // Desde «Antes de mover» no: esa pantalla ya dejó en curso el reporte de este choque.
     if (actual !== 'donde') alinearElLugar({ choqueNuevo: actual === 'heridos' || actual === 'a-salvo' });
   }
   // El croquis arma la vía con el análisis del paso 3. Si el paso 3 no tiene el lugar de este
@@ -214,7 +264,7 @@ function mostrar(nombre) {
   }
   if (INICIAR[nombre]) {
     if (!perezosas[nombre]) perezosas[nombre] = INICIAR[nombre]();
-    perezosas[nombre].entrar();
+    perezosas[nombre].entrar({ desde: actual });
   }
   actual = nombre;
   window.scrollTo(0, 0);
@@ -228,7 +278,9 @@ document.addEventListener('click', (evento) => {
 });
 
 window.addEventListener('hashchange', () => mostrar(location.hash.slice(1)));
+window.addEventListener('online', completarElLugar);
 mostrar(location.hash.slice(1));
+sinSenal.arrancar();
 
 // Para las pruebas en el navegador.
 globalThis.__choqueClaro = {
@@ -242,5 +294,7 @@ globalThis.__choqueClaro = {
   pantallaCroquis: () => perezosas.croquis,
   pantallaEnviar: () => perezosas.enviar,
   pantallaReportes: () => perezosas.reportes,
-  renglonDelInicio: () => perezosas.inicio,
+  pantallaAntes: () => perezosas.antes,
+  pantallaInicio: () => perezosas.inicio,
+  sinSenal,
 };

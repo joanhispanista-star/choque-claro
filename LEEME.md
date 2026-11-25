@@ -13,7 +13,7 @@ repositorio**, que es público: ver `.gitignore`.
 
 - `npm run dev` → <http://127.0.0.1:8320/>. Desde una sesión de Claude: la
   entrada `siniestros` de `PLAZA/.claude/launch.json`.
-- `npm test` → 422 pruebas en Node, sin internet (51 vienen del Taller con lo
+- `npm test` → 459 pruebas en Node, sin internet (51 vienen del Taller con lo
   que se copió de allá; 16 corren la base de las cuentas en un Postgres dentro
   de Node, con PGlite).
 - **En el celular hace falta https**: por la IP del Wi-Fi (`npm run celular`,
@@ -29,19 +29,36 @@ repositorio**, que es público: ver `.gitignore`.
   `GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never`), y empuja las dos ramas. Ojo:
   `git push origin master` NO actualiza el sitio. En otro PC, o si alguien
   cambia la fuente de Pages a `master`, esto deja de hacer falta.
+- **`npm run sellar` después de CUALQUIER cambio en la página** y antes de
+  probar o hacer commit: rehace la lista de archivos con su SHA-256 dentro de
+  `sw.js` (ver «Abre sin señal»). Si se olvida, una prueba falla y lo dice.
 - `npm run ejemplos-via` vuelve a bajar los dos ejemplos reales de las pruebas
   y el del botón «Ver un ejemplo» (ver `pruebas/datos/LEEME.md`);
   `npm run ejemplos-via -- ejemplo` baja solo el del botón.
 
-## Lo que hay (24-nov-2026)
+## Lo que hay (25-nov-2026)
+
+**La portada** (25-nov, la A de los bocetos, que eligió Joan): lo del choque
+primero y grande («Tuve un choque» y «Hay heridos: llamar al 123», que marca de
+un toque y deja detrás la pantalla de los heridos); después, el reporte que
+quedó a medias; y abajo, «Antes de que te pase». Hoy ahí solo está **Tenerla en
+tu teléfono**: las otras baldosas del boceto (practicar, normas, mi carro) se
+ponen cuando existan, no antes. «Tus reportes» va al pie.
 
 Los 8 pasos:
 
 1. **¿Hay alguien herido?** Con heridos, el botón llama al 123 y la app no pide
    nada más hasta que estén atendidos.
-2. **Ponte a salvo**: luces, chaleco, señales y fotos antes de mover los carros
-   (en un choque simple, después hay que retirarlos de la vía: Ley 2251 de
-   2022, art. 16).
+2. **Ponte a salvo y, antes de mover los carros, dos preguntas** (25-nov): luces,
+   chaleco y señales; y después *¿crees que alguien manejaba borracho o
+   drogado?* y *¿los carros pueden andar?* Con cada respuesta se dice qué hacer,
+   con su artículo: en un choque de solo daños hay que retirarlos (art. 143) y
+   negarse es comparendo (144A), menos si se presume embriaguez («cualquiera de
+   las partes» puede negarse hasta las pruebas) o si el carro no anda; nunca
+   sobre el andén (art. 76). Si dejarlos ahí es peligroso, se dice que se muevan:
+   primero la vida. Se puede seguir sin responder. Lo respondido va al reporte,
+   se sella y sale en el expediente **como sospecha de la persona, no como
+   prueba**. La app no pregunta quién.
 3. **¿Dónde fue?** Mapa con el GPS y su círculo de precisión (se escucha hasta
    15 s y se queda la mejor lectura), un toque en el mapa o el pin arrastrado,
    y la hora del choque. Con el punto sale:
@@ -377,9 +394,10 @@ Los 8 pasos:
 **Tus reportes** (17-nov, la opción B de los bocetos, que eligió Joan). Hasta
 ese día un reporte se perdía a las 6 horas: la base lo guardaba, pero abrir la
 app empezaba otro y no había cómo volver.
-- **En el inicio**, debajo de «¿Hay alguien herido?» y nunca encima: el último
-  reporte, solo si quedó a medias, con lo primero que le falta y «Seguir»; y
-  «Ver tus N reportes». Sin reportes guardados, el inicio queda como antes.
+- **En el inicio**, debajo del choque y del 123 y nunca encima: el último
+  reporte, solo si quedó a medias, con lo primero que le falta y «Seguir». Al
+  pie, «Tus reportes», con cuántos hay guardados (desde el 25-nov). Sin reportes
+  guardados no sale ninguno de los dos.
 - **La pantalla `#reportes`**: todos, del más nuevo al más viejo, con el día y
   la hora en Colombia, la calle, si es el ejemplo, si está sellado (con su
   número), sin sellar o «cambió después de sellar» (sin el número viejo, que
@@ -394,7 +412,7 @@ app empezaba otro y no había cómo volver.
   `turno` y `abierto` no entran al sello: abrir uno sellado no le cambia el
   número.
 - **Un choque nuevo no cae en un reporte viejo**: el camino del inicio
-  («¿Hay alguien herido?» y después el paso 3) sigue el reporte en curso solo
+  («Tuve un choque», los heridos y el paso 2) sigue el reporte en curso solo
   si se empezó hace menos de 6 horas, no está sellado y no es el ejemplo
   (`sirveParaUnChoqueNuevo`). Si no, empieza otro. Sin esto, abrir un reporte
   sellado para reenviar el PDF lo dejaba en curso, y el choque siguiente le
@@ -436,7 +454,33 @@ app empezaba otro y no había cómo volver.
   base); no se hizo antes del demo.
 - No se pueden borrar (son evidencia); quedan solo en el teléfono y la pantalla
   lo dice, también que Safari en un iPhone los puede borrar solo (siete días de
-  usar Safari sin abrir la página, si no está en la pantalla de inicio).
+  usar Safari sin abrir la página, si no está en la pantalla de inicio). Desde
+  el 25-nov la nota depende del teléfono (`notaDeLoGuardado`: no le habla de
+  Safari a un Android), y el paso 8 lo avisa **antes** de que importe: «Compártelo
+  hoy», solo en Safari del iPhone.
+
+**Abre sin señal** (25-nov, E0). Un choque en carretera es, muchas veces, sin
+señal, y hasta ese día la app no abría.
+- **Qué se guarda**: al abrirla la primera vez con internet, `sw.js` baja los 73
+  archivos de la app (1,92 MB). Lo pesado (los 60 archivos de la zona 3D y el
+  lector de placas, 24,9 MB) se guarda al usarlo. La portada dice en qué va:
+  «Ya abre sin señal», «Bajando…», o que no se pudo. Con todo adentro se abre, se
+  ubica con el GPS, se toman las fotos, se marcan los daños, se dibuja el
+  croquis, se sella y se arma el PDF sin internet ni servidor.
+- **Cada archivo se comprueba con su SHA-256** antes de guardarlo. Así nunca
+  quedan mezclados archivos de dos versiones (una mitad vieja y una nueva). Si
+  uno no cuadra, no se instala y se queda la versión que ya estaba entera.
+- **La versión nueva no entra sola**: se baja, y la portada ofrece «Actualizar».
+  A mitad de un choque no se recarga nada.
+- **Lo que necesita internet se dice y se completa solo**: el nombre de la vía y
+  el clima quedan como «todavía sin…» y se consultan al volver la señal, salvo
+  que el reporte ya esté sellado (le cambiaría el número).
+- **Agregarla a la pantalla de inicio** (`#agregar`): en el iPhone, a mano y con
+  los tres pasos escritos; en Android, con el botón cuando el navegador lo
+  ofrece. Se dice lo incómodo: en el iPhone, desde el ícono **abre vacía** (no ve
+  lo que se hizo en Safari) y hay que abrirla una vez con internet.
+- En este PC (`localhost`) el service worker no se enciende, para no ver
+  versiones viejas al desarrollar; con `?sw=1` en la dirección, sí.
 
 Las fotos de la escena, de los carros y de los daños van en **una sola cadena
 de huellas** por reporte (`reporte-en-curso.js`): la lista de la escena revisa
@@ -526,6 +570,17 @@ en el reporte. Sin errores en la página ni en la consola. Antes del commit,
 tres revisores independientes leyeron el cambio. Sus hallazgos están
 arreglados salvo dos, anotados: lo que cuesta leer los reportes (arriba) y un
 caso de milisegundos, sellar justo cuando se cumplen las 6 horas.
+
+**Verificado (E0, 25-nov)** en el Edge sin ventana a 390×844 y a 375×667
+(iPhone SE): la portada, el 123 que deja detrás la pantalla de los heridos, las
+dos preguntas con sus avisos, lo respondido guardado en el reporte y en el mismo
+reporte al llegar al paso 3, el renglón «Seguir», y el service worker listo con
+los 73 archivos. Después, **con el servidor apagado y sin red**: abre, GPS,
+fotos, daños en 3D, croquis, sellar y PDF. Al volver la red, la vía y el clima se
+completaron solos; cambiar una respuesta después de sellar pide sellar otra vez;
+y la zona 3D sin red muestra su página con salida. Sin errores en la página ni
+en la consola, y sin desbordes. Las vistas del iPhone se destaparon a mano: en el
+PC no salen solas.
 
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
@@ -621,12 +676,32 @@ La vista realista y el video (24-nov; solo se han visto en el Edge oculto):
 24. Un punto de verdad en Bogotá con el botón «Encender la vista realista»:
     cuánto se demora «Vistiendo la zona…» con datos móviles.
 
+Lo de E0 (25-nov; es lo primero que hay que probar):
+
+25. **«Hay heridos: llamar al 123»**: ¿abre la llamada de un toque? Al cancelar,
+    detrás tiene que estar «Llama al 123», no la portada.
+26. **Agregar a inicio**: Compartir → Agregar a inicio. ¿Sale el ícono verde con
+    los dos carros y el nombre «Choque Claro»? Al abrir desde el ícono, ¿sale sin
+    la barra de Safari y no queda nada tapado arriba ni abajo?
+27. **Abrir sin señal**: desde el ícono, con internet, entrar a «Tenerla en tu
+    teléfono» hasta que diga «Ya abre sin señal». Cerrarla del todo, modo avión,
+    abrirla: tiene que abrir y dejar hacer un reporte hasta el PDF.
+28. **El aviso de Safari** en el paso 8 («Compártelo hoy»): tiene que salir en
+    Safari y NO desde el ícono.
+29. Quitar el modo avión a mitad del paso 3: la vía y el clima deben llegar solos.
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
   **doble línea** casi nunca está: 0 de 1.074 tramos medidos en Bogotá. Sale de
   las fotos.
 - **La app no decide quién tuvo la culpa.** Lo dice al pie del análisis.
+- **«Creo que alguien manejaba borracho» es una sospecha de la persona**, y así
+  sale escrita. No pregunta quién, no lo prueba y lo dice en el expediente: la
+  prueba la hace la autoridad.
+- **«Ya abre sin señal» solo sale cuando los 73 archivos están guardados y
+  comprobados.** Mientras tanto dice en qué va, y lo que sí necesita internet
+  está escrito en la misma pantalla.
 - El clima es de un **modelo**, no de una estación al lado de la vía.
 - Para analizar, el punto se consulta en Overpass y Open-Meteo y el mapa se
   descarga de OpenStreetMap: la pantalla lo dice. Nada más sale del teléfono.
@@ -719,6 +794,16 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | Archivo | Qué hace |
 |---|---|
 | `index.html`, `css/app.css` | Las pantallas. Tema claro y solo claro: se usa a pleno sol. |
+| `sw.js` | El service worker: guarda la app entera, comprueba cada archivo con su SHA-256 y responde sin red. Las dos listas de archivos las escribe `npm run sellar`: no se tocan a mano. |
+| `herramientas/sellar-sw.mjs` | Arma esas listas (qué entra al instalar y qué se guarda al usarlo) y la versión. |
+| `manifest.webmanifest`, `img/icono*` | El ícono y el nombre al agregarla a inicio. |
+| `.gitattributes` | Todo con LF: con CRLF, la huella de este PC no sería la del archivo publicado (ver «Trampas»). |
+| `js/sin-senal.js` | Enciende el service worker y dice en qué va: bajando, lista, no se pudo, hay versión nueva. |
+| `js/instalacion.js` | **Puro.** En qué navegador está la persona, qué se le ofrece para agregarla a inicio y qué se le dice de lo guardado (Safari, ícono o Android). |
+| `js/pantalla-inicio.js` | La portada: el 123 que deja detrás a los heridos y la versión nueva. |
+| `js/pantalla-agregar.js` | «Tenerla en tu teléfono»: los pasos de su teléfono y si ya abre sin señal. |
+| `js/antes.js` | **Puro.** «Antes de mover los carros»: las dos preguntas, lo que dice la ley con cada respuesta y cómo sale al reporte. |
+| `js/pantalla-antes.js` | Esas preguntas en pantalla, guardadas en el reporte en curso. |
 | `js/app.js` | El recorrido: una pantalla por paso, el paso en el `#hash` (el "atrás" del celular funciona). |
 | `js/pantalla-donde.js` | "¿Dónde fue?": GPS, toque, ejemplo, hora, y el análisis con turnos (una respuesta vieja nunca pinta). |
 | `js/via.js` | **Puro.** La consulta a Overpass y el análisis de la vía: la más cercana (las entradas cargan 10 m de castigo), la cadena de tramos, el radio por tres puntos sobre 50 m, la curva cercana, cruces, señales, calzada hermana y las filas de texto. |
@@ -802,6 +887,19 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 
 ## Trampas que ya mordieron
 
+- **La huella de un archivo depende de sus finales de línea** (25-nov). Git en
+  Windows puede dejar CRLF en el disco y publicar LF: el service worker
+  compararía una huella que no es la del archivo que sirve GitHub y no guardaría
+  nada. `.gitattributes` obliga LF, y el sellador calcula la huella de los textos
+  como si tuvieran LF, que es lo que se publica.
+- **Una lista vieja en `sw.js` no se nota aquí**: en este PC no se enciende. Se
+  notaría en el teléfono, que se quedaría con la versión anterior para siempre.
+  Por eso hay una prueba que la compara con los archivos de verdad.
+- **`.ico` ya era de la zona 3D** (25-nov): los íconos de la portada usan
+  `.trazo`; con el mismo nombre se heredaban sus tamaños.
+- **El reporte en curso se prepara UNA vez** (25-nov): «Antes de mover» ya
+  escribe en él, así que el paso 3 no lo vuelve a preparar si se viene de ahí, y
+  recargar la página en el paso 3 no abre otro.
 - **La zona 3D salía gris en cualquier navegador** (13-nov-2026, ya
   publicada). El mapa nacía con la cámara inclinada (zoom 17,3 y 62°) y el
   relieve se encendía después: así MapLibre 4.7 nunca pide la tesela del

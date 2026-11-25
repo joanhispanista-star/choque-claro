@@ -44,6 +44,29 @@ test('cada foto lleva lo que se selló con ella, en palabras', async () => {
   assert.equal(sinNada.gps, 'Sin GPS');
 });
 
+test('lo dicho antes de mover sale como dicho por la persona, y la sospecha no se vende como prueba', async () => {
+  const sin = await expedienteDePrueba();
+  assert.ok(!sin.modelo.resumen.some((f) => f.etiqueta === 'Antes de mover'));
+  assert.ok(!sin.modelo.noAfirma.some((t) => /borracho/.test(t)));
+
+  const con = await expedienteDePrueba({ cambiar: (r) => ({ ...r, antes: { embriaguez: 'si', andan: 'alguno-no', hora: '2026-11-13T22:20:00Z' } }) });
+  const fila = con.modelo.resumen.find((f) => f.etiqueta === 'Antes de mover');
+  assert.equal(fila.valor, 'La persona sospechaba que alguien manejaba borracho o drogado; alguno de los carros no podía andar (5:20 p. m.)');
+  assert.ok(con.modelo.noAfirma.some((t) => /es una sospecha de la persona, no una prueba/.test(t)));
+  // Sigue siendo lo primero lo de la culpa, después del aviso de ejemplo.
+  assert.match(con.modelo.noAfirma[1], /^No dice quién tuvo la culpa/);
+});
+
+test('si no se alcanzó a consultar la vía o el clima, el expediente lo dice', async () => {
+  const completo = await expedienteDePrueba();
+  assert.equal(completo.modelo.lugar.sinConsultar, '');
+  const { modelo } = await expedienteDePrueba({ cambiar: (r) => ({ ...r, lugar: { ...r.lugar, via: null, filasDeLaVia: [] } }) });
+  assert.equal(modelo.lugar.sinConsultar, 'No se alcanzó a consultar la vía: por ejemplo, porque no había internet.');
+  const sinVias = await expedienteDePrueba({ cambiar: (r) => ({ ...r, croquis: null, lugar: { ...r.lugar, via: null, sinVias: true, filasDeLaVia: [] } }) });
+  assert.equal(sinVias.modelo.lugar.sinConsultar, '');
+  assert.equal(sinVias.modelo.lugar.sinVias, true);
+});
+
 test('la escena y los carros: las fotos vigentes, lo que falta y la placa como se declaró', async () => {
   const { modelo, registros, sello } = await expedienteDePrueba();
   assert.equal(registros.length, 26, 'el reporte de prueba: 9 de la escena, 8 de A, 6 de B y 3 de daños');

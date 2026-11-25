@@ -257,6 +257,8 @@ p { margin: 0 0 12px; }
   font-size: 15px;
   font-weight: 600;
 }
+.alerta-arriba { margin: 0 0 10px; }
+.alerta + .nota { margin-top: 10px; }
 
 .tira { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 4px 0 0; }
 .toma {
@@ -641,3 +643,116 @@ p { margin: 0 0 12px; }
 .marca-ejemplo { background: var(--fondo); color: var(--sin-dato); border: 1px solid var(--borde); }
 .enlace { display: inline-block; margin: 8px 0; color: var(--acento); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .volver { display: inline-block; margin: 4px 0 0; color: var(--acento); font-weight: 600; text-decoration: none; }
+
+/* La portada (pantalla-inicio.js). Lo del choque es rojo y enorme; lo demás, del tamaño de siempre:
+   el día del choque hay que encontrar el botón sin leer. */
+.solo-lectores { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.dibujos { position: absolute; }
+.trazo { flex: none; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.inicio-choque {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  min-height: 124px;
+  margin: 4px 0 0;
+  padding: 18px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--peligro);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.inicio-choque .trazo { width: 46px; height: 46px; }
+.inicio-choque strong { display: block; font-size: 27px; line-height: 1.15; }
+.inicio-choque span span { display: block; margin-top: 4px; font-size: 16px; line-height: 1.35; }
+.boton-123 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  margin: 12px 0 0;
+  padding: 8px 14px;
+  border: 2px solid var(--peligro);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--peligro);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+.inicio-choque:active,
+.boton-123:active { transform: scale(0.99); }
+.subtitulo { margin: 22px 0 10px; font-size: 18px; }
+.baldosa {
+  display: block;
+  min-height: 124px;
+  padding: 14px;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--texto);
+  text-decoration: none;
+}
+.baldosa .trazo { width: 30px; height: 30px; color: var(--acento); }
+.baldosa strong { display: block; font-size: 17px; line-height: 1.2; }
+.baldosa span span { display: block; margin-top: 2px; color: var(--texto-suave); font-size: 15px; line-height: 1.35; }
+/* Sola en su renglón: el dibujo a la izquierda y el texto al lado. */
+.baldosa.ancha { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: center; min-height: 72px; }
+.renglon-liso {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--texto);
+  font-weight: 600;
+  text-decoration: none;
+}
+.renglon-liso small { color: var(--texto-suave); font-size: 15px; font-weight: 500; white-space: nowrap; }
+.inicio-choque:focus-visible,
+.boton-123:focus-visible,
+.baldosa:focus-visible,
+.renglon-liso:focus-visible,
+.alternativa:focus-visible { outline: 3px solid var(--precision); outline-offset: 2px; }
+
+/* «Antes de mover los carros» (pantalla-antes.js). */
+.pregunta { margin: 12px 0; padding: 14px 14px 12px; border: 1px solid var(--borde); border-radius: 16px; background: var(--panel); }
+.pregunta > p { margin: 0 0 8px; font-weight: 700; }
+.alternativas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.alternativa {
+  min-height: 52px;
+  padding: 6px;
+  border: 2px solid var(--borde);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--texto);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.alternativa[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); color: var(--acento); }
+.alternativa-atencion[aria-pressed="true"] { border-color: var(--atencion); background: var(--atencion-suave); color: var(--atencion); }
+.aviso-ley { margin: 12px 0; padding: 14px; border-radius: 16px; background: var(--atencion-suave); }
+.aviso-ley strong { display: block; margin-bottom: 4px; color: var(--atencion); font-size: 18px; line-height: 1.25; }
+.aviso-ley p { margin: 0 0 8px; font-size: 16px; }
+.aviso-ley[data-tono="acento"] { background: var(--acento-suave); }
+.aviso-ley[data-tono="acento"] strong { color: var(--acento); }
+.aviso-ley .boton { margin: 2px 0 12px; }
+.articulo { display: inline-block; padding: 2px 9px; border: 1px solid var(--borde); border-radius: 8px; background: var(--panel); color: var(--texto-suave); font-size: 14px; font-weight: 600; }
+
+/* «Tenerla en tu teléfono» (pantalla-agregar.js): si ya quedó lista para abrir sin señal. */
+.estado-app { margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--borde); border-radius: 12px; background: var(--panel); font-weight: 600; }
+.estado-app[data-estado="bien"] { border-color: var(--acento); background: var(--acento-suave); color: var(--acento); }
+.estado-app[data-estado="mal"] { border-color: var(--atencion); background: var(--atencion-suave); color: var(--atencion); }

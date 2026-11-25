@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { INICIO_DE_LA_CADENA, sha256Hex, textoCanonico } from '../js/evidencia.js';
-import { PARTES, completaElLugar, contenidoDelSello, estadoDelSello, lugarParaElReporte, numeroDelReporte, sellarReporte, textoDelCambio } from '../js/sello.js';
+import { PARTES, completaElLugar, contenidoDelSello, estadoDelSello, leFaltaAlgo, lugarParaElReporte, queLeFalta, numeroDelReporte, sellarReporte, textoDelCambio } from '../js/sello.js';
 import { fechaCompacta, fechaLarga, fechaYHora, horaDeColombia } from '../js/fechas.js';
 import { CLIMA, HORA_DEL_CHOQUE, analisisDelEjemplo, reporteDePrueba } from './reporte-de-prueba.js';
 
@@ -104,6 +104,8 @@ test('después de sellar se nota cualquier cambio, y dice en qué parte', async 
 test('lo que cambió, en una frase que concuerda', () => {
   assert.equal(textoDelCambio(['croquis']), 'Después de sellar cambió el croquis. Séllalo otra vez antes de enviarlo: el número va a cambiar.');
   assert.match(textoDelCambio(['carros']), /cambiaron los carros\./);
+  assert.match(textoDelCambio(['antes']), /cambió lo que dijiste antes de mover los carros\./);
+  assert.match(textoDelCambio(['antes', 'fotos']), /cambiaron lo que dijiste antes de mover los carros y las fotos\./);
   assert.match(textoDelCambio(['carros', 'danos', 'croquis']), /cambiaron los carros, los daños y el croquis\./);
   assert.match(textoDelCambio(['lugar']), /cambiaron los datos del lugar\./);
   assert.match(textoDelCambio([]), /cambió el reporte\./);
@@ -123,4 +125,51 @@ test('lo que llega solo completa el lugar guardado, nunca lo reemplaza', () => {
   assert.equal(completaElLugar(completo, completo), false);
   assert.equal(completaElLugar(sinVia, completo), false);
   assert.equal(completaElLugar(null, sinVia), false);
+  // «El mapa no trae vías aquí» también es una respuesta, y no tapa una vía que ya se tenía.
+  const sinVias = lugarParaElReporte({ ...base, via: { estado: 'sin-vias', radio: 60 }, clima: CLIMA });
+  assert.equal(sinVias.sinVias, true);
+  assert.equal(completaElLugar(sinVias, sinVia), true);
+  assert.equal(completaElLugar(sinVias, sinVias), false);
+  assert.equal(completaElLugar(sinVias, completo), false);
+  assert.ok(!('sinVias' in completo) && !('sinVias' in sinVia), 'un lugar de antes sella con el mismo texto');
+});
+
+test('lo que le falta a un lugar marcado sin señal, mientras se pueda pedir', () => {
+  const { punto, analisis } = analisisDelEjemplo();
+  const base = { punto, origen: 'gps', precision: 9, fecha: new Date(HORA_DEL_CHOQUE) };
+  const ahora = new Date('2026-11-25T15:00:00Z');
+  const de = (via, clima) => queLeFalta(lugarParaElReporte({ ...base, via, clima }), ahora);
+  assert.deepEqual(de(analisis, CLIMA), []);
+  assert.deepEqual(de({ estado: 'error' }, { error: 'Sin internet' }), ['la vía', 'el clima']);
+  assert.deepEqual(de(analisis, { error: 'Sin internet' }), ['el clima']);
+  assert.deepEqual(de({ estado: 'sin-vias', radio: 60 }, CLIMA), []);
+  // El clima de hace más de tres meses ya no se consigue: pedirlo para siempre no sirve.
+  const viejo = lugarParaElReporte({ ...base, via: analisis, clima: null });
+  assert.deepEqual(queLeFalta(viejo, new Date('2027-03-25T15:00:00Z')), []);
+  assert.deepEqual(queLeFalta(null), []);
+  assert.equal(leFaltaAlgo(null), false);
+  assert.equal(leFaltaAlgo(viejo, ahora), true);
+});
+
+test('lo dicho antes de mover se sella, y los reportes de antes no cambian de número', async () => {
+  const { reporte, registros } = await reporteDePrueba();
+  const hora = new Date('2026-11-25T22:50:00Z');
+  const sinAntes = await sellarReporte({ reporte, registros, hora });
+  assert.ok(!sinAntes.texto.includes('"antes"'), 'sin respuesta, el texto sellado es el de siempre');
+
+  const antes = { embriaguez: 'si', andan: 'si', hora: '2026-11-25T22:44:00.000Z' };
+  const conAntes = await sellarReporte({ reporte: { ...reporte, antes }, registros, hora });
+  assert.ok(conAntes.texto.includes('"antes"'));
+  assert.notEqual(conAntes.sello.huella, sinAntes.sello.huella);
+  const sellado = { ...reporte, antes, sello: conAntes.sello };
+  assert.equal((await estadoDelSello({ reporte: sellado, registros })).estado, 'vigente');
+  assert.deepEqual((await estadoDelSello({ reporte: { ...sellado, antes: { ...antes, embriaguez: 'no' } }, registros })).cambios, ['antes']);
+
+  // Un sello de antes del 25-nov no trae esa parte: si se responde después, es lo único que cambió;
+  // y si cambia otra cosa, no se culpa a esta.
+  const { antes: _, ...partesViejas } = sinAntes.sello.partes;
+  const viejo = { ...reporte, sello: { ...sinAntes.sello, partes: partesViejas } };
+  assert.equal((await estadoDelSello({ reporte: viejo, registros })).estado, 'vigente');
+  assert.deepEqual((await estadoDelSello({ reporte: { ...viejo, antes }, registros })).cambios, ['antes']);
+  assert.deepEqual((await estadoDelSello({ reporte: { ...viejo, danos: [] }, registros })).cambios, ['danos']);
 });

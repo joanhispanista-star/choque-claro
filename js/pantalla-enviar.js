@@ -15,6 +15,7 @@ import { pdfDelExpediente } from './expediente-pdf.js';
 import { sha256Hex, verificarCadena } from './evidencia.js';
 import { fechaYHora } from './fechas.js';
 import { numero } from './geo.js';
+import { AVISO_DEL_PASO_8, abiertaDesdeInicio, esIOS, seBorraSolo } from './instalacion.js';
 import { detalle } from './reporte-en-curso.js';
 
 // `guardarLugar()`: guarda en el reporte lo del paso 3 que siga en la memoria (app.js, guardarElLugar).
@@ -24,6 +25,10 @@ import { detalle } from './reporte-en-curso.js';
 export function iniciarPantallaEnviar(raiz, { reporte, guardarLugar = async () => false, antesDeSellar = async () => {}, empezarOtro = () => reporte.nuevoReporte() }) {
   const $ = (selector) => raiz.querySelector(selector);
   const estado = { sello: 'sin-sellar', pdf: null, turno: 0, turnoPdf: 0, sellando: false };
+  // En el iPhone lo guardado en Safari tiene plazo: el aviso va junto al botón de compartir.
+  const telefono = { ios: esIOS(), desdeInicio: abiertaDesdeInicio() };
+  $('#enviar-borra').textContent = AVISO_DEL_PASO_8;
+  $('#enviar-borra').hidden = !seBorraSolo(telefono);
   let url = null;
   // El sellado en curso: app.js lo espera antes de cambiar de reporte (el sello va al que se selló).
   let sellado = Promise.resolve();
@@ -77,7 +82,7 @@ export function iniciarPantallaEnviar(raiz, { reporte, guardarLugar = async () =
         det.textContent = item.detalle;
         texto.append(titulo, det);
         li.append(marca, texto);
-        if (!item.completo) {
+        if (!item.completo || item.cambiable) {
           const boton = document.createElement('button');
           boton.type = 'button';
           boton.className = 'boton boton-suave boton-chico';
@@ -177,7 +182,9 @@ export function iniciarPantallaEnviar(raiz, { reporte, guardarLugar = async () =
     const { archivo } = estado.pdf;
     $('#enviar-compartir').disabled = false;
     $('#enviar-ver').href = url;
-    $('#enviar-ver').hidden = false;
+    // Abierta desde el ícono del iPhone no hay pestañas: el PDF taparía la app sin cómo volver. Ahí
+    // se ve desde la hoja de compartir.
+    $('#enviar-ver').hidden = telefono.ios && telefono.desdeInicio;
     $('#enviar-pdf-estado').textContent = `Listo: ${archivo.name}, ${numero(archivo.size / 1e6, 1)}\u00a0MB.`;
   }
 
