@@ -681,8 +681,9 @@ Lo de E0 (25-nov; es lo primero que hay que probar):
 25. **«Hay heridos: llamar al 123»**: ¿abre la llamada de un toque? Al cancelar,
     detrás tiene que estar «Llama al 123», no la portada.
 26. **Agregar a inicio**: Compartir → Agregar a inicio. ¿Sale el ícono verde con
-    los dos carros y el nombre «Choque Claro»? Al abrir desde el ícono, ¿sale sin
-    la barra de Safari y no queda nada tapado arriba ni abajo?
+    el golpe dentro del marco de la cámara y el nombre «Choque Claro»? Al abrir
+    desde el ícono, ¿sale sin la barra de Safari y no queda nada tapado arriba ni
+    abajo?
 27. **Abrir sin señal**: desde el ícono, con internet, entrar a «Tenerla en tu
     teléfono» hasta que diga «Ya abre sin señal». Cerrarla del todo, modo avión,
     abrirla: tiene que abrir y dejar hacer un reporte hasta el PDF.
