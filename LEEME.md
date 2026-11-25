@@ -689,6 +689,11 @@ Lo de E0 (25-nov; es lo primero que hay que probar):
 28. **El aviso de Safari** en el paso 8 («Compártelo hoy»): tiene que salir en
     Safari y NO desde el ícono.
 29. Quitar el modo avión a mitad del paso 3: la vía y el clima deben llegar solos.
+30. **El GPS desde el ícono**: en el paso 3, «Usar mi ubicación» abierta desde el
+    ícono y otra vez desde Safari. Hay un hilo en el foro de Apple que dice que en
+    iOS 26 falla en las apps agregadas a inicio (developer.apple.com/forums/thread/804381);
+    no está confirmado. Si falla, no se le pide a nadie que la agregue hasta
+    resolverlo: un choque sin ubicación vale mucho menos. Anotar la versión de iOS.
 
 ## Lo que la pantalla nunca afirma
 
