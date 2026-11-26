@@ -582,6 +582,12 @@ y la zona 3D sin red muestra su página con salida. Sin errores en la página ni
 en la consola, y sin desbordes. Las vistas del iPhone se destaparon a mano: en el
 PC no salen solas.
 
+**Publicado el jue 26-nov (`ade8834`)** con el «Sí, publícalo» de Joan. A los 31 s
+Pages servía la versión `0d5d0ab94a2c`, y los 133 archivos de la lista eran
+idénticos a lo sellado. El mismo recorrido pasó contra el sitio publicado (54 de
+54). Allá no hay servidor que apagar, así que se cortó la red en el navegador, y
+se comprobó que el corte era real: algo que no estaba guardado no llegó.
+
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
 Ver «Lo que falta probar en el iPhone».
