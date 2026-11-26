@@ -173,3 +173,27 @@ test('lo dicho antes de mover se sella, y los reportes de antes no cambian de n�
   assert.deepEqual((await estadoDelSello({ reporte: { ...viejo, antes }, registros })).cambios, ['antes']);
   assert.deepEqual((await estadoDelSello({ reporte: { ...viejo, danos: [] }, registros })).cambios, ['danos']);
 });
+
+test('lo anotado en «Antes de mover» se sella, y los sellos de antes del 26-nov siguen valiendo', async () => {
+  const { reporte, registros } = await reporteDePrueba();
+  const hora = new Date('2026-11-26T22:50:00Z');
+  const sinPruebas = await sellarReporte({ reporte, registros, hora });
+  assert.ok(!sinPruebas.texto.includes('"pruebas"'), 'sin nada anotado, el texto sellado es el de siempre');
+  assert.ok(PARTES.includes('pruebas'));
+
+  const pruebas = { tipo: 'cruce', renglones: { huella: { respuesta: 'corrida', medida: { valor: 11.4, como: 'cinta', desde: '' } } }, hora: '2026-11-26T22:40:00.000Z' };
+  const conPruebas = await sellarReporte({ reporte: { ...reporte, pruebas }, registros, hora });
+  assert.ok(conPruebas.texto.includes('"pruebas"'));
+  const sellado = { ...reporte, pruebas, sello: conPruebas.sello };
+  assert.equal((await estadoDelSello({ reporte: sellado, registros })).estado, 'vigente');
+  const otraMedida = { ...pruebas, renglones: { huella: { ...pruebas.renglones.huella, medida: { valor: 12, como: 'cinta', desde: '' } } } };
+  assert.deepEqual((await estadoDelSello({ reporte: { ...sellado, pruebas: otraMedida }, registros })).cambios, ['pruebas']);
+  assert.match(textoDelCambio(['pruebas']), /cambió lo que anotaste de lo que se borra primero\./);
+
+  // Un sello de antes del 26-nov no trae esa parte: sigue vigente, y si después se anota algo, es lo
+  // único que cambió.
+  const { pruebas: _, ...partesViejas } = sinPruebas.sello.partes;
+  const viejo = { ...reporte, sello: { ...sinPruebas.sello, partes: partesViejas } };
+  assert.equal((await estadoDelSello({ reporte: viejo, registros })).estado, 'vigente');
+  assert.deepEqual((await estadoDelSello({ reporte: { ...viejo, pruebas }, registros })).cambios, ['pruebas']);
+});

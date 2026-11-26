@@ -63,6 +63,8 @@ export function crearSesionDeCamara({
   alApagarseSola = () => {},
   // Después de que la cadena cambió por debajo y se recargó.
   alRecargar = () => {},
+  // La cámara a 3840×2160 (camara.js): «Antes de mover», que guarda algunas fotos sin reducir.
+  camaraGrande = false,
 }) {
   const $ = (sufijo) => raiz.querySelector(`#${prefijo}-${sufijo}`);
   const video = $('video');
@@ -98,7 +100,7 @@ export function crearSesionDeCamara({
     estado.querida = true;
     let camara;
     try {
-      camara = await abrirCamara(video);
+      camara = await abrirCamara(video, { grande: camaraGrande });
     } catch (error) {
       return { error: mensajeDeLaCamara(error) };
     } finally {

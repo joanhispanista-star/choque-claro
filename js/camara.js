@@ -35,14 +35,17 @@ function conNombre(nombre) {
 }
 
 // Pone la cámara de atrás en `video` y devuelve { detener }.
-export async function abrirCamara(video, { medios = globalThis.navigator?.mediaDevices, seguro = globalThis.isSecureContext } = {}) {
+// `grande`: pide 3840×2160 en vez de 1920×1080, para las fotos de cerca de «Antes de mover» que se
+// guardan sin reducir (pruebas.js). Es `ideal`: el celular que no llega da lo más que tenga. Cuánto
+// da el iPhone de Joan está SIN VERIFICAR (LEEME, lo que falta probar).
+export async function abrirCamara(video, { medios = globalThis.navigator?.mediaDevices, seguro = globalThis.isSecureContext, grande = false } = {}) {
   if (!seguro) throw conNombre('sinHttps');
   if (!medios || typeof medios.getUserMedia !== 'function') throw conNombre('sinCamara');
   let flujo;
   try {
     // `ideal` y no `exact`: si el celular no tiene esa medida, da la más
     // cercana en vez de fallar. 1920 de lado mayor alcanza para reducir a 1280.
-    flujo = await medios.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    flujo = await medios.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: grande ? 3840 : 1920 }, height: { ideal: grande ? 2160 : 1080 } } });
   } catch (error) {
     // Un celular que no tiene esa medida ni parecida: se pide cualquier cámara de atrás.
     if (error?.name !== 'OverconstrainedError') throw error;

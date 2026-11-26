@@ -9,6 +9,7 @@ import { iniciarPantallaInicio } from './pantalla-inicio.js';
 import { iniciarPantallaAgregar, escucharInstalacion } from './pantalla-agregar.js';
 import { iniciarPantallaAntes } from './pantalla-antes.js';
 import { iniciarPantallaDonde } from './pantalla-donde.js';
+import { iniciarPantallaPruebas } from './pantalla-pruebas.js';
 import { iniciarPantallaEscena } from './pantalla-escena.js';
 import { iniciarPantallaCarros } from './pantalla-carros.js';
 import { iniciarPantallaDanos } from './pantalla-danos.js';
@@ -22,7 +23,8 @@ import { textoCanonico } from './evidencia.js';
 import { crearSinSenal } from './sin-senal.js';
 
 // Lo que no es un paso lleva null: la barra dice el nombre de la pantalla (la portada, nada).
-const PASOS = { inicio: null, choque: 1, heridos: 1, 'a-salvo': 2, antes: 2, donde: 3, escena: 4, carros: 5, danos: 6, croquis: 7, enviar: 8, reportes: null, agregar: null };
+// «Antes de mover» (E1) es el paso 4, y la vuelta de la escena es uno de sus renglones: también 4.
+const PASOS = { inicio: null, choque: 1, heridos: 1, 'a-salvo': 2, antes: 2, donde: 3, pruebas: 4, escena: 4, carros: 5, danos: 6, croquis: 7, enviar: 8, reportes: null, agregar: null };
 const TITULOS = { inicio: '', reportes: 'Tus reportes', agregar: 'En tu teléfono' };
 const TOTAL_PASOS = 8;
 const sinSenal = crearSinSenal();
@@ -38,6 +40,7 @@ const INICIAR = {
   agregar: () => iniciarPantallaAgregar(document.querySelector('#p-agregar'), { sinSenal, instalacion }),
   reportes: () => iniciarPantallaReportes(document.querySelector('#p-reportes'), { reporte, abrir: abrirReporte }),
   antes: () => iniciarPantallaAntes(document.querySelector('#p-antes'), { reporte, preparar: prepararElChoque }),
+  pruebas: () => iniciarPantallaPruebas(document.querySelector('#p-pruebas'), { reporte, lugar: lugarGuardable }),
   escena: () => iniciarPantallaEscena(document.querySelector('#p-escena'), { reporte, puntoDelChoque, empezarOtro }),
   carros: () => iniciarPantallaCarros(document.querySelector('#p-carros'), { reporte }),
   danos: () => iniciarPantallaDanos(document.querySelector('#p-danos'), { reporte }),
@@ -79,6 +82,14 @@ function lugarDelChoque() {
   if (!g?.punto) return null;
   const fecha = new Date(g.hora);
   return { punto: g.punto, origen: g.origen, via: null, viaGuardada: g.via ?? null, precision: g.precision ?? null, fecha: Number.isNaN(fecha.getTime()) ? null : fecha, clima: null, climaCargando: false };
+}
+
+// El lugar en la forma en que se guarda en el reporte (sello.js), para «Antes de mover»: de él salen
+// la luz, la lluvia y la velocidad de la vía con que se arma la lista. Lo del paso 3 si es de este
+// reporte (con la vía y el clima que ya llegaron); si no, lo que el reporte guardó.
+function lugarGuardable() {
+  const l = lugarEnMemoria();
+  return (l && lugarParaElReporte(l)) || reporte.reporte()?.lugar || null;
 }
 
 // El punto que se marcó en el mapa, para decirle a la persona si está lejos de
@@ -288,6 +299,7 @@ globalThis.__choqueClaro = {
   lugar: () => ({ de: lugar.de, guardada: lugar.guardada }),
   lugarDelChoque,
   pantallaDonde: () => donde,
+  pantallaPruebas: () => perezosas.pruebas,
   pantallaEscena: () => perezosas.escena,
   pantallaCarros: () => perezosas.carros,
   pantallaDanos: () => perezosas.danos,

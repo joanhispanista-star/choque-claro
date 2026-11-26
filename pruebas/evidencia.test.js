@@ -110,3 +110,13 @@ test('una cadena vacía está íntegra', async () => {
   assert.deepEqual(await verificarCadena([]), { integra: true, total: 0, rota: null });
   assert.match(textoDeLaCadena({ integra: true, total: 1, rota: null }), /1 huella:/);
 });
+
+test('el renglón de «Antes de mover» va en el registro solo si lo hay: las huellas de antes no cambian', async () => {
+  const datos = { reporte: 'r', paso: 'escena', indice: 0, hora: 0, calidad: { nitidez: 1, laplaciano: 2, brillo: 3, problemas: [] }, foto: { tipo: 'image/jpeg', ancho: 1, alto: 1, bytes: 1, sha256: 'x' } };
+  const deSiempre = registroDeFoto(datos);
+  assert.ok(!('prueba' in deSiempre));
+  assert.equal(await huellaDelRegistro(registroDeFoto({ ...datos, prueba: null })), await huellaDelRegistro(deSiempre));
+  const deLaHuella = registroDeFoto({ ...datos, paso: 'prueba', prueba: 'huella', sector: 3 });
+  assert.deepEqual([deLaHuella.paso, deLaHuella.prueba, deLaHuella.sector], ['prueba', 'huella', 3]);
+  assert.notEqual(await huellaDelRegistro(deLaHuella), await huellaDelRegistro(deSiempre));
+});

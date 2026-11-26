@@ -36,7 +36,7 @@ repositorio**, que es público: ver `.gitignore`.
   y el del botón «Ver un ejemplo» (ver `pruebas/datos/LEEME.md`);
   `npm run ejemplos-via -- ejemplo` baja solo el del botón.
 
-## Lo que hay (25-nov-2026)
+## Lo que hay (26-nov-2026)
 
 **La portada** (25-nov, la A de los bocetos, que eligió Joan): lo del choque
 primero y grande («Tuve un choque» y «Hay heridos: llamar al 123», que marca de
@@ -264,7 +264,48 @@ Los 8 pasos:
      foto y los créditos). Los tres lados de los que no hay foto publicada salen
      vacíos, y no hay botón Norte porque no hay brújula
      (`js/muestra-de-la-vuelta.js`, `datos/ejemplo-fotos/LEEME.md`).
-4. **La escena, en una vuelta** (13-nov). Antes de mover los carros, parada en
+4. **Antes de mover: lo que se borra primero** (26-nov, E1, el boceto que
+   aprobó Joan el 25-nov). El paso 3 termina en «Siguiente: antes de mover».
+   Una lista de 11 renglones, cada uno con su porqué, la barra «N de 11» y el
+   renglón que sigue resaltado (`pruebas.js` es el catálogo, puro y con
+   pruebas; `pantalla-pruebas.js` la pantalla):
+   - **Las 4 esquinas** de la escena, de lejos y con algo fijo al fondo.
+   - **La huella de frenada**: 5 fotos; la 4 y la 5, de cerca, desde arriba y
+     con una hoja o la cinta al lado, se guardan **sin reducir** (la cámara de
+     esta pantalla pide 3840×2160). Pregunta «¿Cómo se ve?» (corrida, a pedazos
+     —con ABS son rayitas— o no hay) y al final **la medida**: con cinta en
+     metros o en pasos, desde algo fijo. «No tengo con qué medir» se anota.
+   - **Piso y luz** (seco, mojado, con huecos o arena; de noche también el poste),
+     **la llanta que la dejó** (solo si hay huella), **los dos golpes juntos**,
+     **hacia dónde quedaron las ruedas**, **vidrios y líquidos** y **el semáforo
+     o la señal** (no en reversa ni contra algo quieto).
+   - **La vuelta desde el golpe**: es la de siempre (abajo), en su pantalla, y
+     vuelve a la lista.
+   - **La caminata, por el andén, nunca por la vía**: 30 m, 40 hasta 80 km/h o
+     60 en carretera (la velocidad máxima sale del mapa del paso 3), una foto
+     cada 10 pasos.
+   - **Quien lo vio**: nombre y celular, hasta 3, solo con la casilla «Le
+     pregunté y aceptó quedar en el reporte».
+   «¿Cómo fue?» (por detrás, de frente, en un cruce…) cambia lo que se pide; se
+   puede no responder. Con lluvia (del clima, o el piso mojado que marca la
+   persona) la huella va de primera; de noche (por el sol, o sin lugar por la
+   hora de Colombia) se pide el poste y el chaleco. **La guía se dice en voz
+   alta** (`voz.js`, prendida de entrada; el botón la calla y el teléfono lo
+   recuerda). La pregunta va **debajo** de «Tomar la foto»: el botón tiene que
+   caber sin bajar en un iPhone SE (medido: 614 de 667 px en el peor caso).
+   Cada renglón se puede saltar («No se tomó: "no era seguro"»); lo que la
+   persona marca como «No hay» sale «Según la persona, no había…», y si ya
+   había tomado fotos se dicen las dos cosas. «Ya hay que moverlos» lleva al
+   final: el anillo «N de 11», «19 fotos en 5 minutos. Lo que se iba a borrar ya
+   quedó guardado» (o lo que falta, sin adornos), los avisos de la ley (76 y
+   144A; con sospecha de embriaguez, que puede negarse a moverlos) y «Ya los
+   moví: seguir con los carros», que anota la hora. Todo va al reporte, al sello
+   (parte `pruebas`, opcional: los sellos viejos siguen vigentes), al paso 8
+   («Lo que se borra primero»), al expediente y al PDF («Antes de mover: lo que
+   se borra primero», en hoja propia). **La app no calcula velocidades**: lo
+   dice en la cámara de la huella, en la medida y en el expediente.
+
+   **La vuelta (13-nov), uno de los renglones de arriba.** Parada en
    el punto del golpe, la persona gira sobre sí misma y toma 8 fotos:
    - **El anillo de 8 tomas** gira con la brújula: lo que la cámara tiene al
      frente queda arriba, bajo la flecha. Las tomas se cuentan desde la
@@ -293,7 +334,9 @@ Los 8 pasos:
    - Las fotos se reducen a 1280 px (`fotos.js`) y se guardan en el teléfono
      (IndexedDB, `conexion-bd.js`): los dos, COPIADOS del Taller. Al completar
      la vuelta, la cámara se apaga y la lista revisa la cadena entera.
-   - «Saltar: no es seguro» lleva al paso 5. «Empezar un reporte nuevo» deja
+   - Desde la lista de «Antes de mover» se puede saltar («no era seguro»: así
+     sale en el expediente); su inicio tiene «Volver a la lista» y «Volver al
+     mapa», y la lista de fotos, «Seguir con la lista». «Empezar un reporte nuevo» deja
      el anterior guardado; un reporte sin tocar en 6 horas también empieza otro.
      Ninguno se pierde: quedan en «Tus reportes» (abajo).
 5. **Los carros** (13-nov, prometido para el mié 18). Una tarjeta por carro: A
@@ -702,12 +745,38 @@ Lo de E0 (25-nov; es lo primero que hay que probar):
     no está confirmado. Si falla, no se le pide a nadie que la agregue hasta
     resolverlo: un choque sin ubicación vale mucho menos. Anotar la versión de iOS.
 
+Lo de E1 («Antes de mover», 26-nov):
+
+31. **La voz con el interruptor de silencio**: ¿habla con el silencio puesto y
+    con él quitado? ¿Qué voz sale (de Colombia, de México, de España)? La
+    primera frase tiene que salir al tocar el renglón y las siguientes solas,
+    después de cada foto.
+32. **La cámara grande**: ¿qué medida da el iPhone en esta pantalla (pide
+    3840×2160)? ¿Se calienta o se traba la vista? Anotar cuánto pesa una foto
+    «completa» (la 4 y la 5 de la huella) en «Tus reportes».
+33. **Abrirla y cerrarla diez veces seguidas** (lista → renglón → «Volver a la
+    lista»): tiene que abrir siempre. En el PC no se pudo probar (ver
+    «Trampas»).
+34. **«Desde arriba»**: mirando al piso, ¿la pastilla se pone verde y la foto NO
+    se rechaza por «mirando al piso»?
+35. **«Tomar la foto» sin bajar la página** en la huella «a pedazos» con el piso
+    mojado (la guía más larga): en el PC cabe en 375×667; en Safari, con sus
+    barras, ¿cabe?
+36. **Quien lo vio**: en «Celular», ¿sale el teclado de números?
+
 ## Lo que la pantalla nunca afirma
 
 - Lo que el mapa no trae dice "Sin dato en el mapa", nunca "no había". La
   **doble línea** casi nunca está: 0 de 1.074 tramos medidos en Bogotá. Sale de
   las fotos.
 - **La app no decide quién tuvo la culpa.** Lo dice al pie del análisis.
+- **«No había» solo de lo que la persona declaró**, y dicho como suyo («Según
+  la persona, no había huella de frenada»). Lo que no se tomó dice «No se tomó:
+  "no era seguro"», nunca que no existía (`pruebas.js`, con su prueba).
+- **La app no calcula velocidades**, ni con la huella medida: lo hace un perito
+  con esas fotos. Lo dice la pantalla y lo dice el expediente.
+- **El nombre y el celular de quien lo vio son los que anotó la persona**, con su
+  permiso; la app no los comprueba, y el expediente lo dice.
 - **«Creo que alguien manejaba borracho» es una sospecha de la persona**, y así
   sale escrita. No pregunta quién, no lo prueba y lo dice en el expediente: la
   prueba la hace la autoridad.
@@ -816,6 +885,9 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `js/pantalla-agregar.js` | «Tenerla en tu teléfono»: los pasos de su teléfono y si ya abre sin señal. |
 | `js/antes.js` | **Puro.** «Antes de mover los carros»: las dos preguntas, lo que dice la ley con cada respuesta y cómo sale al reporte. |
 | `js/pantalla-antes.js` | Esas preguntas en pantalla, guardadas en el reporte en curso. |
+| `js/pruebas.js` | **Puro.** «Antes de mover: lo que se borra primero»: los 11 renglones y sus guías, cómo cambian con el choque, la luz, la lluvia y la velocidad, el estado de cada uno (tomado, declarado, saltado, a medias, falta), la medida, quien lo vio, el texto del final y el resumen del paso 8. |
+| `js/pantalla-pruebas.js` | Esa lista en pantalla: la cámara con la guía de cada foto, la medida, quien lo vio y el final. Lo anotado se pinta ya y se guarda en fila. |
+| `js/voz.js` | La guía en voz alta: qué voz en español escoge, que no repita, y el botón que la calla y se recuerda. |
 | `js/app.js` | El recorrido: una pantalla por paso, el paso en el `#hash` (el "atrás" del celular funciona). |
 | `js/pantalla-donde.js` | "¿Dónde fue?": GPS, toque, ejemplo, hora, y el análisis con turnos (una respuesta vieja nunca pinta). |
 | `js/via.js` | **Puro.** La consulta a Overpass y el análisis de la vía: la más cercana (las entradas cargan 10 m de castigo), la cadena de tramos, el radio por tres puntos sobre 50 m, la curva cercana, cruces, señales, calzada hermana y las filas de texto. |
@@ -898,6 +970,13 @@ sale como defecto. Si no, una función rota se leería como «no tiene permiso»
 | `pruebas/` | `node --test`; `datos/` tiene tres respuestas reales de Overpass (ODbL), una de ellas la del ejemplo viejo de la curva. La base del teléfono se simula con `fake-indexeddb` (solo para pruebas). `reporte-de-prueba.js` arma un reporte entero para el paso 8 (la curva del ejemplo, 26 fotos, una repetida, B a medias) y `jpeg-de-prueba.js`, JPEG mínimos válidos. |
 
 ## Trampas que ya mordieron
+
+- **La cámara de mentira del Edge oculto se muere a los ~20 s abierta** (26-nov,
+  medido): después da `NotFoundError` («Este aparato no tiene cámara») en
+  cualquier medida, hasta cerrar el Edge. Parece un fallo de la app y no lo es;
+  casi hace quitar los 3840×2160 de «Antes de mover» por una conclusión mal
+  sacada. Para recorrer una cámara en el PC se usa una sintética (un lienzo con
+  `captureStream`), y abrir y cerrar varias veces se prueba en el teléfono.
 
 - **La huella de un archivo depende de sus finales de línea** (25-nov). Git en
   Windows puede dejar CRLF en el disco y publicar LF: el service worker

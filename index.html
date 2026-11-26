@@ -197,7 +197,135 @@
       <p class="fuente">Vía: © colaboradores de OpenStreetMap. Clima: modelo de Open-Meteo, no una estación. Para analizar, este punto se consulta en esos dos servicios y el mapa se descarga de OpenStreetMap; nada más sale del teléfono. La app no decide quién tuvo la culpa.</p>
     </section>
 
-    <button class="boton" type="button" data-ir="escena">Siguiente: la escena</button>
+    <button class="boton" type="button" data-ir="pruebas">Siguiente: antes de mover</button>
+  </section>
+
+  <section class="pantalla" id="p-pruebas" hidden>
+    <h1>Antes de mover</h1>
+    <p class="estado-ubicacion error" id="pruebas-error" role="alert" hidden></p>
+
+    <div id="pruebas-lista">
+      <div class="pruebas-cabeza">
+        <h2>Lo que se borra primero</h2>
+        <span class="pruebas-cuenta" id="pruebas-cuenta"></span>
+      </div>
+      <div class="pruebas-barra" aria-hidden="true"><span id="pruebas-barra"></span></div>
+      <div class="pregunta">
+        <p>¿Cómo fue? <span class="nota">Cambia lo que se pide. Puedes no responder.</span></p>
+        <div class="alternativas alternativas-tipo" id="pruebas-tipos" role="group" aria-label="¿Cómo fue?"></div>
+      </div>
+      <ol class="pruebas-renglones" id="pruebas-renglones"></ol>
+      <button class="boton" type="button" id="pruebas-seguir"></button>
+      <button class="boton boton-suave" type="button" id="pruebas-saltar">Saltar: no es seguro</button>
+      <p class="nota">La lista cambia con el tipo de choque, la luz y la lluvia. Lo que se salta queda escrito con su porqué.</p>
+      <button class="boton boton-claro" type="button" id="pruebas-ya">Ya hay que moverlos</button>
+    </div>
+
+    <div id="pruebas-camara" hidden>
+      <div class="prueba-titulo">
+        <strong id="prueba-titulo"></strong>
+        <span id="prueba-cuenta"></span>
+      </div>
+      <div class="visor" id="prueba-visor">
+        <video id="prueba-video" playsinline muted autoplay></video>
+        <div class="visor-horizonte" id="prueba-horizonte" hidden></div>
+        <div class="pastillas">
+          <span class="pastilla" id="prueba-pastilla-arriba" data-estado="neutro" hidden>Desde arriba</span>
+          <span class="pastilla" id="prueba-pastilla-nitidez" data-estado="neutro">Revisando…</span>
+          <span class="pastilla" id="prueba-pastilla-completa" data-estado="bien" hidden>Resolución completa</span>
+          <span class="pastilla" id="prueba-pastilla-brujula" data-estado="neutro">Buscando brújula…</span>
+          <span class="pastilla" id="prueba-pastilla-gps" data-estado="neutro">Buscando GPS…</span>
+        </div>
+        <div class="visor-revision" id="prueba-revision" hidden>
+          <img id="prueba-revision-foto" alt="La foto que no pasó la revisión">
+          <div class="visor-revision-caja">
+            <p id="prueba-revision-texto"></p>
+            <button class="boton" type="button" id="prueba-repetir">Repetir la foto</button>
+            <button class="boton boton-claro" type="button" id="prueba-usar-asi" hidden>Usarla así</button>
+          </div>
+        </div>
+      </div>
+      <div class="prueba-guia">
+        <div>
+          <p class="prueba-sigue" id="prueba-sigue"></p>
+          <p class="vuelta-guia" id="prueba-guia" aria-live="polite"></p>
+        </div>
+        <button class="boton-voz" type="button" id="prueba-voz" aria-pressed="true" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="ondas" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="raya" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="solo-lectores" id="prueba-voz-texto">Guía en voz alta</span>
+        </button>
+      </div>
+      <p class="alerta" id="prueba-alerta" role="alert" hidden></p>
+      <button class="boton" type="button" id="prueba-disparar">Tomar la foto</button>
+      <!-- La pregunta va debajo del botón: el visor, la guía y el botón tienen que caber sin bajar, aun en
+           un iPhone SE (como en la escena). Con la pregunta arriba, «Tomar la foto» quedaba escondido. -->
+      <div class="pregunta" id="prueba-pregunta" hidden>
+        <p id="prueba-pregunta-texto"></p>
+        <div class="alternativas alternativas-tres" id="prueba-opciones" role="group"></div>
+      </div>
+      <button class="boton boton-suave" type="button" id="prueba-sin-escala" hidden>No tengo con qué medir</button>
+      <p class="nota" id="prueba-velocidad" hidden>La app no calcula la velocidad: eso lo hace un perito con estas fotos.</p>
+      <div class="tira" id="prueba-tira"></div>
+      <div class="avisos" id="prueba-avisos"></div>
+      <div class="dos-botones">
+        <button class="boton boton-suave" type="button" id="prueba-volver">Volver a la lista</button>
+        <button class="boton boton-suave" type="button" id="prueba-saltar">Saltar: no es seguro</button>
+      </div>
+    </div>
+
+    <div id="pruebas-medida" hidden>
+      <h2>La huella: ¿la mediste?</h2>
+      <p class="suave">Desde algo fijo (un poste, una esquina, un sardinel) hasta donde termina la raya. Con cinta, en metros; si no hay cinta, en pasos.</p>
+      <div class="alternativas" role="group" aria-label="Cómo la mediste">
+        <button class="alternativa" type="button" id="medida-cinta" aria-pressed="true">Con cinta</button>
+        <button class="alternativa" type="button" id="medida-pasos" aria-pressed="false">Con pasos</button>
+      </div>
+      <label class="campo"><span id="medida-unidad">Largo de la raya, en metros</span>
+        <input id="medida-valor" inputmode="decimal" autocomplete="off" maxlength="6">
+      </label>
+      <label class="campo">Desde dónde (si quieres)
+        <input id="medida-desde" placeholder="el poste de la esquina" autocomplete="off" maxlength="80">
+      </label>
+      <p class="estado-ubicacion error" id="medida-error" role="alert" hidden></p>
+      <button class="boton" type="button" id="medida-guardar">Guardar la medida</button>
+      <button class="boton boton-suave" type="button" id="medida-no">No la medí</button>
+      <p class="nota">La app no calcula la velocidad: eso lo hace un perito con las fotos y esta medida.</p>
+    </div>
+
+    <div id="pruebas-testigos" hidden>
+      <h2>Quien lo vio</h2>
+      <p class="suave">Antes de que se vaya, pregúntale si acepta que su nombre y su celular vayan en tu reporte.</p>
+      <ul class="testigos" id="testigos-lista"></ul>
+      <label class="campo">Nombre
+        <input id="testigo-nombre" autocomplete="off" maxlength="80">
+      </label>
+      <label class="campo">Celular
+        <input id="testigo-celular" inputmode="tel" autocomplete="off" maxlength="20">
+      </label>
+      <label class="casilla"><input type="checkbox" id="testigo-acepta"> Le pregunté y aceptó quedar en el reporte</label>
+      <p class="estado-ubicacion error" id="testigo-error" role="alert" hidden></p>
+      <button class="boton" type="button" id="testigo-agregar">Agregarlo</button>
+      <button class="boton boton-suave" type="button" id="testigo-nadie">Nadie que lo viera se quedó</button>
+      <button class="boton boton-suave" type="button" id="testigo-volver">Volver a la lista</button>
+      <p class="nota">Se queda en este teléfono y va solo en el reporte que tú envíes.</p>
+    </div>
+
+    <div id="pruebas-final" hidden>
+      <h2 class="final-titulo">Ya puedes mover los carros</h2>
+      <div class="final-cabeza">
+        <svg class="anillo-final" id="final-anillo" viewBox="0 0 100 100" role="img">
+          <circle cx="50" cy="50" r="42" class="anillo-final-fondo"/>
+          <circle cx="50" cy="50" r="42" class="anillo-final-lleno" id="final-lleno"/>
+          <text x="50" y="47" class="anillo-final-numero" id="final-numero"></text>
+          <text x="50" y="66" class="anillo-final-de" id="final-de"></text>
+        </svg>
+        <p id="final-texto"></p>
+      </div>
+      <ol class="pruebas-renglones" id="final-renglones"></ol>
+      <div id="final-avisos"></div>
+      <button class="boton" type="button" id="final-movidos">Ya los moví: seguir con los carros</button>
+      <button class="boton boton-suave" type="button" id="final-volver">Volver a la lista</button>
+    </div>
   </section>
 
   <section class="pantalla" id="p-escena" hidden>
@@ -208,14 +336,14 @@
       <p>Párate donde fue el golpe y gira despacio sobre ti mismo. La app te pide 8 fotos, una cada octavo de vuelta, para que quede todo lo de alrededor: los carros, la vía, las señales y las marcas en el piso.</p>
       <ul class="pasos">
         <li><strong>Hazla antes de mover los carros.</strong> Después la escena ya no se puede repetir.</li>
-        <li><strong>Solo si es seguro estar ahí.</strong> Si pasan carros rápido, hazla desde el andén o la berma, o salta este paso.</li>
+        <li><strong>Solo si es seguro estar ahí.</strong> Si pasan carros rápido, hazla desde el andén o la berma, o vuelve a la lista y sáltala.</li>
       </ul>
       <p class="nota">Solo con la cámara en vivo: no se pueden usar fotos de la galería. Cada foto guarda la hora, el GPS, hacia dónde apuntaba el celular y una huella digital que deja ver si alguien la cambió después. Las fotos se quedan en este teléfono.</p>
       <button class="boton" type="button" id="escena-empezar" disabled>Empezar la vuelta</button>
       <p class="nota">En iPhone, Safari te va a pedir permiso para la cámara y para el movimiento del celular (la brújula): toca «Permitir» en los dos.</p>
       <div class="dos-botones">
+        <button class="boton boton-suave" type="button" data-ir="pruebas">Volver a la lista</button>
         <button class="boton boton-suave" type="button" data-ir="donde">Volver al mapa</button>
-        <button class="boton boton-suave" type="button" data-ir="carros">Saltar: no es seguro</button>
       </div>
     </div>
 
@@ -256,7 +384,7 @@
       <div class="resumen" id="escena-resumen"></div>
       <p class="cadena" id="escena-cadena"></p>
       <p class="nota">Las fotos están guardadas solo en este teléfono. La huella deja ver si una foto cambió después de tomarla. Para que valga también ante quien tenga el teléfono, tiene que salir de él al enviar el reporte, en el último paso.</p>
-      <button class="boton" type="button" data-ir="carros">Siguiente: los carros</button>
+      <button class="boton" type="button" data-ir="pruebas">Seguir con la lista</button>
       <button class="boton boton-suave" type="button" id="escena-nuevo">Empezar un reporte nuevo</button>
       <p class="nota">El reporte de ahora queda guardado en el teléfono.</p>
     </div>
@@ -271,7 +399,7 @@
       <div class="tarjetas-carros" id="carros-tarjetas"></div>
       <button class="boton boton-suave" type="button" id="carros-agregar">Agregar otro carro</button>
       <button class="boton" type="button" data-ir="danos">Siguiente: los daños</button>
-      <button class="boton boton-suave" type="button" data-ir="escena">Volver a la escena</button>
+      <button class="boton boton-suave" type="button" data-ir="pruebas">Volver a antes de mover</button>
     </div>
 
     <div id="carros-carro" hidden>

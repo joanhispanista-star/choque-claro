@@ -57,9 +57,11 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
     // Reduce, sella y guarda una foto tomada ahora. Si algo falla, la foto no
     // entra y la cadena queda como estaba: la persona la vuelve a tomar.
     // `datos`: paso, sector, carro, pieza, dano y reemplaza (evidencia.js).
-    async agregarFoto({ blob, hora, gps, orientacion, medida, revision }, { paso, sector = null, carro = null, pieza = null, dano = null, reemplaza = null }) {
+    // `completa`: se guarda con la medida de la cámara, sin reducir a 1.280 px (las fotos de cerca de
+    // una huella, E1: a 1.280 las rayas se pierden). Pesa de cuatro a diez veces más.
+    async agregarFoto({ blob, hora, gps, orientacion, medida, revision }, { paso, sector = null, carro = null, pieza = null, dano = null, prueba = null, completa = false, reemplaza = null }) {
       const deEste = reporte.id;
-      const reducida = await reducir(blob, { ladoMiniatura: MINIATURA });
+      const reducida = await reducir(blob, completa ? { ladoMayor: Infinity, ladoMiniatura: MINIATURA, calidad: 0.92 } : { ladoMiniatura: MINIATURA });
       const bytes = await reducida.foto.arrayBuffer();
       const huella = await sha256Hex(bytes);
       if (reporte.id !== deEste) throw new Error(OTRO_REPORTE);
@@ -72,6 +74,7 @@ export function crearReporteEnCurso({ abrirBase = abrirBaseDelReporte, reducir =
         carro,
         pieza,
         dano,
+        prueba,
         hora,
         gps,
         orientacion,

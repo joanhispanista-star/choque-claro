@@ -15,9 +15,10 @@ const porClave = (items) => Object.fromEntries(items.map((i) => [i.clave, i]));
 
 test('un reporte vacío: todo por hacer, cada cosa con su botón', () => {
   const items = revisionDelReporte({ reporte: { id: 'r', carros: [], danos: [], croquis: null, lugar: null }, registros: [] });
-  assert.deepEqual(items.map((i) => i.clave), ['lugar', 'escena', 'carro-A', 'carro-B', 'danos', 'croquis']);
+  assert.deepEqual(items.map((i) => i.clave), ['lugar', 'pruebas', 'escena', 'carro-A', 'carro-B', 'danos', 'croquis']);
   const i = porClave(items);
   assert.deepEqual([i.lugar.detalle, i.lugar.completo, i.lugar.ir, i.lugar.boton], ['Sin marcar.', false, 'donde', 'Marcar']);
+  assert.deepEqual([i.pruebas.titulo, i.pruebas.detalle, i.pruebas.completo, i.pruebas.ir, i.pruebas.boton], ['Lo que se borra primero', 'Sin empezar.', false, 'pruebas', 'Empezar']);
   assert.deepEqual([i.escena.detalle, i.escena.completo, i.escena.boton], ['Sin fotos.', false, 'Tomarlas']);
   assert.equal(i['carro-A'].titulo, nombreDelCarro(carroNuevo('A', 'tuyo')));
   assert.equal(i['carro-A'].detalle, 'Sin fotos · placa sin leer.');

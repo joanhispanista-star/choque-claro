@@ -19,8 +19,8 @@ import { CARROS, HORA_DEL_CHOQUE, reporteDePrueba } from './reporte-de-prueba.js
 const HORA_DEL_SELLO = new Date('2026-11-13T22:44:12Z');
 const cerca = (a, b, tolerancia = 1e-6) => Math.abs(a - b) <= tolerancia;
 
-async function expedienteDePrueba({ cambiar = (r) => r } = {}) {
-  const base = await reporteDePrueba();
+async function expedienteDePrueba({ cambiar = (r) => r, conPruebas = false } = {}) {
+  const base = await reporteDePrueba({ conPruebas });
   const reporte = cambiar(base.reporte);
   const { registros, fotos } = base;
   const { sello, texto } = await sellarReporte({ reporte, registros, hora: HORA_DEL_SELLO });
@@ -265,4 +265,55 @@ test('el PDF: cada foto y el texto sellado con sus bytes intactos, adjuntos y p�
   const real = await expedienteDePrueba({ cambiar: (r) => ({ ...r, lugar: { ...r.lugar, origen: 'gps' }, croquis: { ...r.croquis, ejemplo: false } }) });
   const otro = Buffer.from(pdfDelExpediente(real.modelo, { fotos: real.fotos })).toString('latin1');
   assert.ok(!otro.includes('EJEMPLO'));
+});
+
+test('«Antes de mover»: cada renglón con sus fotos y lo declarado; ninguna cae al anexo ni se calcula una velocidad', async () => {
+  const { modelo, registros } = await expedienteDePrueba({ conPruebas: true });
+  const p = modelo.pruebas;
+  assert.ok(p, 'con algo anotado, va la sección');
+  assert.equal(p.tipo, 'En un cruce, según la persona');
+  assert.match(p.movidos, /^La persona marcó que los movió a las 5:31 p\. m\.$/);
+  const r = (clave) => p.renglones.find((x) => x.clave === clave);
+  assert.ok(!r('vuelta'), 'la vuelta va en «La escena», no dos veces');
+  assert.equal(r('huella').fotos.length, 5);
+  assert.equal(r('huella').resumen, '5 fotos · a pedazos · 11,4 m con cinta, desde el poste de la esquina');
+  assert.equal(r('huella').fotos[3].titulo, 'La huella de frenada · De cerca, con medida');
+  assert.equal(r('vidrios').resumen, 'Según la persona, no había vidrios ni líquidos en el piso');
+  assert.equal(r('caminata').resumen, 'No se tomó: «no era seguro»');
+  assert.equal(r('esquinas').resumen, '1 de 4 fotos');
+  assert.deepEqual(p.testigos, [{ nombre: 'Ana Ruiz', celular: '300 123 4567' }]);
+  // Sus fotos no van al anexo como «ya no corresponde»: la del daño repetido sigue siendo la única.
+  assert.equal(modelo.anexo.length, 1);
+  const valor = (etiqueta) => modelo.resumen.find((f) => f.etiqueta === etiqueta)?.valor;
+  // Hechos: la huella, los vidrios (declarado), la vuelta y quien lo vio. Las 14 fotos: 5 de la
+  // huella, 1 esquina y las 8 de la vuelta.
+  assert.match(valor('Lo que se borra primero'), /^4 de 11 · 14 fotos · la caminata no se tomó/);
+  assert.match(valor('Fotos'), /^32 fotos en la cadena: 8 de la escena, 6 de antes de mover, /);
+  assert.equal(modelo.cadena.filas[26].que, 'La huella de frenada · 1');
+  assert.ok(modelo.noAfirma.some((t) => /no calcula velocidades/.test(t)));
+  assert.ok(modelo.noAfirma.some((t) => /quien lo vio son los que la persona anotó, con su permiso/.test(t)));
+  for (const t of [p.resumen, ...p.renglones.map((x) => x.resumen)]) assert.doesNotMatch(t, /km\/h/);
+});
+
+test('sin nada de «Antes de mover» no va la sección; la vuelta saltada por seguridad se dice', async () => {
+  const sin = await expedienteDePrueba();
+  assert.equal(sin.modelo.pruebas, null, 'un reporte de antes de E1 no lleva una sección de «sin fotos»');
+  assert.ok(!sin.modelo.resumen.some((f) => f.etiqueta === 'Lo que se borra primero'));
+  assert.ok(!sin.modelo.noAfirma.some((t) => /velocidades/.test(t)));
+  const saltada = await expedienteDePrueba({ cambiar: (r) => ({ ...r, pruebas: { renglones: { vuelta: { saltada: 'no-era-seguro' } } } }) });
+  // La vuelta del reporte de prueba está completa: saltarla después no cambia lo que se tomó.
+  assert.doesNotMatch(saltada.modelo.escena.faltan, /no era seguro/);
+  // Sin las fotos de la vuelta, sí: que no parezca un olvido.
+  const sinVuelta = armarExpediente({ reporte: saltada.reporte, registros: saltada.registros.filter((r) => r.paso !== 'escena'), sello: saltada.sello });
+  assert.equal(sinVuelta.escena.faltan, 'No se tomaron fotos de la escena. La persona marcó que no era seguro hacerla.');
+});
+
+test('el PDF lleva la sección de «Antes de mover» con sus fotos intactas', async () => {
+  const { modelo, registros, fotos } = await expedienteDePrueba({ conPruebas: true });
+  const pdf = Buffer.from(pdfDelExpediente(modelo, { fotos }));
+  const s = pdf.toString('latin1');
+  for (const r of registros) assert.ok(pdf.indexOf(Buffer.from(fotos.get(r.huella))) >= 0, `falta la foto del registro ${r.indice + 1}`);
+  assert.equal(s.match(/\/Subtype \/Image/g).length, registros.length, 'cada foto una vez: ninguna repetida en el anexo');
+  assert.ok(s.includes('Antes de mover: lo que se borra primero'));
+  assert.ok(s.includes('Ana Ruiz'));
 });

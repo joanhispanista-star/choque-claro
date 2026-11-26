@@ -17,7 +17,7 @@ const sinPunto = (t) => String(t ?? '').replace(/\.$/, '');
 // el que nadie declaró nada: no se lista. `reporte.fotos` es la cuenta que da la base.
 export function reporteVacio(reporte) {
   if (!reporte) return true;
-  if (reporte.fotos || reporte.antes || reporte.lugar || reporte.croquis || reporte.sello || reporte.danos?.length) return false;
+  if (reporte.fotos || reporte.antes || reporte.pruebas || reporte.lugar || reporte.croquis || reporte.sello || reporte.danos?.length) return false;
   return !(reporte.carros ?? []).some((c) => c.linea || c.placa?.texto || c.placa?.fuente || c.placa?.lectura);
 }
 

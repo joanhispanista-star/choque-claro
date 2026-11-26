@@ -24,11 +24,13 @@ import { filasDelClima } from './clima.js';
 export const VERSION_DEL_SELLO = 1;
 
 // Las partes del reporte, en el orden en que la pantalla dice qué cambió después de sellar.
-// «antes» (lo del paso 2, 25-nov-2026) es la única que puede no estar: contenidoDelSello cuenta por qué.
-export const PARTES = ['antes', 'fotos', 'lugar', 'carros', 'danos', 'croquis'];
-const NOMBRES_DE_LAS_PARTES = { antes: 'lo que dijiste antes de mover los carros', fotos: 'las fotos', lugar: 'los datos del lugar', carros: 'los carros', danos: 'los daños', croquis: 'el croquis' };
+// «antes» (lo del paso 2, 25-nov-2026) y «pruebas» (lo que se anotó en «Antes de mover», 26-nov-2026)
+// son las que pueden no estar: contenidoDelSello cuenta por qué.
+export const PARTES = ['antes', 'pruebas', 'fotos', 'lugar', 'carros', 'danos', 'croquis'];
+const OPCIONALES = new Set(['antes', 'pruebas']);
+const NOMBRES_DE_LAS_PARTES = { antes: 'lo que dijiste antes de mover los carros', pruebas: 'lo que anotaste de lo que se borra primero', fotos: 'las fotos', lugar: 'los datos del lugar', carros: 'los carros', danos: 'los daños', croquis: 'el croquis' };
 // «cambió el croquis», pero «cambiaron los carros».
-const EN_SINGULAR = new Set(['antes', 'croquis']);
+const EN_SINGULAR = new Set(['antes', 'pruebas', 'croquis']);
 
 const redondear = (valor, decimales) => (Number.isFinite(valor) ? Math.round(valor * 10 ** decimales) / 10 ** decimales : null);
 
@@ -96,8 +98,9 @@ export const leFaltaAlgo = (lugar, ahora) => queLeFalta(lugar, ahora).length > 0
 // Lo que se sella: todo lo que el reporte declara, tal como está guardado, y la punta de la
 // cadena de fotos (que amarra a todas las anteriores). `hora`: la del sello.
 //
-// `antes` va solo si la persona respondió: con un «antes: null» en el texto, a todos los reportes
-// sellados antes del 25-nov-2026 les cambiaría la huella sin que nadie los tocara.
+// `antes` va solo si la persona respondió, y `pruebas` solo si anotó algo en «Antes de mover»: con un
+// «antes: null» en el texto, a todos los reportes sellados antes les cambiaría la huella sin que nadie
+// los tocara. (Las fotos de «Antes de mover» van en la cadena, como todas.)
 export function contenidoDelSello({ reporte, registros = [], hora }) {
   const ultima = registros.length ? registros[registros.length - 1].huella : INICIO_DE_LA_CADENA;
   return limpio({
@@ -107,6 +110,7 @@ export function contenidoDelSello({ reporte, registros = [], hora }) {
     creado: reporte.creado,
     sellado: new Date(hora).toISOString(),
     ...(reporte.antes ? { antes: reporte.antes } : {}),
+    ...(reporte.pruebas ? { pruebas: reporte.pruebas } : {}),
     fotos: { total: registros.length, ultimaHuella: ultima },
     lugar: reporte.lugar ?? null,
     carros: reporte.carros ?? [],
@@ -153,10 +157,10 @@ export async function estadoDelSello({ reporte, registros = [] }, sutil) {
   const texto = textoCanonico(contenido);
   if ((await sha256Hex(texto, sutil)) === sello.huella) return { estado: 'vigente', cambios: [], contenido, texto };
   const partes = await huellasDeLasPartes(contenido, sutil);
-  // Un sello de antes del 25-nov-2026 no trae la huella de «antes»: vale lo que valía entonces, que
-  // no se había respondido nada.
+  // Un sello de antes del 25-nov-2026 no trae la huella de «antes» (ni uno de antes del 26-nov la de
+  // «pruebas»): vale lo que valía entonces, que no se había respondido nada.
   const nada = await sha256Hex(textoCanonico(null), sutil);
-  return { estado: 'cambio', cambios: PARTES.filter((p) => !sello.partes || partes[p] !== (sello.partes[p] ?? (p === 'antes' ? nada : undefined))) };
+  return { estado: 'cambio', cambios: PARTES.filter((p) => !sello.partes || partes[p] !== (sello.partes[p] ?? (OPCIONALES.has(p) ? nada : undefined))) };
 }
 
 const enLista = (cosas) => (cosas.length <= 1 ? cosas.join('') : cosas.slice(0, -1).join(', ') + ' y ' + cosas[cosas.length - 1]);

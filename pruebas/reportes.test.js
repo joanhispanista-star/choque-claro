@@ -6,7 +6,7 @@ import { candidatosParaSeguir, cuandoDeLaFila, dondeFue, filaDelReporte, reporte
 import { sellarReporte } from '../js/sello.js';
 import { carroNuevo } from '../js/carros.js';
 import { diaRelativo } from '../js/fechas.js';
-import { CARROS, DANOS, reporteDePrueba } from './reporte-de-prueba.js';
+import { CARROS, DANOS, pruebasResueltas, reporteDePrueba } from './reporte-de-prueba.js';
 
 // Martes 17 de noviembre de 2026, 3:00 p. m. en Bogotá.
 const AHORA = new Date('2026-11-17T20:00:00Z');
@@ -40,7 +40,12 @@ test('dónde fue: la vía del paso 3, si no la del croquis, y nunca una calle qu
 });
 
 test('un reporte a medias: «Seguir» lleva a lo primero que falta', async () => {
-  const { reporte, registros } = await reporteDePrueba();
+  const { reporte: sinAntes, registros } = await reporteDePrueba();
+  // Sin «Antes de mover» (E1), eso es lo primero que falta: va antes que la escena.
+  const sinEmpezar = await filaDelReporte({ reporte: sinAntes, registros }, { ahora: AHORA });
+  // La vuelta de la escena (8 de 8) es uno de sus renglones: va «1 de 11».
+  assert.deepEqual([sinEmpezar.linea, sinEmpezar.ir], ['Falta: lo que se borra primero (1 de 11)', 'pruebas']);
+  const reporte = { ...sinAntes, pruebas: pruebasResueltas() };
   const fila = await filaDelReporte({ reporte: { ...reporte, fotos: registros.length }, registros }, { ahora: AHORA });
   assert.equal(fila.id, 'r-prueba');
   assert.deepEqual([fila.dia, fila.hora], ['vie 13 nov', '5:20 p. m.']);
@@ -72,7 +77,7 @@ test('un reporte sellado: «Abrir» lleva al número; si cambió después, vuelv
 test('con todo completo falta sellarlo, y si cambió después de sellar, sellarlo otra vez', async () => {
   const { reporte, registros } = await reporteDePrueba();
   // Solo A (B es el que tiene fotos de menos) y sus daños con foto de cerca: no falta nada.
-  const completo = { ...reporte, carros: [CARROS[0]], danos: DANOS.filter((d) => d.carro === 'A' && d.pieza !== 'guardafango-del-der') };
+  const completo = { ...reporte, pruebas: pruebasResueltas(), carros: [CARROS[0]], danos: DANOS.filter((d) => d.carro === 'A' && d.pieza !== 'guardafango-del-der') };
   const fila = await filaDelReporte({ reporte: completo, registros }, { ahora: AHORA });
   assert.deepEqual([fila.sello, fila.linea, fila.ir, fila.boton], ['sin-sellar', 'Está todo: falta sellarlo', 'enviar', 'Seguir']);
 
@@ -88,7 +93,8 @@ test('lo que falta se dice corto: el lugar, la escena y el croquis', async () =>
   assert.equal(sinLugar.linea, 'Falta: dónde y cuándo (sin marcar)');
   assert.equal(sinLugar.ir, 'donde');
   const pocas = registros.filter((r) => r.paso === 'escena').slice(0, 3);
-  const escena = await filaDelReporte({ reporte, registros: pocas }, { ahora: AHORA });
+  // Todo «Antes de mover» resuelto menos la vuelta: si la vuelta se saltó allá, aquí no falta.
+  const escena = await filaDelReporte({ reporte: { ...reporte, pruebas: pruebasResueltas(['vuelta']) }, registros: pocas }, { ahora: AHORA });
   assert.equal(escena.linea, 'Falta: la escena (3 de 8 fotos)');
   assert.equal(escena.ir, 'escena');
 });

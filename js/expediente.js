@@ -22,6 +22,7 @@ import { fechaLarga, fechaYHora, horaDeColombia } from './fechas.js';
 import { distancia, numero, puntoCardinal } from './geo.js';
 import { NO_ES_PRUEBA_DE_EMBRIAGUEZ, respuestasDeAntes, resumenDeAntes } from './antes.js';
 import { queLeFalta } from './sello.js';
+import { CLAVES, esDeLaPrueba, estadoDeLasPruebas, fotosDeLaPrueba, resumenDeLasPruebas, SALTADA, TIPOS, tituloDelRenglon } from './pruebas.js';
 
 const GRADO = Math.PI / 180;
 
@@ -176,6 +177,7 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
   // «Escena · 3», «Carro B · 5», «Daño A · bómper delantero».
   const queEs = (r) => {
     if (r.paso === 'danos') return `Daño ${r.carro}${r.pieza ? ' · ' + nombreDePiezaEn(carroceriaDe.get(r.carro), r.pieza).toLowerCase() : ''}`;
+    if (r.paso === 'prueba') return `${tituloDelRenglon(r.prueba)}${Number.isInteger(r.sector) ? ' · ' + (r.sector + 1) : ''}`;
     return `${PASOS[r.paso] ?? r.paso}${r.carro ? ' ' + r.carro : ''}${Number.isInteger(r.sector) ? ' · ' + (r.sector + 1) : ''}`;
   };
   const lugar = reporte.lugar ?? null;
@@ -185,12 +187,51 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
   const vigente = (r) => !reemplazadas.has(r.huella);
   const quienEs = (c) => (c.quien === 'tuyo' ? 'el tuyo' : c.letra === 'B' ? 'el otro' : null);
 
-  // La escena.
+  // La escena. Si en «Antes de mover» se saltó la vuelta por seguridad, se dice: si no, parecería
+  // olvido.
   const vueltaEscena = estadoDeLaVuelta(registros, { filtro: esDeLaEscena });
+  const vueltaSaltada = reporte.pruebas?.renglones?.vuelta?.saltada === SALTADA && !vueltaEscena.completa;
+  const porSeguridad = vueltaSaltada ? ' La persona marcó que no era seguro hacerla.' : '';
   const escena = {
     fotos: vueltaEscena.vigentes.filter(Boolean).map((r) => fotoDelExpediente(r, `Escena · foto ${r.sector + 1}`)),
-    faltan: vueltaEscena.cuantas === 0 ? 'No se tomaron fotos de la escena.' : faltantes(vueltaEscena, null),
+    faltan: vueltaEscena.cuantas === 0 ? `No se tomaron fotos de la escena.${porSeguridad}` : `${faltantes(vueltaEscena, null)}${porSeguridad}`,
   };
+
+  // «Antes de mover» (E1, 26-nov-2026): cada renglón con lo que se tomó, lo que la persona declaró y
+  // lo que no se tomó. Va si se anotó algo o hay alguna de sus fotos; un reporte de antes de E1 no
+  // lleva una sección entera de «sin fotos». La vuelta no se repite: está en «La escena». Un renglón
+  // que ya no está en la lista (se cambió el tipo de choque) igual va si tiene fotos: ninguna se esconde.
+  const conPruebas = !!reporte.pruebas || registros.some((r) => r.paso === 'prueba');
+  const estadoPruebas = conPruebas ? estadoDeLasPruebas({ pruebas: reporte.pruebas, registros, lugar, ahora: new Date(sello.hora) }) : null;
+  const pruebas = conPruebas
+    ? (() => {
+        const enLaLista = new Map(estadoPruebas.renglones.map((r) => [r.clave, r]));
+        const renglones = CLAVES.filter((clave) => clave !== 'vuelta' && (enLaLista.has(clave) || registros.some(esDeLaPrueba(clave)))).map((clave) => {
+          const r = enLaLista.get(clave) ?? null;
+          const suyas = registros.filter(esDeLaPrueba(clave));
+          const n = Math.max(r?.total ?? 0, ...suyas.map((x) => (Number.isInteger(x.sector) ? x.sector + 1 : 0)));
+          const { vigentes } = fotosDeLaPrueba(registros, clave, n);
+          const titulo = tituloDelRenglon(clave);
+          return {
+            clave,
+            titulo,
+            estado: r?.estado ?? 'fuera',
+            resumen: r ? r.resumen : `${suyas.length === 1 ? '1 foto' : `${vigentes.filter(Boolean).length} fotos`}. Ya no estaba en la lista: la persona cambió el tipo de choque después de tomarlas.`,
+            nota: r?.sinEscala ? 'La persona marcó que no tenía con qué medir: las fotos de cerca van sin medida al lado.' : '',
+            fotos: vigentes.filter(Boolean).map((x) => fotoDelExpediente(x, `${titulo} · ${r?.fotos[x.sector]?.corto ?? `foto ${x.sector + 1}`}`)),
+          };
+        });
+        const tipo = TIPOS.find((t) => t.valor === estadoPruebas.tipo);
+        return {
+          resumen: resumenDeLasPruebas(estadoPruebas),
+          tipo: tipo && tipo.valor !== 'no-se' ? `${tipo.texto}, según la persona` : '',
+          // «5:31 p. m.» ya termina en punto: no se le pone otro.
+          movidos: estadoPruebas.movidos ? `La persona marcó que los movió a las ${horaDeColombia(estadoPruebas.movidos).replace(/\.$/, '')}.` : '',
+          renglones,
+          testigos: estadoPruebas.testigos.map((t) => ({ nombre: t.nombre, celular: t.celular })),
+        };
+      })()
+    : null;
 
   // Los carros, cada uno con su vuelta, su placa y sus daños.
   const carros = carrosDelReporte(reporte).map((c) => {
@@ -226,7 +267,7 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
   // Lo que va al anexo: las fotos repetidas (otra las reemplazó) y las que ya no corresponden a
   // nada de lo declarado (la foto de un daño cuya marca se quitó después). Siguen en la cadena y
   // van en el PDF igual: nada de la cadena se esconde.
-  const mostradas = new Set([...escena.fotos, ...carros.flatMap((c) => [...c.fotos, ...c.danos.filas.map((f) => f.foto).filter(Boolean)])].map((f) => f.huella));
+  const mostradas = new Set([...escena.fotos, ...(pruebas?.renglones.flatMap((r) => r.fotos) ?? []), ...carros.flatMap((c) => [...c.fotos, ...c.danos.filas.map((f) => f.foto).filter(Boolean)])].map((f) => f.huella));
   const anexo = registros
     .filter((r) => !mostradas.has(r.huella))
     .map((r) => {
@@ -265,8 +306,9 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
     { etiqueta: 'El choque', valor: horaDelChoque ? fechaYHora(horaDelChoque) : 'Sin hora' },
     { etiqueta: 'Dónde', valor: [viaNombre, punto ? `${punto.lat.toFixed(6)}, ${punto.lon.toFixed(6)}` : 'Sin marcar'].filter(Boolean).join(' · ') },
     ...(antes ? [{ etiqueta: 'Antes de mover', valor: antes.startsWith('La persona') ? antes : `${antes}, según la persona` }] : []),
+    ...(pruebas ? [{ etiqueta: 'Lo que se borra primero', valor: pruebas.resumen.replace(/\.$/, '') }] : []),
     ...carrosDelReporte(reporte).map((c, i) => ({ etiqueta: `Carro ${c.letra}`, valor: [quienEs(c), carros[i].placa.texto === 'Sin leer' ? 'placa sin leer' : carros[i].placa.texto, textoDeLaLinea(c.linea) || null].filter(Boolean).join(' · ') })),
-    { etiqueta: 'Fotos', valor: `${conFotos(registros.length)} en la cadena: ${cuantas(esDeLaEscena)} de la escena, ${carros.map((c) => `${cuantas(esDelCarro(c.letra))} del carro ${c.letra}`).join(', ')} y ${cuantas((r) => r.paso === 'danos')} de los daños${anexo.length ? ` (${anexo.length} en el anexo)` : ''}` },
+    { etiqueta: 'Fotos', valor: `${conFotos(registros.length)} en la cadena: ${cuantas(esDeLaEscena)} de la escena, ${pruebas ? `${cuantas((r) => r.paso === 'prueba')} de antes de mover, ` : ''}${carros.map((c) => `${cuantas(esDelCarro(c.letra))} del carro ${c.letra}`).join(', ')} y ${cuantas((r) => r.paso === 'danos')} de los daños${anexo.length ? ` (${anexo.length} en el anexo)` : ''}` },
     { etiqueta: 'Daños', valor: carros.map((c) => `${c.letra}: ${c.danos.filas.length ? c.danos.filas.length + (c.danos.filas.length === 1 ? ' pieza' : ' piezas') : 'ninguno marcado'}`).join(' · ') },
     { etiqueta: 'Croquis', valor: croquis ? `${tituloDelCaso(croquis.caso)}${croquis.hecho ? '' : ' (sin terminar)'}` : 'No se hizo' },
   ];
@@ -279,6 +321,12 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
     'Mientras el reporte estuvo solo en el teléfono, alguien con el teléfono y conocimientos pudo rehacerlo entero. Vale desde que salió de él: este PDF, y el número y la huella que la persona envió.',
   ];
   if (respuestasDeAntes(reporte.antes)?.embriaguez === 'si') noAfirma.splice(1, 0, NO_ES_PRUEBA_DE_EMBRIAGUEZ);
+  if (pruebas) {
+    // Va junto a la del croquis: es lo que la persona declaró, no una medición.
+    const i = noAfirma.findIndex((t) => t.startsWith('El croquis'));
+    noAfirma.splice(i + 1, 0, 'La app no calcula velocidades. La medida de la huella, si la hay, es la que anotó la persona, con cinta o con pasos; si hace falta una velocidad, la calcula un perito con las fotos.');
+    if (pruebas.testigos.length) noAfirma.splice(i + 2, 0, 'El nombre y el celular de quien lo vio son los que la persona anotó, con su permiso; la app no los comprobó.');
+  }
   if (ejemplo) noAfirma.unshift('ES UN EJEMPLO: el lugar es real, pero el choque es inventado.');
 
   return {
@@ -314,6 +362,7 @@ export function armarExpediente({ reporte, registros = [], sello, revision = nul
         }
       : null,
     escena,
+    pruebas,
     carros,
     anexo,
     cadena,

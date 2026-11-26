@@ -63,7 +63,7 @@ export async function sha256Hex(datos, sutil = globalThis.crypto?.subtle) {
 // tipo, danos.js) solo van en las fotos de los carros y de los daños, y se
 // sellan con la foto: lo que la persona dijo que mostraba en el momento de
 // tomarla. En las de la escena no aparecen, y su huella sale igual que antes.
-export function registroDeFoto({ reporte, paso, indice, sector = null, carro = null, pieza = null, dano = null, hora, gps = null, orientacion = null, calidad, foto, reemplaza = null }) {
+export function registroDeFoto({ reporte, paso, indice, sector = null, carro = null, pieza = null, dano = null, prueba = null, hora, gps = null, orientacion = null, calidad, foto, reemplaza = null }) {
   const conRumbo = orientacion && Number.isFinite(orientacion.rumbo);
   const conInclinacion = orientacion && Number.isFinite(orientacion.elevacion) && Number.isFinite(orientacion.giro);
   return {
@@ -75,6 +75,9 @@ export function registroDeFoto({ reporte, paso, indice, sector = null, carro = n
     ...(carro !== null ? { carro } : {}),
     ...(pieza !== null ? { pieza } : {}),
     ...(dano !== null ? { dano } : {}),
+    // El renglón de «Antes de mover» (pruebas.js), desde el 26-nov-2026. Como los de arriba, solo si
+    // lo hay: un campo nuevo en todos los registros les cambiaría la huella a los de antes.
+    ...(prueba !== null ? { prueba } : {}),
     hora: new Date(hora).toISOString(),
     gps:
       gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lon)

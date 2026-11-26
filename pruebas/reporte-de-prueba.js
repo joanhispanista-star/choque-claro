@@ -8,8 +8,13 @@ import { analizarVia } from '../js/via.js';
 import { armarCaso, croquisParaGuardar, viaDesdeElAnalisis } from '../js/croquis.js';
 import { lugarParaElReporte } from '../js/sello.js';
 import { jpegDePrueba } from './jpeg-de-prueba.js';
+import { CLAVES, SALTADA } from '../js/pruebas.js';
 
 export const HORA_DEL_CHOQUE = '2026-11-13T22:15:00Z';
+
+// «Antes de mover» con todo resuelto (cada renglón saltado por seguridad, menos los de `menos`): para
+// las pruebas que miran otra cosa y no quieren que «lo que se borra primero» sea lo primero que falte.
+export const pruebasResueltas = (menos = []) => ({ renglones: Object.fromEntries(CLAVES.filter((c) => !menos.includes(c)).map((c) => [c, { saltada: SALTADA }])) });
 export const CLIMA = { desde: '17:00', hasta: '18:00', lluvia: 0, nubes: 78, visibilidad: 24000, codigo: 3, texto: 'Nublado' };
 
 export function analisisDelEjemplo() {
@@ -29,7 +34,19 @@ export const DANOS = [
   { carro: 'B', pieza: 'guardafango-del-izq', tipo: 'roto', cuando: '2026-11-13T22:38:00Z' },
 ];
 
-export async function reporteDePrueba({ conLugar = true } = {}) {
+// Lo que se anotó en «Antes de mover» en el reporte de prueba con `conPruebas` (E1): un cruce, la
+// huella a pedazos y medida, sin vidrios, la caminata saltada, una testigo y los carros movidos.
+export const PRUEBAS = {
+  tipo: 'cruce',
+  renglones: { huella: { respuesta: 'pedazos', medida: { valor: 11.4, como: 'cinta', desde: 'el poste de la esquina' } }, vidrios: { respuesta: 'no-hay' }, caminata: { saltada: SALTADA } },
+  testigos: [{ nombre: 'Ana Ruiz', celular: '300 123 4567' }],
+  movidos: '2026-11-13T22:31:00.000Z',
+  hora: '2026-11-13T22:31:00.000Z',
+};
+
+// `conPruebas`: además, las 5 fotos de la huella y una esquina, DESPUÉS de las demás (así los
+// registros de siempre conservan su número).
+export async function reporteDePrueba({ conLugar = true, conPruebas = false } = {}) {
   const { punto, analisis } = analisisDelEjemplo();
   const via = viaDesdeElAnalisis(analisis, punto);
   const croquis = { ...croquisParaGuardar(armarCaso('frente', via, CARROS), via, { punto, ejemplo: true, hora: HORA_DEL_CHOQUE }), hecho: '2026-11-13T22:41:00Z' };
@@ -69,7 +86,11 @@ export async function reporteDePrueba({ conLugar = true } = {}) {
   await tomar({ paso: 'danos', carro: 'A', pieza: 'bomper-del', dano: 'abolladura' });
   await tomar({ paso: 'danos', carro: 'A', pieza: 'capo', dano: 'rayon' });
   await tomar({ paso: 'danos', carro: 'B', pieza: 'guardafango-del-izq', dano: 'roto' });
+  if (conPruebas) {
+    for (let s = 0; s < 5; s++) await tomar({ paso: 'prueba', prueba: 'huella', sector: s });
+    await tomar({ paso: 'prueba', prueba: 'esquinas', sector: 0 });
+  }
 
-  const reporte = { id: 'r-prueba', orden: 1, creado: '2026-11-13T22:20:00Z', actualizado: '2026-11-13T22:41:00Z', carros: CARROS, danos: DANOS, croquis, lugar };
+  const reporte = { id: 'r-prueba', orden: 1, creado: '2026-11-13T22:20:00Z', actualizado: '2026-11-13T22:41:00Z', carros: CARROS, danos: DANOS, croquis, lugar, ...(conPruebas ? { pruebas: PRUEBAS } : {}) };
   return { reporte, registros, fotos, punto, analisis };
 }

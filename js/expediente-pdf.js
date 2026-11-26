@@ -349,6 +349,26 @@ export function pdfDelExpediente(modelo, { fotos = new Map(), adjuntos = [] } = 
     }
   }
 
+  // «Antes de mover» (E1): primero, en una tabla, lo que no tiene fotos (lo declarado, lo saltado y lo
+  // que falta, dicho así); después cada renglón con las suyas. Quien lo vio va en su propia tabla.
+  function pruebas() {
+    const p = modelo.pruebas;
+    if (!p) return;
+    titulo('Antes de mover: lo que se borra primero', { nuevaHoja: true });
+    parrafo([p.resumen, p.tipo ? `Tipo de choque: ${p.tipo}.` : '', p.movidos].filter(Boolean).join(' '), { tamano: 9, color: C.suave });
+    const sinFotos = p.renglones.filter((r) => !r.fotos.length && !(r.clave === 'testigos' && p.testigos.length));
+    if (sinFotos.length) tabla(sinFotos.map((r) => ({ etiqueta: r.titulo, valor: r.resumen, nota: r.nota, aviso: r.estado === 'falta' || r.estado === 'saltado' ? 'sin-dato' : null })));
+    for (const r of p.renglones.filter((x) => x.fotos.length)) {
+      subtitulo(r.titulo);
+      parrafo([r.resumen, r.nota].filter(Boolean).join('. '), { tamano: 8.8, color: C.suave });
+      rejilla(r.fotos);
+    }
+    if (p.testigos.length) {
+      subtitulo('Quien lo vio');
+      tabla(p.testigos.map((t) => ({ etiqueta: t.nombre, valor: t.celular, nota: 'Lo anotó la persona, con su permiso' })));
+    }
+  }
+
   function carros() {
     for (const c of modelo.carros) {
       titulo(c.titulo, { nuevaHoja: true });
@@ -426,6 +446,7 @@ export function pdfDelExpediente(modelo, { fotos = new Map(), adjuntos = [] } = 
   dondeYCuando();
   croquis();
   escena();
+  pruebas();
   carros();
   anexo();
   cadena();

@@ -13,6 +13,7 @@ import { fechaYHora } from './fechas.js';
 import { distancia, planoLocal } from './geo.js';
 import { resumenDeAntes } from './antes.js';
 import { queLeFalta } from './sello.js';
+import { estadoDeLasPruebas, resumenDeLasPruebas, SALTADA, TEXTO_DE_SALTADA } from './pruebas.js';
 
 const fotos = (n) => (n === 1 ? '1 foto' : `${n} fotos`);
 // La misma distancia con la que el croquis avisa que el punto del paso 3 se movió (pantalla-croquis.js).
@@ -51,12 +52,27 @@ export function revisionDelReporte({ reporte, registros = [], ahora = new Date()
     items.push({ clave: 'lugar', titulo: 'Dónde y cuándo', detalle: 'Sin marcar.', completo: false, ir: 'donde', boton: 'Marcar' });
   }
 
+  // «Antes de mover» (paso 4, E1). Lo saltado por seguridad cuenta como resuelto: fue una decisión
+  // de la persona y el expediente la dice; insistir aquí no la cambia, porque ya se movieron. La
+  // vuelta no cuenta aquí: tiene su renglón propio («La escena»), y dirían lo mismo dos veces.
+  const pruebas = estadoDeLasPruebas({ pruebas: reporte.pruebas, registros, lugar, ahora });
+  items.push({
+    clave: 'pruebas',
+    titulo: 'Lo que se borra primero',
+    detalle: resumenDeLasPruebas(pruebas),
+    completo: pruebas.renglones.every((r) => r.resuelto || r.clave === 'vuelta'),
+    ir: 'pruebas',
+    boton: pruebas.empezada ? 'Completar' : 'Empezar',
+  });
+
   const escena = estadoDeLaVuelta(registros, { filtro: esDeLaEscena });
+  // La vuelta es un renglón de «Antes de mover»: si allá se saltó por seguridad, aquí no falta.
+  const vueltaSaltada = reporte.pruebas?.renglones?.vuelta?.saltada === SALTADA && !escena.completa;
   items.push({
     clave: 'escena',
     titulo: 'La escena',
-    detalle: escena.cuantas === 0 ? 'Sin fotos.' : `${escena.cuantas} de ${TOMAS} fotos.`,
-    completo: escena.completa,
+    detalle: vueltaSaltada ? `${escena.cuantas ? `${escena.cuantas} de ${TOMAS} fotos. ` : ''}${TEXTO_DE_SALTADA}.` : escena.cuantas === 0 ? 'Sin fotos.' : `${escena.cuantas} de ${TOMAS} fotos.`,
+    completo: escena.completa || vueltaSaltada,
     ir: 'escena',
     boton: escena.cuantas === 0 ? 'Tomarlas' : 'Completar',
   });
