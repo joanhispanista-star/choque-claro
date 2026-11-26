@@ -631,6 +631,13 @@ idénticos a lo sellado. El mismo recorrido pasó contra el sitio publicado (54 
 54). Allá no hay servidor que apagar, así que se cortó la red en el navegador, y
 se comprobó que el corte era real: algo que no estaba guardado no llegó.
 
+**E1 publicado el jue 26-nov (`5517f8a`)** con el «Sí, publícalo» de Joan. A los
+41 s Pages servía la versión `6a67d7b60967`, y los 136 archivos de la lista eran
+idénticos a lo sellado. El recorrido de «Antes de mover» pasó contra el sitio
+publicado (55 de 55: lista, cámara, huella con su medida, saltar, «No hay», quien
+lo vio, el final y el paso 8), con una cámara sintética: la de mentira del Edge
+oculto se muere a los 20 s (ver «Trampas»).
+
 **NO probado en un celular todavía.** GitHub Pages está encendido desde el
 13-nov (todos los archivos llegan, el motor del lector con `application/wasm`).
 Ver «Lo que falta probar en el iPhone».
